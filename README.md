@@ -6,7 +6,7 @@ The platform focuses on **conceptual understanding**, **step-by-step validation*
 
 ---
 
-# Core Features
+## Core Features
 
 ## Step-by-Step Problem Solving
 
@@ -48,7 +48,7 @@ Students can compete with other learners in real-time math duels.
 
 ---
 
-# Architecture Overview
+## Architecture Overview
 
 The system follows a modular architecture designed for reliability and scalability.
 
@@ -70,7 +70,7 @@ Deterministic validation always runs before AI assistance.
 
 ---
 
-# Tech Stack
+## Tech Stack
 
 ## Frontend
 
@@ -98,7 +98,7 @@ Deterministic validation always runs before AI assistance.
 
 ---
 
-# Project Structure
+## Project Structure
 
 app/  
 Next.js routes
@@ -120,7 +120,7 @@ Engineering documentation
 
 ---
 
-# Documentation
+## Documentation
 
 Engineering documentation is located in the `docs` folder.
 
@@ -139,7 +139,7 @@ testing-strategy.md
 
 ---
 
-# Running Locally
+## Running Locally
 
 Install dependencies:
 
@@ -155,7 +155,7 @@ http://localhost:3000
 
 ---
 
-# Environment Variables
+## Environment Variables
 
 Required environment variables include:
 
@@ -173,7 +173,7 @@ Environment variables should be configured in the hosting platform (e.g. Vercel)
 
 ---
 
-# Database
+## Database
 
 The platform uses **Supabase PostgreSQL**.
 
@@ -193,7 +193,7 @@ Row Level Security (RLS) ensures users can only access their own data.
 
 ---
 
-# Testing
+## Testing
 
 Testing includes multiple layers:
 
@@ -213,7 +213,7 @@ npm run test
 
 ---
 
-# Deployment
+## Deployment
 
 The platform is deployed using **Vercel**.
 
@@ -233,7 +233,7 @@ Database migrations are managed using **Supabase CLI**.
 
 ---
 
-# Security
+## Security
 
 Key security measures include:
 
@@ -250,6 +250,6 @@ docs/security.md
 
 ---
 
-# License
+## License
 
 This project is currently private and under development.

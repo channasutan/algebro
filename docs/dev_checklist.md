@@ -1,6 +1,6 @@
-Development Checklist
+# Development Checklist
 
-Overview
+## Overview
 
 This checklist helps ensure that every code change follows the project architecture, security rules, and development standards.
 
@@ -8,7 +8,7 @@ Developers and AI tools should review this checklist before committing or openin
 
 ---
 
-Architecture
+## Architecture
 
 Before committing code, verify:
 
@@ -20,7 +20,7 @@ Before committing code, verify:
 
 ---
 
-API
+## API
 
 Verify that:
 
@@ -31,7 +31,7 @@ Verify that:
 
 ---
 
-Data Model
+## Data Model
 
 Check that:
 
@@ -42,7 +42,7 @@ Check that:
 
 ---
 
-Security
+## Security
 
 Verify that:
 
@@ -56,7 +56,7 @@ Security guidelines are defined in "security.md".
 
 ---
 
-Testing
+## Testing
 
 Confirm that:
 
@@ -69,7 +69,7 @@ Testing strategy is defined in "testing-strategy.md".
 
 ---
 
-Code Quality
+## Code Quality
 
 Check that:
 
@@ -81,7 +81,7 @@ Check that:
 
 ---
 
-Documentation
+## Documentation
 
 If the change affects system behavior, verify that documentation is updated:
 
@@ -92,7 +92,7 @@ If the change affects system behavior, verify that documentation is updated:
 
 ---
 
-Git Workflow
+## Git Workflow
 
 Before committing:
 
@@ -108,7 +108,7 @@ Before opening a pull request:
 
 ---
 
-Pre-Commit Quick Check
+## Pre-Commit Quick Check
 
 Before committing, quickly verify:
 
@@ -120,7 +120,7 @@ Before committing, quickly verify:
 
 ---
 
-Summary
+## Summary
 
 Before committing or opening a PR:
 
