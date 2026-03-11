@@ -1,3 +1,5 @@
+import "server-only";
+
 type NodeEnv = "development" | "test" | "production";
 
 type RawEnv = {
@@ -51,7 +53,11 @@ function readNodeEnv(value: string): NodeEnv {
   throw new Error(`Invalid NODE_ENV value: ${value}`);
 }
 
-export const env = rawEnv;
+export const env: PublicEnv = {
+  nodeEnv: readNodeEnv(rawEnv.nodeEnv),
+  supabaseUrl: readRequiredEnv(rawEnv.supabaseUrl, "NEXT_PUBLIC_SUPABASE_URL"),
+  supabaseAnonKey: readRequiredEnv(rawEnv.supabaseAnonKey, "NEXT_PUBLIC_SUPABASE_ANON_KEY")
+};
 
 export function getPublicEnv(): PublicEnv {
   return {
