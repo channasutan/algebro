@@ -64,16 +64,24 @@ ALTER TABLE public.duel_answers
   );
 
 -- 3. Remove redundant indexes (already created by unique constraints)
+-- - idx_duel_rounds_duel_id: NOT recreated (unique constraint on (duel_id, round_number) covers this)
+-- - idx_duel_answers_round_id: NOT recreated (unique constraint on (round_id, player_id) covers this)
+-- - idx_subscriptions_user_id: NOT recreated (unique constraint on (user_id) covers this)
 
 DROP INDEX IF EXISTS public.idx_duel_rounds_duel_id;
 DROP INDEX IF EXISTS public.idx_duel_answers_round_id;
 DROP INDEX IF EXISTS public.idx_subscriptions_user_id;
 
--- Recreate only idx_duel_rounds_duel_id as it's needed for performance 
--- (not covered by unique constraint - unique is on (duel_id, round_number))
-CREATE INDEX IF NOT EXISTS idx_duel_rounds_duel_id ON public.duel_rounds (duel_id);
+-- 4. Add indexes on topic_id columns for performance
 
--- 4. Ensure problem_templates.name has unique constraint (already done in 20260311183000)
+CREATE INDEX IF NOT EXISTS idx_problems_topic_id ON public.problems (topic_id);
+CREATE INDEX IF NOT EXISTS idx_problem_pool_topic_id ON public.problem_pool (topic_id);
+CREATE INDEX IF NOT EXISTS idx_practice_sessions_topic_id ON public.practice_sessions (topic_id);
+CREATE INDEX IF NOT EXISTS idx_duels_topic_id ON public.duels (topic_id);
+CREATE INDEX IF NOT EXISTS idx_topic_progress_topic_id ON public.topic_progress (topic_id);
+CREATE INDEX IF NOT EXISTS idx_material_topics_topic_id ON public.material_topics (topic_id);
+
+-- 5. Ensure problem_templates.name has unique constraint (already done in 20260311183000)
 -- Verify it exists
 
 DO $$
@@ -88,7 +96,7 @@ BEGIN
   END IF;
 END $$;
 
--- 5. Enable RLS on duel_rounds, topics, jobs
+-- 6. Enable RLS on duel_rounds, topics, jobs
 
 ALTER TABLE public.duel_rounds ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.topics ENABLE ROW LEVEL SECURITY;
