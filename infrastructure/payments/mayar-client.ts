@@ -25,13 +25,13 @@ export type MayarCheckoutSessionInput = {
 type MayarApiResponse = Record<string, unknown>;
 
 async function mayarRequest(path: string, init: RequestInit = {}): Promise<MayarApiResponse> {
+  const headers = new Headers(init.headers);
+  headers.set("Authorization", `Bearer ${getMayarApiKey()}`);
+  headers.set("Content-Type", "application/json");
+
   const response = await fetch(`${DEFAULT_MAYAR_API_BASE_URL}${path}`, {
     ...init,
-    headers: {
-      Authorization: `Bearer ${getMayarApiKey()}`,
-      "Content-Type": "application/json",
-      ...(init.headers ?? {})
-    }
+    headers
   });
 
   if (!response.ok) {
@@ -65,7 +65,7 @@ async function createCheckoutSession(
 }
 
 async function getPayment(providerPaymentId: string): Promise<MayarApiResponse> {
-  return mayarRequest(`/payments/${providerPaymentId}`, {
+  return mayarRequest(`/payments/${encodeURIComponent(providerPaymentId)}`, {
     method: "GET"
   });
 }
