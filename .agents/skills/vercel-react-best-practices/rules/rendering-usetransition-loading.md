@@ -45,7 +45,7 @@ function SearchResults() {
   const [results, setResults] = useState([])
   const [isPending, startTransition] = useTransition()
 
-  const handleSearch = (value: string) => {
+  const handleSearch = async (value: string) => {
     setQuery(value) // Update input immediately
     
     const data = await fetchResults(value)

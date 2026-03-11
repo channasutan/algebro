@@ -1,14 +1,7 @@
-import { 
-  getPublicEnv as getServerPublicEnv, 
-  getServerEnv as getServerEnvInternal, 
-  getInfrastructureServerEnv as getInfrastructureServerEnvInternal, 
-  type PublicEnv, 
-  type ServerEnv, 
-  type InfrastructureServerEnv 
-} from "./env.server";
-import { getPublicEnv as getClientPublicEnv } from "./env.public";
+import { getPublicEnv as getClientPublicEnv, type PublicEnv } from "./env.client";
+export { type ServerEnv, type InfrastructureServerEnv } from "./env.server-entry";
 
-export { type PublicEnv, type ServerEnv, type InfrastructureServerEnv };
+export type { PublicEnv } from "./env.client";
 
 export const env = getClientPublicEnv();
 
@@ -16,10 +9,10 @@ export function getPublicEnv(): PublicEnv {
   return getClientPublicEnv();
 }
 
-export function getServerEnv(): ServerEnv {
-  return getServerEnvInternal();
+export function getServerEnv() {
+  throw new Error("getServerEnv() must be called from server context");
 }
 
-export function getInfrastructureServerEnv(): InfrastructureServerEnv {
-  return getInfrastructureServerEnvInternal();
+export function getInfrastructureServerEnv() {
+  throw new Error("getInfrastructureServerEnv() must be called from server context");
 }
