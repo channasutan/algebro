@@ -1,4 +1,4 @@
-# AI Math Practice Platform
+# algebro
 
 An AI-powered mathematics learning platform that enables students to solve problems step-by-step while receiving intelligent guidance and feedback.
 
