@@ -56,6 +56,7 @@ function normalizeDateTimestamp(date: Date): DomainEventTimestamp {
 }
 
 // ISO-8601 format: YYYY-MM-DDTHH:mm:ss.sssZ or YYYY-MM-DDTHH:mm:ss.sss+HH:MM
+// Accepts optional fractional seconds (exactly 3 digits) and timezone (Z or offset)
 const ISO_8601_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?(Z|[+-]\d{2}:\d{2})$/;
 
 function normalizeStringTimestamp(value: string): DomainEventTimestamp {
@@ -76,6 +77,9 @@ function normalizeStringTimestamp(value: string): DomainEventTimestamp {
     throw new Error(`Invalid domain event timestamp: ${value}`);
   }
 
+  // Normalize to UTC for deterministic event ordering and storage.
+  // Input timestamps with timezone offsets are converted to UTC (toISOString).
+  // Original timezone information is intentionally discarded.
   return normalizedDate.toISOString();
 }
 
@@ -92,9 +96,14 @@ function normalizeTimestamp(timestamp?: Date | string | null): DomainEventTimest
 }
 
 /**
- * Recursively freezes an object and all its nested properties.
- * Creates a new WeakSet per invocation to prevent shared traversal state.
- * Handles cyclic structures safely.
+ * Recursively freezes plain objects and arrays to prevent accidental mutation.
+ * - Creates a new WeakSet per invocation to prevent shared traversal state.
+ * - Handles cyclic structures safely.
+ *
+ * Limitations:
+ * - Prevents mutation of plain objects and arrays via Object.freeze.
+ * - Built-in types (Date, Map, Set, etc.) remain internally mutable due to JS limitations.
+ * - Assumes payloads contain plain serializable data.
  */
 function deepFreeze<T>(value: T): Readonly<T> {
   const seen = new WeakSet<object>();
@@ -132,8 +141,13 @@ function deepFreezeInternal<T>(value: T, seen: WeakSet<object>): Readonly<T> {
   return Object.freeze(value) as Readonly<T>;
 }
 
+/**
+ * Deep clones and freezes the event payload for immutability.
+ * - Relies on structuredClone (Node 18+ or modern browsers) for deterministic cloning.
+ * - Preserves Dates, Sets, Maps, and other structured data.
+ * - Payload must contain serializable data (no functions, symbols, or circular references).
+ */
 function freezeEventPayload<TPayload extends DomainEventPayload>(payload: TPayload): Readonly<TPayload> {
-  // Use structuredClone for deterministic deep cloning (preserves Dates, Sets, Maps, etc.)
   const cloned = structuredClone(payload);
   return deepFreeze(cloned);
 }
