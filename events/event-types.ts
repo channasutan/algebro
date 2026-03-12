@@ -120,13 +120,23 @@ function deepFreeze<T>(value: T): Readonly<T> {
 }
 
 function freezeEventPayload<TPayload extends DomainEventPayload>(payload: TPayload): Readonly<TPayload> {
+  let cloned: unknown;
+
   try {
-    return deepFreeze(structuredClone(payload));
-  } catch (error) {
-    throw new Error(
-      "Event payload must contain only serializable data (no functions, symbols, or non-cloneable values)"
-    );
+    // Use structuredClone if available (modern environments)
+    cloned = structuredClone(payload);
+  } catch {
+    // Fallback to JSON cloning for older runtimes
+    try {
+      cloned = JSON.parse(JSON.stringify(payload));
+    } catch {
+      throw new Error(
+        "Event payload must contain only serializable data (no functions, symbols, or circular references)"
+      );
+    }
   }
+
+  return deepFreeze(cloned as TPayload);
 }
 
 export function createDomainEvent<TPayload extends DomainEventPayload>(
