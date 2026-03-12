@@ -116,10 +116,8 @@ describe("createDomainEvent", () => {
     });
 
     it("defaults timestamp when null", () => {
-      // Note: TypeScript type is Date | string | undefined, but runtime accepts null
-      const event = createDomainEvent(
-        buildEventInput({ timestamp: null as unknown as undefined })
-      );
+      // @ts-expect-error testing runtime behavior when timestamp is null
+      const event = createDomainEvent(buildEventInput({ timestamp: null }));
 
       expect(event.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
     });
