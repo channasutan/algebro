@@ -23,7 +23,7 @@ export function createEventBus(): EventBus {
 
       const handlerSnapshot = Array.from(registeredHandlers);
 
-      await Promise.allSettled(handlerSnapshot.map((handler) => Promise.resolve(handler(event))));
+      await Promise.allSettled(handlerSnapshot.map((handler) => Promise.resolve().then(() => handler(event))));
     },
 
     subscribe(eventType, handler) {

@@ -106,4 +106,24 @@ describe("event bus", () => {
     expect(successfulHandler).toHaveBeenCalledTimes(1);
     expect(successfulHandler).toHaveBeenCalledWith(event);
   });
+
+  it("continues invoking other handlers when one throws synchronously", async () => {
+    const bus = createEventBus();
+    const successfulHandler = vi.fn();
+    const event = createDomainEvent({
+      eventType: "attempt_completed",
+      payload: { attemptId: "attempt-5" }
+    });
+
+    // First handler throws synchronously (not async)
+    bus.subscribe("attempt_completed", () => {
+      throw new Error("sync handler failure");
+    });
+    bus.subscribe("attempt_completed", successfulHandler);
+
+    await expect(bus.publish(event)).resolves.toBeUndefined();
+
+    expect(successfulHandler).toHaveBeenCalledTimes(1);
+    expect(successfulHandler).toHaveBeenCalledWith(event);
+  });
 });
