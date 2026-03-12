@@ -1,38 +1,45 @@
 import type { DomainEvent, EventHandler, EventUnsubscribe } from "@/events/event-types";
 
-class InMemoryEventBus {
-  private readonly handlers = new Map<string, Set<EventHandler>>();
+export type EventBus = {
+  publish(event: DomainEvent): Promise<void>;
+  subscribe(eventType: string, handler: EventHandler): EventUnsubscribe;
+};
 
-  async publish(event: DomainEvent): Promise<void> {
-    const registeredHandlers = this.handlers.get(event.type);
+export function createEventBus(): EventBus {
+  const handlers = new Map<string, Set<EventHandler>>();
 
-    if (!registeredHandlers || registeredHandlers.size === 0) {
-      return;
-    }
+  return {
+    async publish(event) {
+      const registeredHandlers = handlers.get(event.event_type);
 
-    await Promise.all(Array.from(registeredHandlers, (handler) => handler(event)));
-  }
-
-  subscribe(eventType: string, handler: EventHandler): EventUnsubscribe {
-    const handlers = this.handlers.get(eventType) ?? new Set<EventHandler>();
-
-    handlers.add(handler);
-    this.handlers.set(eventType, handlers);
-
-    return () => {
-      const currentHandlers = this.handlers.get(eventType);
-
-      if (!currentHandlers) {
+      if (!registeredHandlers || registeredHandlers.size === 0) {
         return;
       }
 
-      currentHandlers.delete(handler);
+      await Promise.all(Array.from(registeredHandlers, (handler) => handler(event)));
+    },
 
-      if (currentHandlers.size === 0) {
-        this.handlers.delete(eventType);
-      }
-    };
-  }
+    subscribe(eventType, handler) {
+      const eventHandlers = handlers.get(eventType) ?? new Set<EventHandler>();
+
+      eventHandlers.add(handler);
+      handlers.set(eventType, eventHandlers);
+
+      return () => {
+        const currentHandlers = handlers.get(eventType);
+
+        if (!currentHandlers) {
+          return;
+        }
+
+        currentHandlers.delete(handler);
+
+        if (currentHandlers.size === 0) {
+          handlers.delete(eventType);
+        }
+      };
+    }
+  };
 }
 
-export const eventBus = new InMemoryEventBus();
+export const eventBus = createEventBus();

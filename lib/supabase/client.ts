@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-import { getInfrastructureServerEnv, getPublicEnv, getServerEnv } from "@/config/env";
+import { getPublicEnv } from "@/config/env.public";
+import { getSupabaseServiceRoleKey } from "@/config/env.server-entry";
 
 type Database = Record<string, never>;
 
@@ -36,7 +37,7 @@ export function getSupabaseServerClient(): SupabaseClient<Database> {
     return serverClient;
   }
 
-  const { supabaseAnonKey } = getServerEnv();
+  const { supabaseAnonKey } = getPublicEnv();
 
   serverClient = createSupabaseInstance(supabaseAnonKey, false);
 
@@ -52,7 +53,7 @@ export function getSupabaseAdminClient(): SupabaseClient<Database> {
     return adminClient;
   }
 
-  const { supabaseServiceRoleKey } = getInfrastructureServerEnv();
+  const supabaseServiceRoleKey = getSupabaseServiceRoleKey();
 
   adminClient = createSupabaseInstance(supabaseServiceRoleKey, false);
 

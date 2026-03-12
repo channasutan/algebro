@@ -1,9 +1,16 @@
 export type DomainEventPayload = Record<string, unknown>;
 
-export type DomainEvent<TPayload extends DomainEventPayload = DomainEventPayload> = {
-  id: string;
-  type: string;
-  occurredAt: string;
+export type DomainEvent<TPayload extends DomainEventPayload = DomainEventPayload> = Readonly<{
+  event_id: string;
+  event_type: string;
+  timestamp: string;
+  payload: Readonly<TPayload>;
+}>;
+
+export type CreateDomainEventInput<TPayload extends DomainEventPayload = DomainEventPayload> = {
+  eventId?: string;
+  eventType: string;
+  timestamp?: Date | string;
   payload: TPayload;
 };
 
@@ -12,3 +19,16 @@ export type EventHandler<TPayload extends DomainEventPayload = DomainEventPayloa
 ) => void | Promise<void>;
 
 export type EventUnsubscribe = () => void;
+
+export function createDomainEvent<TPayload extends DomainEventPayload>(
+  input: CreateDomainEventInput<TPayload>
+): DomainEvent<TPayload> {
+  const timestamp = input.timestamp instanceof Date ? input.timestamp.toISOString() : input.timestamp;
+
+  return {
+    event_id: input.eventId ?? crypto.randomUUID(),
+    event_type: input.eventType,
+    timestamp: timestamp ?? new Date().toISOString(),
+    payload: Object.freeze({ ...input.payload }) as Readonly<TPayload>
+  };
+}

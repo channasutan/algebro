@@ -77,3 +77,19 @@ export function getInfrastructureServerEnv(): InfrastructureServerEnv {
     mayarWebhookSecret: readRequiredEnv(rawEnv.mayarWebhookSecret, "MAYAR_WEBHOOK_SECRET")
   };
 }
+
+export function getSupabaseServiceRoleKey(): string {
+  return readRequiredEnv(rawEnv.supabaseServiceRoleKey, "SUPABASE_SERVICE_ROLE_KEY");
+}
+
+export function getAiProviderApiKey(): string {
+  return readRequiredEnv(rawEnv.aiProviderApiKey, "AI_PROVIDER_API_KEY");
+}
+
+export function getMayarApiKey(): string {
+  return readRequiredEnv(rawEnv.mayarApiKey, "MAYAR_API_KEY");
+}
+
+export function getMayarWebhookSecret(): string {
+  return readRequiredEnv(rawEnv.mayarWebhookSecret, "MAYAR_WEBHOOK_SECRET");
+}
