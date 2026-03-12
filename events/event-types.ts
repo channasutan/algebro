@@ -39,6 +39,6 @@ export function createDomainEvent<TPayload extends DomainEventPayload>(
     event_id: input.eventId ?? crypto.randomUUID(),
     event_type: input.eventType,
     timestamp: timestamp ?? new Date().toISOString(),
-    payload: Object.freeze({ ...input.payload }) as Readonly<TPayload>
+    payload: Object.freeze({ ...input.payload })
   };
 }
