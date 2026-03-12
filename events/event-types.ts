@@ -55,11 +55,19 @@ function normalizeDateTimestamp(date: Date): DomainEventTimestamp {
   return date.toISOString();
 }
 
+// Strict ISO-8601 format: YYYY-MM-DDTHH:mm:ss.sssZ
+const ISO_8601_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;
+
 function normalizeStringTimestamp(value: string): DomainEventTimestamp {
   const trimmed = value.trim();
 
   if (trimmed.length === 0) {
     throw new Error("Invalid domain event timestamp: timestamp cannot be empty");
+  }
+
+  // Validate strict ISO-8601 format
+  if (!ISO_8601_REGEX.test(trimmed)) {
+    throw new Error(`Invalid domain event timestamp: must be ISO-8601 format (e.g., "2024-01-01T12:00:00.000Z"), got: ${value}`);
   }
 
   const normalizedDate = new Date(trimmed);
@@ -68,13 +76,7 @@ function normalizeStringTimestamp(value: string): DomainEventTimestamp {
     throw new Error(`Invalid domain event timestamp: ${value}`);
   }
 
-  // Validate ISO-8601 format to reject ambiguous timestamps
-  const isoString = normalizedDate.toISOString();
-  if (!trimmed.startsWith(isoString.substring(0, 10))) {
-    throw new Error(`Invalid domain event timestamp: must be ISO-8601 format, got: ${value}`);
-  }
-
-  return isoString;
+  return normalizedDate.toISOString();
 }
 
 function normalizeTimestamp(timestamp?: Date | string | null): DomainEventTimestamp {
@@ -89,31 +91,42 @@ function normalizeTimestamp(timestamp?: Date | string | null): DomainEventTimest
   return normalizeStringTimestamp(timestamp);
 }
 
-const frozenObjects = new WeakSet<object>();
-
+/**
+ * Recursively freezes an object and all its nested properties.
+ * Creates a new WeakSet per invocation to prevent shared traversal state.
+ * Handles cyclic structures safely.
+ */
 function deepFreeze<T>(value: T): Readonly<T> {
+  const seen = new WeakSet<object>();
+  return deepFreezeInternal(value, seen);
+}
+
+/**
+ * Internal recursive implementation that tracks visited objects to prevent infinite recursion.
+ */
+function deepFreezeInternal<T>(value: T, seen: WeakSet<object>): Readonly<T> {
   if (typeof value !== "object" || value === null) {
     return value as Readonly<T>;
   }
 
-  if (Object.isFrozen(value) || frozenObjects.has(value)) {
+  // Skip already frozen or visited objects
+  if (Object.isFrozen(value) || seen.has(value)) {
     return value as Readonly<T>;
   }
 
-  frozenObjects.add(value);
+  seen.add(value);
 
   if (Array.isArray(value)) {
     for (const item of value) {
-      deepFreeze(item);
+      deepFreezeInternal(item, seen);
     }
-
     return Object.freeze(value) as Readonly<T>;
   }
 
-  // Include symbol keys for complete traversal
+  // Traverse all keys including symbols for complete traversal
   for (const key of Reflect.ownKeys(value)) {
     const propertyValue = (value as Record<PropertyKey, unknown>)[key];
-    deepFreeze(propertyValue);
+    deepFreezeInternal(propertyValue, seen);
   }
 
   return Object.freeze(value) as Readonly<T>;
