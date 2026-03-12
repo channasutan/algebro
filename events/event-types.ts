@@ -56,7 +56,7 @@ function normalizeDateTimestamp(date: Date): DomainEventTimestamp {
 }
 
 // ISO-8601 format: YYYY-MM-DDTHH:mm:ss.sssZ or YYYY-MM-DDTHH:mm:ss.sss+HH:MM
-// Requires timezone (Z or offset like +05:30); fractional seconds (.sss) are optional
+// Requires timezone (Z or offset like +05:30); optional milliseconds (.sss, exactly 3 digits)
 const ISO_8601_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?(Z|[+-]\d{2}:\d{2})$/;
 
 function normalizeStringTimestamp(value: string): DomainEventTimestamp {
@@ -156,10 +156,11 @@ function freezeEventPayload<TPayload extends DomainEventPayload>(payload: TPaylo
 
   try {
     cloned = structuredClone(payload);
-  } catch {
+  } catch (error) {
     throw new Error(
       "Event payload must contain only structured-cloneable data (objects, arrays, primitives, Date, Map, Set, Error, etc.). " +
-        "Functions, symbols, WeakMap, and WeakSet are not allowed."
+        "Functions, symbols, WeakMap, and WeakSet are not allowed.",
+      { cause: error }
     );
   }
 
