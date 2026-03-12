@@ -7,10 +7,7 @@ import type {
 
 export type EventBus = {
   publish(event: DomainEvent): Promise<void>;
-  subscribe<TEvent extends DomainEvent = DomainEvent>(
-    eventType: DomainEventType,
-    handler: (event: TEvent) => void | Promise<void>
-  ): EventUnsubscribe;
+  subscribe(eventType: DomainEventType, handler: EventHandler): EventUnsubscribe;
 };
 
 export function createEventBus(): EventBus {
@@ -29,14 +26,10 @@ export function createEventBus(): EventBus {
       await Promise.allSettled(handlerSnapshot.map((handler) => Promise.resolve().then(() => handler(event))));
     },
 
-    subscribe<TEvent extends DomainEvent = DomainEvent>(
-      eventType: DomainEventType,
-      handler: (event: TEvent) => void | Promise<void>
-    ) {
+    subscribe(eventType, handler) {
       const eventHandlers = handlers.get(eventType) ?? new Set<EventHandler>();
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      eventHandlers.add(handler as any);
+      eventHandlers.add(handler);
       handlers.set(eventType, eventHandlers);
 
       let unsubscribed = false;
@@ -54,8 +47,7 @@ export function createEventBus(): EventBus {
           return;
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        currentHandlers.delete(handler as any);
+        currentHandlers.delete(handler);
 
         if (currentHandlers.size === 0) {
           handlers.delete(eventType);
