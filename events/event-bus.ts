@@ -27,10 +27,16 @@ export function createEventBus(): EventBus {
     },
 
     subscribe(eventType, handler) {
-      const eventHandlers = handlers.get(eventType) ?? new Set<EventHandler>();
+      const normalizedEventType = eventType.trim() as DomainEventType;
+
+      if (!normalizedEventType) {
+        throw new Error("Event type must be a non-empty string");
+      }
+
+      const eventHandlers = handlers.get(normalizedEventType) ?? new Set<EventHandler>();
 
       eventHandlers.add(handler);
-      handlers.set(eventType, eventHandlers);
+      handlers.set(normalizedEventType, eventHandlers);
 
       let unsubscribed = false;
 
@@ -41,7 +47,7 @@ export function createEventBus(): EventBus {
 
         unsubscribed = true;
 
-        const currentHandlers = handlers.get(eventType);
+        const currentHandlers = handlers.get(normalizedEventType);
 
         if (!currentHandlers) {
           return;
@@ -50,7 +56,7 @@ export function createEventBus(): EventBus {
         currentHandlers.delete(handler);
 
         if (currentHandlers.size === 0) {
-          handlers.delete(eventType);
+          handlers.delete(normalizedEventType);
         }
       };
     }
