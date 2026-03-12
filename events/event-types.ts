@@ -100,14 +100,13 @@ function normalizeTimestamp(timestamp?: Date | string | null): DomainEventTimest
  * - Creates a new WeakSet per invocation to prevent shared traversal state.
  * - Traverses own properties including symbols.
  *
- * Note: Cyclic structures are rejected earlier by structuredClone in freezeEventPayload.
- * This function assumes the input is already a valid, cloneable JSON-like payload.
+ * Note: This function assumes the input is a valid, cloneable JSON-like payload.
+ * Cyclic structures are handled safely by this function.
  *
  * Limitations:
  * - Prevents accidental mutation of JSON-like payloads (plain objects/arrays).
  * - Built-in objects with internal mutable state (Date, Map, Set) are NOT fully immutable.
  * - Map and Set entries are not traversed—only the container reference is frozen.
- * - Intended for plain objects, arrays, and primitives (no cyclic references).
  */
 function deepFreeze<T>(value: T): Readonly<T> {
   const seen = new WeakSet<object>();
@@ -148,8 +147,9 @@ function deepFreezeInternal<T>(value: T, seen: WeakSet<object>): Readonly<T> {
 /**
  * Deep clones and freezes the event payload for immutability.
  * - Relies on structuredClone (Node 18+ or modern browsers) for deterministic cloning.
- * - Preserves Dates, Sets, Maps, and other structured data.
- * - Payload must contain structured-cloneable data (no functions, symbols, or circular references).
+ * - Preserves Dates, Sets, Maps, Errors, and other structured data.
+ * - Supports cyclic object graphs.
+ * - Payload must contain structured-cloneable data (no functions, symbols, WeakMap, or WeakSet).
  */
 function freezeEventPayload<TPayload extends DomainEventPayload>(payload: TPayload): Readonly<TPayload> {
   let cloned: TPayload;
@@ -158,8 +158,8 @@ function freezeEventPayload<TPayload extends DomainEventPayload>(payload: TPaylo
     cloned = structuredClone(payload);
   } catch {
     throw new Error(
-      "Event payload must contain only structured-cloneable data (plain objects, arrays, and primitives). " +
-        "Functions, symbols, and circular references are not allowed."
+      "Event payload must contain only structured-cloneable data (objects, arrays, primitives, Date, Map, Set, Error, etc.). " +
+        "Functions, symbols, WeakMap, and WeakSet are not allowed."
     );
   }
 
