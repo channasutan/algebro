@@ -22,7 +22,10 @@ export type JobRunResult = {
 };
 
 export const JOB_QUEUE_CLAIM_SQL = `
-select id, type, payload, status, attempt_count, max_attempts, scheduled_at
+select id, type, payload, status, 
+       attempt_count as "attemptCount", 
+       max_attempts as "maxAttempts", 
+       scheduled_at as "scheduledAt"
 from public.jobs
 where status = 'pending'
   and (scheduled_at is null or scheduled_at <= timezone('utc', now()))
