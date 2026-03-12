@@ -4,6 +4,8 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export type RealtimeChannelName = "lobby" | `duel:${string}`;
 
+const terminalStatuses = new Set(["CHANNEL_ERROR", "TIMED_OUT", "CLOSED"]);
+
 function createChannel(
   channelName: RealtimeChannelName,
   options?: RealtimeChannelOptions
@@ -19,7 +21,7 @@ async function subscribe(channel: RealtimeChannel): Promise<void> {
         return;
       }
 
-      if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+      if (terminalStatuses.has(status)) {
         reject(new Error(`Supabase realtime subscription failed with status ${status}`));
       }
     });
