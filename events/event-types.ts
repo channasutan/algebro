@@ -56,7 +56,7 @@ function normalizeDateTimestamp(date: Date): DomainEventTimestamp {
 }
 
 // ISO-8601 format: YYYY-MM-DDTHH:mm:ss.sssZ or YYYY-MM-DDTHH:mm:ss.sss+HH:MM
-// Accepts optional fractional seconds (exactly 3 digits) and timezone (Z or offset)
+// Accepts optional fractional seconds (.sss) and timezone (Z or offset like +05:30)
 const ISO_8601_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?(Z|[+-]\d{2}:\d{2})$/;
 
 function normalizeStringTimestamp(value: string): DomainEventTimestamp {
@@ -96,13 +96,15 @@ function normalizeTimestamp(timestamp?: Date | string | null): DomainEventTimest
 }
 
 /**
- * Recursively freezes plain objects and arrays to prevent accidental mutation.
+ * Recursively applies Object.freeze to plain objects and arrays to prevent accidental mutation.
  * - Creates a new WeakSet per invocation to prevent shared traversal state.
  * - Handles cyclic structures safely.
+ * - Traverses own properties including symbols.
  *
  * Limitations:
- * - Prevents mutation of plain objects and arrays via Object.freeze.
- * - Built-in types (Date, Map, Set, etc.) remain internally mutable due to JS limitations.
+ * - Prevents accidental mutation of JSON-like payloads (plain objects/arrays).
+ * - Built-in objects with internal mutable state (Date, Map, Set) are NOT fully immutable.
+ * - Map and Set entries are not traversed—only the container reference is frozen.
  * - Assumes payloads contain plain serializable data.
  */
 function deepFreeze<T>(value: T): Readonly<T> {
