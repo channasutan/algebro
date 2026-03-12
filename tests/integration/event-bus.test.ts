@@ -1,26 +1,28 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { createEventBus } from "@/events/event-bus";
-import { createDomainEvent } from "@/events/event-types";
+import { createDomainEvent, DomainEvent } from "@/events/event-types";
 
 describe("event bus", () => {
-  it("does not throw when publishing with no subscribers", async () => {
-    const bus = createEventBus();
-    const event = createDomainEvent({
+  const createBus = () => createEventBus();
+
+  const createTestEvent = (attemptId: string): DomainEvent =>
+    createDomainEvent({
       eventType: "attempt_completed",
-      payload: { attemptId: "attempt-0" }
+      payload: { attemptId }
     });
+
+  it("does not throw when publishing with no subscribers", async () => {
+    const bus = createBus();
+    const event = createTestEvent("attempt-0");
 
     await expect(bus.publish(event)).resolves.toBeUndefined();
   });
 
   it("invokes a single subscriber", async () => {
-    const bus = createEventBus();
+    const bus = createBus();
     const handler = vi.fn();
-    const event = createDomainEvent({
-      eventType: "attempt_completed",
-      payload: { attemptId: "attempt-1" }
-    });
+    const event = createTestEvent("attempt-1");
 
     bus.subscribe("attempt_completed", handler);
 
@@ -31,13 +33,10 @@ describe("event bus", () => {
   });
 
   it("invokes multiple subscribers", async () => {
-    const bus = createEventBus();
+    const bus = createBus();
     const firstHandler = vi.fn();
     const secondHandler = vi.fn();
-    const event = createDomainEvent({
-      eventType: "attempt_completed",
-      payload: { attemptId: "attempt-1b" }
-    });
+    const event = createTestEvent("attempt-1b");
 
     bus.subscribe("attempt_completed", firstHandler);
     bus.subscribe("attempt_completed", secondHandler);
@@ -51,12 +50,9 @@ describe("event bus", () => {
   });
 
   it("stops delivering events after unsubscribe", async () => {
-    const bus = createEventBus();
+    const bus = createBus();
     const handler = vi.fn();
-    const event = createDomainEvent({
-      eventType: "attempt_completed",
-      payload: { attemptId: "attempt-2" }
-    });
+    const event = createTestEvent("attempt-2");
 
     const unsubscribe = bus.subscribe("attempt_completed", handler);
     unsubscribe();
@@ -67,12 +63,9 @@ describe("event bus", () => {
   });
 
   it("awaits async handlers", async () => {
-    const bus = createEventBus();
+    const bus = createBus();
     const completionSpy = vi.fn();
-    const event = createDomainEvent({
-      eventType: "attempt_completed",
-      payload: { attemptId: "attempt-3" }
-    });
+    const event = createTestEvent("attempt-3");
 
     bus.subscribe("attempt_completed", async () => {
       await new Promise<void>((resolve) => {
@@ -89,12 +82,9 @@ describe("event bus", () => {
   });
 
   it("continues invoking other handlers when one fails", async () => {
-    const bus = createEventBus();
+    const bus = createBus();
     const successfulHandler = vi.fn();
-    const event = createDomainEvent({
-      eventType: "attempt_completed",
-      payload: { attemptId: "attempt-4" }
-    });
+    const event = createTestEvent("attempt-4");
 
     bus.subscribe("attempt_completed", async () => {
       throw new Error("handler failure");
@@ -108,12 +98,9 @@ describe("event bus", () => {
   });
 
   it("continues invoking other handlers when one throws synchronously", async () => {
-    const bus = createEventBus();
+    const bus = createBus();
     const successfulHandler = vi.fn();
-    const event = createDomainEvent({
-      eventType: "attempt_completed",
-      payload: { attemptId: "attempt-5" }
-    });
+    const event = createTestEvent("attempt-5");
 
     // First handler throws synchronously (not async)
     bus.subscribe("attempt_completed", () => {
