@@ -1,126 +1,102 @@
 import { describe, expect, it } from "vitest";
 
-import { createDomainEvent } from "@/events/event-types";
+import { createDomainEvent, CreateDomainEventInput } from "@/events/event-types";
+
+type EventInput = CreateDomainEventInput<{ attemptId: string }>;
+
+function buildEventInput(overrides: Partial<EventInput> = {}): EventInput {
+  return {
+    eventType: "attempt_completed",
+    payload: { attemptId: "test-1" },
+    ...overrides
+  };
+}
 
 describe("createDomainEvent", () => {
   describe("event type validation", () => {
     it("accepts valid event types", () => {
-      const event = createDomainEvent({
-        eventType: "attempt_completed",
-        payload: { attemptId: "test-1" }
-      });
+      const event = createDomainEvent(buildEventInput());
 
       expect(event.event_type).toBe("attempt_completed");
     });
 
     it("trims whitespace in eventType", () => {
-      const event = createDomainEvent({
-        eventType: "  step_submitted  ",
-        payload: { stepId: "step-1" }
-      });
+      const event = createDomainEvent(
+        buildEventInput({ eventType: "  step_submitted  " })
+      );
 
       expect(event.event_type).toBe("step_submitted");
     });
 
     it("rejects empty event type", () => {
       expect(() =>
-        createDomainEvent({
-          eventType: "",
-          payload: { data: "test" }
-        })
+        createDomainEvent(buildEventInput({ eventType: "" }))
       ).toThrow("Domain events require a non-empty event_type");
     });
 
     it("rejects whitespace-only event type", () => {
       expect(() =>
-        createDomainEvent({
-          eventType: "   ",
-          payload: { data: "test" }
-        })
+        createDomainEvent(buildEventInput({ eventType: "   " }))
       ).toThrow("Domain events require a non-empty event_type");
     });
   });
 
   describe("timestamp normalization", () => {
     it("accepts valid ISO-8601 timestamp with Z suffix", () => {
-      const event = createDomainEvent({
-        eventType: "attempt_completed",
-        timestamp: "2024-01-15T10:30:00.000Z",
-        payload: { attemptId: "test-1" }
-      });
+      const event = createDomainEvent(
+        buildEventInput({ timestamp: "2024-01-15T10:30:00.000Z" })
+      );
 
       expect(event.timestamp).toBe("2024-01-15T10:30:00.000Z");
     });
 
     it("accepts valid ISO-8601 timestamp with timezone offset", () => {
-      const event = createDomainEvent({
-        eventType: "attempt_completed",
-        timestamp: "2024-01-15T16:00:00.000+05:30",
-        payload: { attemptId: "test-1" }
-      });
+      const event = createDomainEvent(
+        buildEventInput({ timestamp: "2024-01-15T16:00:00.000+05:30" })
+      );
 
       // Normalized to UTC
       expect(event.timestamp).toBe("2024-01-15T10:30:00.000Z");
     });
 
     it("accepts ISO-8601 timestamp without milliseconds", () => {
-      const event = createDomainEvent({
-        eventType: "attempt_completed",
-        timestamp: "2024-01-15T10:30:00Z",
-        payload: { attemptId: "test-1" }
-      });
+      const event = createDomainEvent(
+        buildEventInput({ timestamp: "2024-01-15T10:30:00Z" })
+      );
 
       // Normalized to ISO with milliseconds
       expect(event.timestamp).toBe("2024-01-15T10:30:00.000Z");
     });
 
     it("normalizes timestamps to toISOString() format", () => {
-      const event = createDomainEvent({
-        eventType: "attempt_completed",
-        timestamp: "2024-01-15T10:30:00.123Z",
-        payload: { attemptId: "test-1" }
-      });
+      const event = createDomainEvent(
+        buildEventInput({ timestamp: "2024-01-15T10:30:00.123Z" })
+      );
 
       expect(event.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
     });
 
     it("rejects invalid timestamp string", () => {
       expect(() =>
-        createDomainEvent({
-          eventType: "attempt_completed",
-          timestamp: "not-a-date",
-          payload: { attemptId: "test-1" }
-        })
+        createDomainEvent(buildEventInput({ timestamp: "not-a-date" }))
       ).toThrow("Invalid domain event timestamp");
     });
 
     it("rejects ambiguous timestamp format without T separator", () => {
       expect(() =>
-        createDomainEvent({
-          eventType: "attempt_completed",
-          timestamp: "2024-01-15 10:30:00",
-          payload: { attemptId: "test-1" }
-        })
+        createDomainEvent(buildEventInput({ timestamp: "2024-01-15 10:30:00" }))
       ).toThrow("Invalid domain event timestamp");
     });
 
     it("rejects date-only format", () => {
       expect(() =>
-        createDomainEvent({
-          eventType: "attempt_completed",
-          timestamp: "01/02/2024",
-          payload: { attemptId: "test-1" }
-        })
+        createDomainEvent(buildEventInput({ timestamp: "01/02/2024" }))
       ).toThrow("Invalid domain event timestamp");
     });
 
     it("accepts Date input", () => {
       const date = new Date("2024-01-15T10:30:00.000Z");
-      const event = createDomainEvent({
-        eventType: "attempt_completed",
-        timestamp: date,
-        payload: { attemptId: "test-1" }
-      });
+      const event = createDomainEvent(buildEventInput({ timestamp: date }));
 
       expect(event.timestamp).toBe("2024-01-15T10:30:00.000Z");
     });
@@ -129,51 +105,34 @@ describe("createDomainEvent", () => {
       const invalidDate = new Date("invalid");
 
       expect(() =>
-        createDomainEvent({
-          eventType: "attempt_completed",
-          timestamp: invalidDate,
-          payload: { attemptId: "test-1" }
-        })
+        createDomainEvent(buildEventInput({ timestamp: invalidDate }))
       ).toThrow("Invalid domain event timestamp");
     });
 
     it("defaults timestamp when undefined", () => {
-      const event = createDomainEvent({
-        eventType: "attempt_completed",
-        payload: { attemptId: "test-1" }
-      });
+      const event = createDomainEvent(buildEventInput());
 
       expect(event.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
     });
 
     it("defaults timestamp when null", () => {
       // Note: TypeScript type is Date | string | undefined, but runtime accepts null
-      const event = createDomainEvent({
-        eventType: "attempt_completed",
-        timestamp: null as unknown as undefined,
-        payload: { attemptId: "test-1" }
-      });
+      const event = createDomainEvent(
+        buildEventInput({ timestamp: null as unknown as undefined })
+      );
 
       expect(event.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
     });
 
     it("rejects empty string timestamp", () => {
       expect(() =>
-        createDomainEvent({
-          eventType: "attempt_completed",
-          timestamp: "",
-          payload: { attemptId: "test-1" }
-        })
+        createDomainEvent(buildEventInput({ timestamp: "" }))
       ).toThrow("Invalid domain event timestamp");
     });
 
     it("rejects whitespace-only timestamp", () => {
       expect(() =>
-        createDomainEvent({
-          eventType: "attempt_completed",
-          timestamp: "   ",
-          payload: { attemptId: "test-1" }
-        })
+        createDomainEvent(buildEventInput({ timestamp: "   " }))
       ).toThrow("Invalid domain event timestamp");
     });
   });
@@ -257,21 +216,16 @@ describe("createDomainEvent", () => {
 
   describe("event structure", () => {
     it("generates a random event_id when not provided", () => {
-      const event = createDomainEvent({
-        eventType: "attempt_completed",
-        payload: { attemptId: "test-1" }
-      });
+      const event = createDomainEvent(buildEventInput());
 
       expect(event.event_id).toBeDefined();
       expect(event.event_id.length).toBeGreaterThan(0);
     });
 
     it("uses provided event_id when given", () => {
-      const event = createDomainEvent({
-        eventId: "custom-id-123",
-        eventType: "attempt_completed",
-        payload: { attemptId: "test-1" }
-      });
+      const event = createDomainEvent(
+        buildEventInput({ eventId: "custom-id-123" })
+      );
 
       expect(event.event_id).toBe("custom-id-123");
     });
