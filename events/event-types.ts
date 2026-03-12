@@ -46,6 +46,9 @@ function normalizeEventType(eventType: DomainEventType): DomainEventType {
 
 function normalizeTimestamp(timestamp?: Date | string): DomainEventTimestamp {
   if (timestamp instanceof Date) {
+    if (Number.isNaN(timestamp.getTime())) {
+      throw new Error(`Invalid domain event timestamp: ${timestamp}`);
+    }
     return timestamp.toISOString();
   }
 
