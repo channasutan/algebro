@@ -56,7 +56,7 @@ function normalizeDateTimestamp(date: Date): DomainEventTimestamp {
 }
 
 // ISO-8601 format: YYYY-MM-DDTHH:mm:ss.sssZ or YYYY-MM-DDTHH:mm:ss.sss+HH:MM
-// Accepts optional fractional seconds (.sss) and timezone (Z or offset like +05:30)
+// Requires timezone (Z or offset like +05:30); fractional seconds (.sss) are optional
 const ISO_8601_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?(Z|[+-]\d{2}:\d{2})$/;
 
 function normalizeStringTimestamp(value: string): DomainEventTimestamp {
@@ -98,14 +98,16 @@ function normalizeTimestamp(timestamp?: Date | string | null): DomainEventTimest
 /**
  * Recursively applies Object.freeze to plain objects and arrays to prevent accidental mutation.
  * - Creates a new WeakSet per invocation to prevent shared traversal state.
- * - Handles cyclic structures safely.
  * - Traverses own properties including symbols.
+ *
+ * Note: Cyclic structures are rejected earlier by structuredClone in freezeEventPayload.
+ * This function assumes the input is already a valid, cloneable JSON-like payload.
  *
  * Limitations:
  * - Prevents accidental mutation of JSON-like payloads (plain objects/arrays).
  * - Built-in objects with internal mutable state (Date, Map, Set) are NOT fully immutable.
  * - Map and Set entries are not traversed—only the container reference is frozen.
- * - Assumes payloads contain plain serializable data.
+ * - Intended for plain objects, arrays, and primitives (no cyclic references).
  */
 function deepFreeze<T>(value: T): Readonly<T> {
   const seen = new WeakSet<object>();
@@ -147,10 +149,20 @@ function deepFreezeInternal<T>(value: T, seen: WeakSet<object>): Readonly<T> {
  * Deep clones and freezes the event payload for immutability.
  * - Relies on structuredClone (Node 18+ or modern browsers) for deterministic cloning.
  * - Preserves Dates, Sets, Maps, and other structured data.
- * - Payload must contain serializable data (no functions, symbols, or circular references).
+ * - Payload must contain structured-cloneable data (no functions, symbols, or circular references).
  */
 function freezeEventPayload<TPayload extends DomainEventPayload>(payload: TPayload): Readonly<TPayload> {
-  const cloned = structuredClone(payload);
+  let cloned: TPayload;
+
+  try {
+    cloned = structuredClone(payload);
+  } catch {
+    throw new Error(
+      "Event payload must contain only structured-cloneable data (plain objects, arrays, and primitives). " +
+        "Functions, symbols, and circular references are not allowed."
+    );
+  }
+
   return deepFreeze(cloned);
 }
 
