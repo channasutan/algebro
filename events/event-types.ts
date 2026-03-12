@@ -66,7 +66,15 @@ function normalizeTimestamp(timestamp?: Date | string): DomainEventTimestamp {
 }
 
 function deepFreeze<T>(value: T): Readonly<T> {
-  if (typeof value !== "object" || value === null || Object.isFrozen(value)) {
+  if (typeof value !== "object") {
+    return value as Readonly<T>;
+  }
+
+  if (value === null) {
+    return value as Readonly<T>;
+  }
+
+  if (Object.isFrozen(value)) {
     return value as Readonly<T>;
   }
 
