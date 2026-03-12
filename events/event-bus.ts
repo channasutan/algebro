@@ -1,12 +1,17 @@
-import type { DomainEvent, EventHandler, EventUnsubscribe } from "@/events/event-types";
+import type {
+  DomainEvent,
+  DomainEventType,
+  EventHandler,
+  EventUnsubscribe
+} from "@/events/event-types";
 
 export type EventBus = {
   publish(event: DomainEvent): Promise<void>;
-  subscribe(eventType: string, handler: EventHandler): EventUnsubscribe;
+  subscribe(eventType: DomainEventType, handler: EventHandler): EventUnsubscribe;
 };
 
 export function createEventBus(): EventBus {
-  const handlers = new Map<string, Set<EventHandler>>();
+  const handlers = new Map<DomainEventType, Set<EventHandler>>();
 
   return {
     async publish(event) {
@@ -16,7 +21,9 @@ export function createEventBus(): EventBus {
         return;
       }
 
-      await Promise.all(Array.from(registeredHandlers, (handler) => handler(event)));
+      const handlerSnapshot = Array.from(registeredHandlers);
+
+      await Promise.allSettled(handlerSnapshot.map((handler) => handler(event)));
     },
 
     subscribe(eventType, handler) {
@@ -25,7 +32,15 @@ export function createEventBus(): EventBus {
       eventHandlers.add(handler);
       handlers.set(eventType, eventHandlers);
 
+      let unsubscribed = false;
+
       return () => {
+        if (unsubscribed) {
+          return;
+        }
+
+        unsubscribed = true;
+
         const currentHandlers = handlers.get(eventType);
 
         if (!currentHandlers) {
