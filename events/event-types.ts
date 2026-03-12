@@ -55,8 +55,8 @@ function normalizeDateTimestamp(date: Date): DomainEventTimestamp {
   return date.toISOString();
 }
 
-// Strict ISO-8601 format: YYYY-MM-DDTHH:mm:ss.sssZ
-const ISO_8601_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;
+// ISO-8601 format: YYYY-MM-DDTHH:mm:ss.sssZ or YYYY-MM-DDTHH:mm:ss.sss+HH:MM
+const ISO_8601_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?(Z|[+-]\d{2}:\d{2})$/;
 
 function normalizeStringTimestamp(value: string): DomainEventTimestamp {
   const trimmed = value.trim();
@@ -65,9 +65,9 @@ function normalizeStringTimestamp(value: string): DomainEventTimestamp {
     throw new Error("Invalid domain event timestamp: timestamp cannot be empty");
   }
 
-  // Validate strict ISO-8601 format
+  // Validate ISO-8601 format (accepts Z or timezone offset like +05:30)
   if (!ISO_8601_REGEX.test(trimmed)) {
-    throw new Error(`Invalid domain event timestamp: must be ISO-8601 format (e.g., "2024-01-01T12:00:00.000Z"), got: ${value}`);
+    throw new Error(`Invalid domain event timestamp: must be ISO-8601 format (e.g., "2024-01-01T12:00:00.000Z" or "2024-01-01T12:00:00.000+05:30"), got: ${value}`);
   }
 
   const normalizedDate = new Date(trimmed);
@@ -133,23 +133,9 @@ function deepFreezeInternal<T>(value: T, seen: WeakSet<object>): Readonly<T> {
 }
 
 function freezeEventPayload<TPayload extends DomainEventPayload>(payload: TPayload): Readonly<TPayload> {
-  let cloned: unknown;
-
-  try {
-    // Use structuredClone if available (modern environments)
-    cloned = structuredClone(payload);
-  } catch {
-    // Fallback to JSON cloning for older runtimes
-    try {
-      cloned = JSON.parse(JSON.stringify(payload));
-    } catch {
-      throw new Error(
-        "Event payload must contain only serializable data (no functions, symbols, or circular references)"
-      );
-    }
-  }
-
-  return deepFreeze(cloned as TPayload);
+  // Use structuredClone for deterministic deep cloning (preserves Dates, Sets, Maps, etc.)
+  const cloned = structuredClone(payload);
+  return deepFreeze(cloned);
 }
 
 export function createDomainEvent<TPayload extends DomainEventPayload>(
