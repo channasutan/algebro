@@ -25,7 +25,11 @@ export type GeminiGenerateContentResponse = {
 };
 
 function isConfigured(): boolean {
-  return Boolean(process.env.AI_PROVIDER_API_KEY?.trim());
+  try {
+    return Boolean(getAiProviderApiKey()?.trim());
+  } catch {
+    return false;
+  }
 }
 
 async function generateContent(

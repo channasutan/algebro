@@ -42,7 +42,13 @@ async function mayarRequest(path: string, init: RequestInit = {}): Promise<Mayar
 }
 
 function isConfigured(): boolean {
-  return Boolean(process.env.MAYAR_API_KEY?.trim() && process.env.MAYAR_WEBHOOK_SECRET?.trim());
+  try {
+    const apiKey = getMayarApiKey();
+    const webhookSecret = getMayarWebhookSecret();
+    return Boolean(apiKey && webhookSecret);
+  } catch {
+    return false;
+  }
 }
 
 async function createCheckoutSession(
