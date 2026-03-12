@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { createEventBus } from "@/events/event-bus";
-import { createDomainEvent, DomainEvent } from "@/events/event-types";
+import { createDomainEvent, type DomainEvent } from "@/events/event-types";
 
 describe("event bus", () => {
   const createBus = () => createEventBus();
