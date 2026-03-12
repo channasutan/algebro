@@ -5,9 +5,24 @@ import type {
   EventUnsubscribe
 } from "@/events/event-types";
 
+/**
+ * StrictEventHandler ties a handler to a specific DomainEventType.
+ * This provides compile-time safety that handlers subscribe to expected event types.
+ *
+ * @example
+ * StrictEventHandler<"attempt_completed"> ensures the handler receives
+ * a DomainEvent with event_type "attempt_completed"
+ */
+export type StrictEventHandler<TEventType extends DomainEventType> = (
+  event: DomainEvent & { event_type: TEventType }
+) => void | Promise<void>;
+
 export type EventBus = {
   publish(event: DomainEvent): Promise<void>;
-  subscribe(eventType: DomainEventType, handler: EventHandler): EventUnsubscribe;
+  subscribe<TEventType extends DomainEventType>(
+    eventType: TEventType,
+    handler: EventHandler
+  ): EventUnsubscribe;
 };
 
 export function createEventBus(): EventBus {
