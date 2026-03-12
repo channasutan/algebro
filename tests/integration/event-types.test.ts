@@ -148,26 +148,26 @@ describe("createDomainEvent", () => {
     });
 
     it("prevents mutation of nested properties", () => {
-      const payload = { attemptId: "test-1", data: { nested: "value" } };
+      const payload = { data: { nested: "value" } };
       const event = createDomainEvent({
         eventType: "attempt_completed",
         payload
       });
 
       expect(() => {
-        (event.payload as Record<string, unknown>).attemptId = "changed";
+        (event.payload as { data: { nested: string } }).data.nested = "changed";
       }).toThrow();
     });
 
     it("prevents mutation of nested objects", () => {
-      const payload = { attemptId: "test-1", data: { nested: "value" } };
+      const payload = { data: { nested: { deep: "value" } } };
       const event = createDomainEvent({
         eventType: "attempt_completed",
         payload
       });
 
       expect(() => {
-        (event.payload as Record<string, unknown>).data = {};
+        (event.payload as { data: { nested: { deep: string } } }).data.nested.deep = "changed";
       }).toThrow();
     });
 
