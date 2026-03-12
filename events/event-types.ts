@@ -68,7 +68,13 @@ function normalizeStringTimestamp(value: string): DomainEventTimestamp {
     throw new Error(`Invalid domain event timestamp: ${value}`);
   }
 
-  return normalizedDate.toISOString();
+  // Validate ISO-8601 format to reject ambiguous timestamps
+  const isoString = normalizedDate.toISOString();
+  if (!trimmed.startsWith(isoString.substring(0, 10))) {
+    throw new Error(`Invalid domain event timestamp: must be ISO-8601 format, got: ${value}`);
+  }
+
+  return isoString;
 }
 
 function normalizeTimestamp(timestamp?: Date | string | null): DomainEventTimestamp {
@@ -104,7 +110,9 @@ function deepFreeze<T>(value: T): Readonly<T> {
     return Object.freeze(value) as Readonly<T>;
   }
 
-  for (const propertyValue of Object.values(value)) {
+  // Include symbol keys for complete traversal
+  for (const key of Reflect.ownKeys(value)) {
+    const propertyValue = (value as Record<PropertyKey, unknown>)[key];
     deepFreeze(propertyValue);
   }
 
@@ -112,7 +120,13 @@ function deepFreeze<T>(value: T): Readonly<T> {
 }
 
 function freezeEventPayload<TPayload extends DomainEventPayload>(payload: TPayload): Readonly<TPayload> {
-  return deepFreeze(structuredClone(payload));
+  try {
+    return deepFreeze(structuredClone(payload));
+  } catch (error) {
+    throw new Error(
+      "Event payload must contain only serializable data (no functions, symbols, or non-cloneable values)"
+    );
+  }
 }
 
 export function createDomainEvent<TPayload extends DomainEventPayload>(
