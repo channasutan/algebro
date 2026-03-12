@@ -44,25 +44,43 @@ function normalizeEventType(eventType: DomainEventType): DomainEventType {
   return normalizedEventType;
 }
 
-function normalizeTimestamp(timestamp?: Date | string): DomainEventTimestamp {
-  if (timestamp instanceof Date) {
-    if (Number.isNaN(timestamp.getTime())) {
-      throw new Error(`Invalid domain event timestamp: ${timestamp}`);
-    }
-    return timestamp.toISOString();
+function currentTimestamp(): DomainEventTimestamp {
+  return new Date().toISOString();
+}
+
+function normalizeDateTimestamp(date: Date): DomainEventTimestamp {
+  if (Number.isNaN(date.getTime())) {
+    throw new Error(`Invalid domain event timestamp: ${date}`);
+  }
+  return date.toISOString();
+}
+
+function normalizeStringTimestamp(value: string): DomainEventTimestamp {
+  const trimmed = value.trim();
+
+  if (trimmed.length === 0) {
+    throw new Error("Invalid domain event timestamp: timestamp cannot be empty");
   }
 
-  if (!timestamp || typeof timestamp !== "string" || timestamp.trim().length === 0) {
-    return new Date().toISOString();
-  }
-
-  const normalizedDate = new Date(timestamp);
+  const normalizedDate = new Date(trimmed);
 
   if (Number.isNaN(normalizedDate.getTime())) {
-    throw new Error(`Invalid domain event timestamp: ${timestamp}`);
+    throw new Error(`Invalid domain event timestamp: ${value}`);
   }
 
   return normalizedDate.toISOString();
+}
+
+function normalizeTimestamp(timestamp?: Date | string | null): DomainEventTimestamp {
+  if (timestamp === undefined || timestamp === null) {
+    return currentTimestamp();
+  }
+
+  if (timestamp instanceof Date) {
+    return normalizeDateTimestamp(timestamp);
+  }
+
+  return normalizeStringTimestamp(timestamp);
 }
 
 const frozenObjects = new WeakSet<object>();
