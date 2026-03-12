@@ -52,7 +52,7 @@ function normalizeTimestamp(timestamp?: Date | string): DomainEventTimestamp {
     return timestamp.toISOString();
   }
 
-  if (!timestamp) {
+  if (!timestamp || typeof timestamp !== "string" || timestamp.trim().length === 0) {
     return new Date().toISOString();
   }
 
@@ -65,18 +65,18 @@ function normalizeTimestamp(timestamp?: Date | string): DomainEventTimestamp {
   return normalizedDate.toISOString();
 }
 
+const frozenObjects = new WeakSet<object>();
+
 function deepFreeze<T>(value: T): Readonly<T> {
-  if (typeof value !== "object") {
+  if (typeof value !== "object" || value === null) {
     return value as Readonly<T>;
   }
 
-  if (value === null) {
+  if (Object.isFrozen(value) || frozenObjects.has(value)) {
     return value as Readonly<T>;
   }
 
-  if (Object.isFrozen(value)) {
-    return value as Readonly<T>;
-  }
+  frozenObjects.add(value);
 
   if (Array.isArray(value)) {
     for (const item of value) {
