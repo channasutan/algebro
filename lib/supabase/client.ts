@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 import { getPublicEnv } from "@/config/env.public";
+import { getSupabaseServiceRoleKey } from "@/config/env.server-entry";
 
 type Database = Record<string, never>;
 
@@ -17,14 +18,6 @@ function createSupabaseInstance(key: string, persistSession: boolean): SupabaseC
       persistSession
     }
   });
-}
-
-function readRequiredServerEnv(value: string | undefined, key: string): string {
-  if (!value || value.trim().length === 0) {
-    throw new Error(`Missing required environment variable: ${key}`);
-  }
-
-  return value;
 }
 
 export function getSupabaseBrowserClient(): SupabaseClient<Database> {
@@ -60,10 +53,7 @@ export function getSupabaseAdminClient(): SupabaseClient<Database> {
     return adminClient;
   }
 
-  const supabaseServiceRoleKey = readRequiredServerEnv(
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
-    "SUPABASE_SERVICE_ROLE_KEY"
-  );
+  const supabaseServiceRoleKey = getSupabaseServiceRoleKey();
 
   adminClient = createSupabaseInstance(supabaseServiceRoleKey, false);
 
