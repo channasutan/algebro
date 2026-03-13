@@ -1,3 +1,5 @@
+import "client-only";
+
 import type { RealtimeChannel, RealtimeChannelOptions } from "@supabase/supabase-js";
 
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser-client";
