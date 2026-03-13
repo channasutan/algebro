@@ -2,10 +2,9 @@
  * Client-safe environment configuration entry point.
  *
  * This file can be safely imported in both client and server code.
- * Server-only functions (getServerEnv, getInfrastructureServerEnv) throw errors
- * when called from client context.
- *
- * For server-side code that needs infrastructure secrets, import from @/config/env.server-entry instead.
+ * Server-only functions (getServerEnv, getInfrastructureServerEnv) are intentionally
+ * not available from this client-safe entry point and will always throw if called.
+ * Server code must import them from "@/config/env.server-entry".
  */
 import { getPublicEnv as getClientPublicEnv, type PublicEnv } from "./env.client";
 export { type ServerEnv, type InfrastructureServerEnv } from "./env.server-entry";

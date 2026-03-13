@@ -2,7 +2,7 @@
  * Public environment variable implementation.
  *
  * Contains only environment variables that are safe to expose to the browser.
- * All variables here use the NEXT_PUBLIC_ prefix and are embedded in the client bundle.
+ * All browser-exposed environment variables use the NEXT_PUBLIC_ prefix and are embedded in the client bundle.
  */
 export type PublicEnv = {
   nodeEnv: "development" | "test" | "production";
