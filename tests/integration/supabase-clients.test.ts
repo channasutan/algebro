@@ -94,6 +94,10 @@ describe("env configuration - validation", () => {
 });
 
 describe("env configuration - positive cases", () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
   it("getPublicEnv returns correct values", async () => {
     const { getPublicEnv } = await import("@/config/env.public");
     const env = getPublicEnv();
@@ -104,6 +108,7 @@ describe("env configuration - positive cases", () => {
   });
 
   it("server-entry exports getSupabaseServiceRoleKey", async () => {
+    vi.resetModules();
     const { getSupabaseServiceRoleKey } = await import("@/config/env.server-entry");
     expect(typeof getSupabaseServiceRoleKey).toBe("function");
     expect(getSupabaseServiceRoleKey()).toBe("test-service-role-key");
