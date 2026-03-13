@@ -1,5 +1,9 @@
 import "client-only";
 
+/**
+ * Browser-only realtime helper using the Supabase browser client.
+ * Provides channel creation, subscription, and cleanup for realtime features.
+ */
 import type { RealtimeChannel, RealtimeChannelOptions } from "@supabase/supabase-js";
 
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser-client";
