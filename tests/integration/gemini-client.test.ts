@@ -6,8 +6,8 @@ describe("gemini client", () => {
   const mockFetch = vi.fn();
 
   beforeEach(() => {
-    // Replace global fetch with mock
-    global.fetch = mockFetch;
+    // Replace globalThis fetch with mock
+    globalThis.fetch = mockFetch;
     mockFetch.mockClear();
   });
 
