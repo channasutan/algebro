@@ -142,31 +142,10 @@ describe("gemini client", () => {
       );
     });
 
-    it("throws an error when the API request fails with 400", async () => {
+    it.each([400, 401, 500])("throws an error when the API request fails with %i", async (status) => {
       mockFetch.mockResolvedValue({
         ok: false,
-        status: 400
-      });
-
-      const input = {
-        model: "gemini-1.5-flash",
-        contents: [
-          {
-            role: "user" as const,
-            parts: [{ text: "Invalid request" }]
-          }
-        ]
-      };
-
-      await expect(geminiClient.generateContent(input)).rejects.toThrow(
-        "Gemini request failed with status 400"
-      );
-    });
-
-    it("throws an error when the API request fails with 401", async () => {
-      mockFetch.mockResolvedValue({
-        ok: false,
-        status: 401
+        status
       });
 
       const input = {
@@ -180,28 +159,7 @@ describe("gemini client", () => {
       };
 
       await expect(geminiClient.generateContent(input)).rejects.toThrow(
-        "Gemini request failed with status 401"
-      );
-    });
-
-    it("throws an error when the API request fails with 500", async () => {
-      mockFetch.mockResolvedValue({
-        ok: false,
-        status: 500
-      });
-
-      const input = {
-        model: "gemini-1.5-flash",
-        contents: [
-          {
-            role: "user" as const,
-            parts: [{ text: "Test" }]
-          }
-        ]
-      };
-
-      await expect(geminiClient.generateContent(input)).rejects.toThrow(
-        "Gemini request failed with status 500"
+        `Gemini request failed with status ${status}`
       );
     });
 
