@@ -1,4 +1,16 @@
+/**
+ * Server-side environment configuration implementation.
+ *
+ * This file contains the actual implementation of environment variable access
+ * for server-side code. It is protected by the "server-only" package.
+ *
+ * Server code should import from @/config/env.server-entry instead of this file directly.
+ */
 import "server-only";
+
+import type { PublicEnv } from "./env.public";
+
+export type { PublicEnv };
 
 type NodeEnv = "development" | "test" | "production";
 
@@ -41,12 +53,6 @@ function readNodeEnv(value: string): NodeEnv {
   );
 }
 
-export type PublicEnv = {
-  nodeEnv: NodeEnv;
-  supabaseUrl: string;
-  supabaseAnonKey: string;
-};
-
 export type ServerEnv = PublicEnv;
 
 export type InfrastructureServerEnv = ServerEnv & {
@@ -79,17 +85,29 @@ export function getInfrastructureServerEnv(): InfrastructureServerEnv {
 }
 
 export function getSupabaseServiceRoleKey(): string {
-  return readRequiredEnv(rawEnv.supabaseServiceRoleKey, "SUPABASE_SERVICE_ROLE_KEY");
+  if (!rawEnv.supabaseServiceRoleKey || rawEnv.supabaseServiceRoleKey.trim().length === 0) {
+    throw new Error("Missing required environment variable: SUPABASE_SERVICE_ROLE_KEY (required for admin database access)");
+  }
+  return rawEnv.supabaseServiceRoleKey;
 }
 
 export function getAiProviderApiKey(): string {
-  return readRequiredEnv(rawEnv.aiProviderApiKey, "AI_PROVIDER_API_KEY");
+  if (!rawEnv.aiProviderApiKey || rawEnv.aiProviderApiKey.trim().length === 0) {
+    throw new Error("Missing required environment variable: AI_PROVIDER_API_KEY (required for AI service)");
+  }
+  return rawEnv.aiProviderApiKey;
 }
 
 export function getMayarApiKey(): string {
-  return readRequiredEnv(rawEnv.mayarApiKey, "MAYAR_API_KEY");
+  if (!rawEnv.mayarApiKey || rawEnv.mayarApiKey.trim().length === 0) {
+    throw new Error("Missing required environment variable: MAYAR_API_KEY (required for payment service)");
+  }
+  return rawEnv.mayarApiKey;
 }
 
 export function getMayarWebhookSecret(): string {
-  return readRequiredEnv(rawEnv.mayarWebhookSecret, "MAYAR_WEBHOOK_SECRET");
+  if (!rawEnv.mayarWebhookSecret || rawEnv.mayarWebhookSecret.trim().length === 0) {
+    throw new Error("Missing required environment variable: MAYAR_WEBHOOK_SECRET (required for payment webhooks)");
+  }
+  return rawEnv.mayarWebhookSecret;
 }
