@@ -11,7 +11,7 @@ import "server-only";
 import type { PublicEnv } from "./env.public";
 export type { PublicEnv } from "./env.public";
 
-type NodeEnv = "development" | "test" | "production";
+type NodeEnv = PublicEnv["nodeEnv"];
 
 type RawServerEnv = {
   nodeEnv: string;
@@ -79,10 +79,26 @@ export function getServerEnv(): ServerEnv {
 export function getInfrastructureServerEnv(): InfrastructureServerEnv {
   return {
     ...getPublicEnv(),
-    supabaseServiceRoleKey: readRequiredEnv(rawEnv.supabaseServiceRoleKey, "SUPABASE_SERVICE_ROLE_KEY"),
-    aiProviderApiKey: readRequiredEnv(rawEnv.aiProviderApiKey, "AI_PROVIDER_API_KEY"),
-    mayarApiKey: readRequiredEnv(rawEnv.mayarApiKey, "MAYAR_API_KEY"),
-    mayarWebhookSecret: readRequiredEnv(rawEnv.mayarWebhookSecret, "MAYAR_WEBHOOK_SECRET")
+    supabaseServiceRoleKey: readRequiredEnv(
+      rawEnv.supabaseServiceRoleKey,
+      "SUPABASE_SERVICE_ROLE_KEY",
+      "required for admin database access"
+    ),
+    aiProviderApiKey: readRequiredEnv(
+      rawEnv.aiProviderApiKey,
+      "AI_PROVIDER_API_KEY",
+      "required for AI service"
+    ),
+    mayarApiKey: readRequiredEnv(
+      rawEnv.mayarApiKey,
+      "MAYAR_API_KEY",
+      "required for payment service"
+    ),
+    mayarWebhookSecret: readRequiredEnv(
+      rawEnv.mayarWebhookSecret,
+      "MAYAR_WEBHOOK_SECRET",
+      "required for payment webhooks"
+    )
   };
 }
 
