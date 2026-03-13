@@ -1,4 +1,4 @@
-import type { Job, JobHandler } from "../job-runner";
+import type { Job, JobHandler } from "@/jobs/job-runner";
 
 export const MATERIAL_PROCESSING_JOB = "material_processing";
 
