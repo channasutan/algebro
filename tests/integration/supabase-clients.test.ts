@@ -4,9 +4,10 @@ import path from "node:path";
 
 /**
  * Helper to test that missing environment variables throw errors.
- * Handles saving/deleting/restoring env values and module cache reset.
+ * For env.public - validation happens at module import time.
+ * For env.server-entry - validation happens when getter function is called.
  */
-async function expectMissingEnv(
+async function expectMissingEnvAtImport(
   envVar: string,
   modulePath: string,
   expectedError: string
@@ -15,15 +16,30 @@ async function expectMissingEnv(
   delete process.env[envVar];
   vi.resetModules();
 
-  await expect(async () => {
-    const mod = await import(modulePath);
-    // Attempt to call the factory function to trigger evaluation
-    if (typeof mod.getPublicEnv === "function") {
-      mod.getPublicEnv();
-    } else if (typeof mod.getSupabaseServiceRoleKey === "function") {
-      mod.getSupabaseServiceRoleKey();
-    }
-  }).rejects.toThrow(expectedError);
+  const promise = import(modulePath);
+  await expect(promise).rejects.toThrow(expectedError);
+
+  // Restore original value
+  if (originalValue === undefined) {
+    delete process.env[envVar];
+  } else {
+    process.env[envVar] = originalValue;
+  }
+  vi.resetModules();
+}
+
+async function expectMissingEnvAtCall(
+  envVar: string,
+  modulePath: string,
+  getterName: "getPublicEnv" | "getSupabaseServiceRoleKey",
+  expectedError: string
+): Promise<void> {
+  const originalValue = process.env[envVar];
+  delete process.env[envVar];
+  vi.resetModules();
+
+  const mod = await import(modulePath);
+  await expect(mod[getterName]()).rejects.toThrow(expectedError);
 
   // Restore original value
   if (originalValue === undefined) {
@@ -96,7 +112,7 @@ describe("env configuration - validation", () => {
   });
 
   it("throws when NEXT_PUBLIC_SUPABASE_URL is missing", async () => {
-    await expectMissingEnv(
+    await expectMissingEnvAtImport(
       "NEXT_PUBLIC_SUPABASE_URL",
       "@/config/env.public",
       "NEXT_PUBLIC_SUPABASE_URL"
@@ -104,7 +120,7 @@ describe("env configuration - validation", () => {
   });
 
   it("throws when NEXT_PUBLIC_SUPABASE_ANON_KEY is missing", async () => {
-    await expectMissingEnv(
+    await expectMissingEnvAtImport(
       "NEXT_PUBLIC_SUPABASE_ANON_KEY",
       "@/config/env.public",
       "NEXT_PUBLIC_SUPABASE_ANON_KEY"
@@ -112,9 +128,10 @@ describe("env configuration - validation", () => {
   });
 
   it("throws when SUPABASE_SERVICE_ROLE_KEY is missing", async () => {
-    await expectMissingEnv(
+    await expectMissingEnvAtCall(
       "SUPABASE_SERVICE_ROLE_KEY",
       "@/config/env.server-entry",
+      "getSupabaseServiceRoleKey",
       "SUPABASE_SERVICE_ROLE_KEY"
     );
   });
