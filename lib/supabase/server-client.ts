@@ -2,7 +2,7 @@ import "server-only";
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-import { getPublicEnv } from "@/config/env.public";
+import { getPublicEnv } from "@/config/env.server-entry";
 
 type Database = Record<string, never>;
 
