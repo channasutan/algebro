@@ -1,0 +1,7 @@
+import type { Job, JobHandler } from "../job-runner";
+
+export const MATERIAL_PROCESSING_JOB = "material_processing";
+
+export const materialProcessingHandler: JobHandler = async (_job: Job) => {
+  return;
+};
