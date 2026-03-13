@@ -1,4 +1,3 @@
-
 Overview
 
 This document defines the Git workflow used in this project.
