@@ -245,33 +245,28 @@ describe("gemini client", () => {
   });
 
   describe("API integration", () => {
-    it("uses the correct base URL", async () => {
+    // Helper to call generateContent and return the request URL
+    const getRequestUrl = async (model: string) => {
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({ candidates: [] })
       });
 
       await geminiClient.generateContent({
-        model: "gemini-1.5-flash",
+        model,
         contents: [{ role: "user", parts: [{ text: "test" }] }]
       });
 
-      const callUrl = mockFetch.mock.calls[0][0];
+      return mockFetch.mock.calls[0][0] as string;
+    };
+
+    it("uses the correct base URL", async () => {
+      const callUrl = await getRequestUrl("gemini-1.5-flash");
       expect(callUrl).toContain("https://generativelanguage.googleapis.com/v1beta");
     });
 
     it("includes the model name in the URL path", async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({ candidates: [] })
-      });
-
-      await geminiClient.generateContent({
-        model: "gemini-1.5-pro",
-        contents: [{ role: "user", parts: [{ text: "test" }] }]
-      });
-
-      const callUrl = mockFetch.mock.calls[0][0];
+      const callUrl = await getRequestUrl("gemini-1.5-pro");
       expect(callUrl).toContain("/models/gemini-1.5-pro:generateContent");
     });
   });
