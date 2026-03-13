@@ -6,30 +6,39 @@ describe("gemini client", () => {
   const mockFetch = vi.fn();
 
   beforeEach(() => {
-    // Replace globalThis fetch with mock
-    globalThis.fetch = mockFetch;
+    vi.stubGlobal("fetch", mockFetch);
     mockFetch.mockClear();
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   describe("isConfigured", () => {
-    it("returns false when API key is missing", () => {
-      // The test environment sets a default key, so we test the behavior
-      // by checking that isConfigured returns true with the test key
+    it("returns true when API key is present", () => {
+      // Test environment has AI_PROVIDER_API_KEY set in tests/setup.ts
       const result = geminiClient.isConfigured();
 
-      // With test environment setup, this should be true
       expect(result).toBe(true);
     });
 
-    it("returns true when API key is present", () => {
-      // Test environment has AI_PROVIDER_API_KEY set
-      const result = geminiClient.isConfigured();
+    it("returns false when API key is missing", async () => {
+      // Reset modules to force re-evaluation of the env variable
+      vi.resetModules();
 
-      expect(result).toBe(true);
+      // Temporarily remove the env variable to test the missing case
+      const originalKey = process.env.AI_PROVIDER_API_KEY;
+      delete process.env.AI_PROVIDER_API_KEY;
+
+      // Re-import to get fresh module state
+      const { geminiClient: freshClient } = await import("@/infrastructure/ai/gemini-client");
+      const result = freshClient.isConfigured();
+
+      // Restore the env variable
+      process.env.AI_PROVIDER_API_KEY = originalKey;
+
+      expect(result).toBe(false);
     });
   });
 
