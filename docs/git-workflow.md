@@ -1,3 +1,4 @@
+
 Overview
 
 This document defines the Git workflow used in this project.
@@ -15,11 +16,16 @@ The workflow is intentionally simple and suitable for MVP development and AI-ass
 
 Branch Structure
 
-The repository uses three branch types.
+The repository uses a simple branching strategy.
+
+main
+└── feature/*
+
+---
 
 main
 
-The "main" branch represents production-ready code.
+The main branch represents production-ready code.
 
 Rules:
 
@@ -29,21 +35,7 @@ Rules:
 
 ---
 
-develop
-
-The "develop" branch is the main integration branch.
-
-Purpose:
-
-- integrate completed features
-- test combined functionality
-- prepare releases
-
-Feature branches are merged into "develop".
-
----
-
-feature branches
+Feature Branches
 
 New work must be implemented in feature branches.
 
@@ -59,7 +51,7 @@ feature/ai-hints
 feature/material-processing
 feature/pvp-duel
 
-Feature branches are always created from "develop".
+Feature branches are always created from main.
 
 ---
 
@@ -67,21 +59,21 @@ Development Workflow
 
 Typical workflow:
 
-develop
- ↓
+main
+↓
 feature/*
- ↓
+↓
 Pull Request
- ↓
-merge into develop
- ↓
-release to main
+↓
+merge into main
+↓
+production deployment
 
 Steps:
 
-1. Checkout develop
+1. Checkout main
 
-git checkout develop
+git checkout main
 
 2. Create feature branch
 
@@ -91,13 +83,13 @@ git checkout -b feature/<feature-name>
 
 4. Commit logical changes.
 
-5. Push branch.
+5. Push branch
 
 git push origin feature/<feature-name>
 
-6. Open Pull Request to "develop".
+6. Open Pull Request to main.
 
-7. After review, merge into "develop".
+7. After review, merge into main.
 
 ---
 
@@ -194,7 +186,7 @@ Use this rule:
 1 feature = 1 branch
 multiple commits within the branch
 
-This keeps development organized and PRs easy to review.
+This keeps development organized and Pull Requests easy to review.
 
 ---
 
@@ -204,7 +196,7 @@ All changes must go through Pull Requests.
 
 Pull Request rules:
 
-- PR must target the "develop" branch
+- PR must target the main branch
 - PR description must explain the change
 - large features should be split into smaller PRs
 - code must follow project documentation
@@ -224,17 +216,17 @@ Before merging, reviewers should verify:
 
 Architecture
 
-- follows "architecture.md"
+- follows architecture.md
 - respects module boundaries
 
 API
 
-- matches "api-contracts.md"
+- matches api-contracts.md
 - no undocumented endpoints
 
 Data
 
-- follows "data-model.md"
+- follows data-model.md
 - migrations included when schema changes occur
 
 Security
@@ -271,14 +263,12 @@ feat(ai): add hint generation
 Deployment Flow
 
 Deployment follows this flow:
-
-feature/* → preview deployment
-develop → staging testing
+[13/03/26 09.01] Sutansyah: feature/* → preview deployment
 main → production deployment
 
 Preview deployments allow testing before merging.
 
-Production releases only occur from "main".
+Production releases occur only from main.
 
 ---
 
@@ -287,7 +277,7 @@ Closing Branches
 After a Pull Request is merged:
 
 - delete the feature branch
-- continue development from "develop"
+- continue development from main
 
 This keeps the repository clean and avoids unused branches.
 
@@ -307,8 +297,8 @@ push branch
 ↓
 open pull request
 ↓
-review and merge into develop
+review and merge into main
 ↓
-release to main
+production deployment
 
 This workflow keeps development structured while remaining lightweight for MVP development and AI-assisted coding.
