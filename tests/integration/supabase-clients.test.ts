@@ -3,18 +3,48 @@ import fs from "node:fs";
 import path from "node:path";
 
 /**
- * Helper to test that missing environment variables throw errors.
- * Handles the full cycle: save/delete/reset/import/assert/restore/reset.
- *
- * @param envVar - Environment variable name to delete
- * @param modulePath - Path to dynamically import
- * @param fn - Optional function to call after import (for call-time validation)
- * @param expectedError - Expected error message substring
+ * Restores environment variables from saved original values.
  */
-async function expectMissingEnv(
+function restoreEnv(originalEnv: Record<string, string | undefined>): void {
+  for (const [key, value] of Object.entries(originalEnv)) {
+    if (value === undefined) {
+      delete process.env[key];
+    } else {
+      process.env[key] = value;
+    }
+  }
+}
+
+/**
+ * Helper to test that missing environment variables throw errors at import time.
+ */
+async function expectMissingEnvAtImport(
   envVar: string,
   modulePath: string,
-  fn: (mod: Record<string, unknown>) => Promise<unknown>,
+  expectedError: string
+): Promise<void> {
+  const originalValue = process.env[envVar];
+  delete process.env[envVar];
+  vi.resetModules();
+
+  await expect(import(modulePath)).rejects.toThrow(expectedError);
+
+  // Restore original value
+  if (originalValue === undefined) {
+    delete process.env[envVar];
+  } else {
+    process.env[envVar] = originalValue;
+  }
+  vi.resetModules();
+}
+
+/**
+ * Helper to test that missing environment variables throw when getter is called.
+ */
+async function expectMissingEnvAtCall(
+  envVar: string,
+  modulePath: string,
+  getterName: string,
   expectedError: string
 ): Promise<void> {
   const originalValue = process.env[envVar];
@@ -22,8 +52,7 @@ async function expectMissingEnv(
   vi.resetModules();
 
   const mod = await import(modulePath);
-  const promise = fn ? fn(mod) : mod;
-  await expect(promise).rejects.toThrow(expectedError);
+  await expect((mod as Record<string, unknown>)[getterName] as () => unknown).rejects.toThrow(expectedError);
 
   // Restore original value
   if (originalValue === undefined) {
@@ -78,46 +107,30 @@ describe("env configuration - validation", () => {
   });
 
   afterEach(() => {
-    if (originalEnv.NEXT_PUBLIC_SUPABASE_URL === undefined) {
-      delete process.env.NEXT_PUBLIC_SUPABASE_URL;
-    } else {
-      process.env.NEXT_PUBLIC_SUPABASE_URL = originalEnv.NEXT_PUBLIC_SUPABASE_URL;
-    }
-    if (originalEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY === undefined) {
-      delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    } else {
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = originalEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    }
-    if (originalEnv.SUPABASE_SERVICE_ROLE_KEY === undefined) {
-      delete process.env.SUPABASE_SERVICE_ROLE_KEY;
-    } else {
-      process.env.SUPABASE_SERVICE_ROLE_KEY = originalEnv.SUPABASE_SERVICE_ROLE_KEY;
-    }
+    restoreEnv(originalEnv);
   });
 
   it("throws when NEXT_PUBLIC_SUPABASE_URL is missing", async () => {
-    await expectMissingEnv(
+    await expectMissingEnvAtImport(
       "NEXT_PUBLIC_SUPABASE_URL",
       "@/config/env.public",
-      (mod) => mod.getPublicEnv() as Promise<unknown>,
       "NEXT_PUBLIC_SUPABASE_URL"
     );
   });
 
   it("throws when NEXT_PUBLIC_SUPABASE_ANON_KEY is missing", async () => {
-    await expectMissingEnv(
+    await expectMissingEnvAtImport(
       "NEXT_PUBLIC_SUPABASE_ANON_KEY",
       "@/config/env.public",
-      (mod) => mod.getPublicEnv() as Promise<unknown>,
       "NEXT_PUBLIC_SUPABASE_ANON_KEY"
     );
   });
 
   it("throws when SUPABASE_SERVICE_ROLE_KEY is missing", async () => {
-    await expectMissingEnv(
+    await expectMissingEnvAtCall(
       "SUPABASE_SERVICE_ROLE_KEY",
       "@/config/env.server-entry",
-      (mod) => (mod.getSupabaseServiceRoleKey as () => Promise<unknown>)(),
+      "getSupabaseServiceRoleKey",
       "SUPABASE_SERVICE_ROLE_KEY"
     );
   });
