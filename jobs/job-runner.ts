@@ -29,7 +29,7 @@ export class NonRetryableJobError extends Error {
     Object.setPrototypeOf(this, new.target.prototype);
 
     if (typeof Error.captureStackTrace === "function") {
-      Error.captureStackTrace(this, NonRetryableJobError);
+      Error.captureStackTrace(this, new.target);
     }
   }
 }

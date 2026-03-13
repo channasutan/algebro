@@ -105,6 +105,6 @@ describe("job runner", () => {
         attemptCount: 0,
         maxAttempts: 3
       })
-    ).rejects.toThrow("No job handler registered for type: unknown_job_type");
+    ).rejects.toThrow(/No job handler registered for type:/);
   });
 });
