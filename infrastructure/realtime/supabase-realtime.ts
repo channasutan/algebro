@@ -1,6 +1,6 @@
 import type { RealtimeChannel, RealtimeChannelOptions } from "@supabase/supabase-js";
 
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { getSupabaseBrowserClient } from "@/lib/supabase/browser-client";
 
 export type RealtimeChannelName = "lobby" | `duel:${string}`;
 
