@@ -1,3 +1,10 @@
+/**
+ * Public environment variable implementation.
+ *
+ * Contains only environment variables that are safe to expose to the browser.
+ * Browser-exposed environment variables should use the "NEXT_PUBLIC_" prefix.
+ * "nodeEnv" is also exposed, provided by the build/runtime environment.
+ */
 export type PublicEnv = {
   nodeEnv: "development" | "test" | "production";
   supabaseUrl: string;

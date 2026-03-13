@@ -1,6 +1,17 @@
+/**
+ * Server-side environment configuration implementation.
+ *
+ * This file contains the actual implementation of environment variable access
+ * for server-side code. It is protected by the "server-only" package.
+ *
+ * Server code should import from @/config/env.server-entry instead of this file directly.
+ */
 import "server-only";
 
-type NodeEnv = "development" | "test" | "production";
+import type { PublicEnv } from "./env.public";
+export type { PublicEnv } from "./env.public";
+
+type NodeEnv = PublicEnv["nodeEnv"];
 
 type RawServerEnv = {
   nodeEnv: string;
@@ -22,9 +33,12 @@ const rawEnv: RawServerEnv = {
   mayarWebhookSecret: process.env.MAYAR_WEBHOOK_SECRET
 };
 
-function readRequiredEnv(value: string | undefined, key: string): string {
+function readRequiredEnv(value: string | undefined, key: string, description?: string): string {
   if (!value || value.trim().length === 0) {
-    throw new Error(`Missing required environment variable: ${key}`);
+    const message = description
+      ? `Missing required environment variable: ${key} (${description})`
+      : `Missing required environment variable: ${key}`;
+    throw new Error(message);
   }
 
   return value;
@@ -40,12 +54,6 @@ function readNodeEnv(value: string): NodeEnv {
     `Invalid NODE_ENV value: "${value}". Allowed values are: ${allowedValues.join(", ")}`
   );
 }
-
-export type PublicEnv = {
-  nodeEnv: NodeEnv;
-  supabaseUrl: string;
-  supabaseAnonKey: string;
-};
 
 export type ServerEnv = PublicEnv;
 
@@ -71,25 +79,41 @@ export function getServerEnv(): ServerEnv {
 export function getInfrastructureServerEnv(): InfrastructureServerEnv {
   return {
     ...getPublicEnv(),
-    supabaseServiceRoleKey: readRequiredEnv(rawEnv.supabaseServiceRoleKey, "SUPABASE_SERVICE_ROLE_KEY"),
-    aiProviderApiKey: readRequiredEnv(rawEnv.aiProviderApiKey, "AI_PROVIDER_API_KEY"),
-    mayarApiKey: readRequiredEnv(rawEnv.mayarApiKey, "MAYAR_API_KEY"),
-    mayarWebhookSecret: readRequiredEnv(rawEnv.mayarWebhookSecret, "MAYAR_WEBHOOK_SECRET")
+    supabaseServiceRoleKey: getSupabaseServiceRoleKey(),
+    aiProviderApiKey: getAiProviderApiKey(),
+    mayarApiKey: getMayarApiKey(),
+    mayarWebhookSecret: getMayarWebhookSecret()
   };
 }
 
 export function getSupabaseServiceRoleKey(): string {
-  return readRequiredEnv(rawEnv.supabaseServiceRoleKey, "SUPABASE_SERVICE_ROLE_KEY");
+  return readRequiredEnv(
+    rawEnv.supabaseServiceRoleKey,
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "required for admin database access"
+  );
 }
 
 export function getAiProviderApiKey(): string {
-  return readRequiredEnv(rawEnv.aiProviderApiKey, "AI_PROVIDER_API_KEY");
+  return readRequiredEnv(
+    rawEnv.aiProviderApiKey,
+    "AI_PROVIDER_API_KEY",
+    "required for AI service"
+  );
 }
 
 export function getMayarApiKey(): string {
-  return readRequiredEnv(rawEnv.mayarApiKey, "MAYAR_API_KEY");
+  return readRequiredEnv(
+    rawEnv.mayarApiKey,
+    "MAYAR_API_KEY",
+    "required for payment service"
+  );
 }
 
 export function getMayarWebhookSecret(): string {
-  return readRequiredEnv(rawEnv.mayarWebhookSecret, "MAYAR_WEBHOOK_SECRET");
+  return readRequiredEnv(
+    rawEnv.mayarWebhookSecret,
+    "MAYAR_WEBHOOK_SECRET",
+    "required for payment webhooks"
+  );
 }
