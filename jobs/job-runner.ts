@@ -25,6 +25,14 @@ export class NonRetryableJobError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "NonRetryableJobError";
+
+    // Restore the prototype chain for proper instanceof behavior
+    Object.setPrototypeOf(this, new.target.prototype);
+
+    // Capture a clean stack trace
+    if (typeof Error.captureStackTrace === "function") {
+      Error.captureStackTrace(this, NonRetryableJobError);
+    }
   }
 }
 
