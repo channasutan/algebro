@@ -9,8 +9,7 @@
 import "server-only";
 
 import type { PublicEnv } from "./env.public";
-
-export type { PublicEnv };
+export type { PublicEnv } from "./env.public";
 
 type NodeEnv = "development" | "test" | "production";
 
