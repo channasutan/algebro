@@ -16,26 +16,45 @@ describe("sympy client", () => {
   });
 
   describe("getBaseUrl", () => {
-    it("returns the default URL if environment variable is not set", () => {
-      // The default in the code is http://127.0.0.1:8000
-      // However, we should verify what it actually is in the test environment
-      expect(sympyClient.getBaseUrl()).toBeDefined();
+    it("returns the default URL if environment variable is not set", async () => {
+      const originalUrl = process.env.SYMPY_SERVICE_URL;
+      
+      try {
+        // Ensure env variable is unset to test default behavior
+        delete process.env.SYMPY_SERVICE_URL;
+        
+        // Reset modules to ensure fresh import picks up the unset env
+        vi.resetModules();
+        
+        const { sympyClient: freshClient } = await import("@/infrastructure/math/sympy-client");
+        expect(freshClient.getBaseUrl()).toBe("http://127.0.0.1:8000");
+      } finally {
+        // Restore original value
+        if (originalUrl) {
+          process.env.SYMPY_SERVICE_URL = originalUrl;
+        } else {
+          delete process.env.SYMPY_SERVICE_URL;
+        }
+      }
     });
 
     it("respects the SYMPY_SERVICE_URL environment variable", async () => {
-      vi.resetModules();
       const originalUrl = process.env.SYMPY_SERVICE_URL;
       const testUrl = "http://test-sympy-service:9000";
-      process.env.SYMPY_SERVICE_URL = testUrl;
+      
+      try {
+        process.env.SYMPY_SERVICE_URL = testUrl;
+        vi.resetModules();
 
-      const { sympyClient: freshClient } = await import("@/infrastructure/math/sympy-client");
-      expect(freshClient.getBaseUrl()).toBe(testUrl);
-
-      // Restore
-      if (originalUrl) {
-        process.env.SYMPY_SERVICE_URL = originalUrl;
-      } else {
-        delete process.env.SYMPY_SERVICE_URL;
+        const { sympyClient: freshClient } = await import("@/infrastructure/math/sympy-client");
+        expect(freshClient.getBaseUrl()).toBe(testUrl);
+      } finally {
+        // Restore original value
+        if (originalUrl) {
+          process.env.SYMPY_SERVICE_URL = originalUrl;
+        } else {
+          delete process.env.SYMPY_SERVICE_URL;
+        }
       }
     });
   });
