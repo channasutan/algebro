@@ -1,3 +1,5 @@
+import "client-only";
+
 /**
  * Browser-safe Supabase client.
  *
