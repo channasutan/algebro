@@ -2,6 +2,38 @@ import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 
+/**
+ * Helper to test that missing environment variables throw errors.
+ * Handles saving/deleting/restoring env values and module cache reset.
+ */
+async function expectMissingEnv(
+  envVar: string,
+  modulePath: string,
+  expectedError: string
+): Promise<void> {
+  const originalValue = process.env[envVar];
+  delete process.env[envVar];
+  vi.resetModules();
+
+  await expect(async () => {
+    const mod = await import(modulePath);
+    // Attempt to call the factory function to trigger evaluation
+    if (typeof mod.getPublicEnv === "function") {
+      mod.getPublicEnv();
+    } else if (typeof mod.getSupabaseServiceRoleKey === "function") {
+      mod.getSupabaseServiceRoleKey();
+    }
+  }).rejects.toThrow(expectedError);
+
+  // Restore original value
+  if (originalValue === undefined) {
+    delete process.env[envVar];
+  } else {
+    process.env[envVar] = originalValue;
+  }
+  vi.resetModules();
+}
+
 describe("supabase clients - boundary safety", () => {
   const clientsDir = path.resolve(process.cwd(), "lib/supabase");
 
@@ -40,56 +72,51 @@ describe("env configuration - validation", () => {
   const originalEnv: Record<string, string | undefined> = {};
 
   beforeEach(() => {
-    // Save original values
     originalEnv.NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
     originalEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     originalEnv.SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
   });
 
   afterEach(() => {
-    // Restore original values
-    if (originalEnv.NEXT_PUBLIC_SUPABASE_URL !== undefined) {
-      process.env.NEXT_PUBLIC_SUPABASE_URL = originalEnv.NEXT_PUBLIC_SUPABASE_URL;
-    } else {
+    if (originalEnv.NEXT_PUBLIC_SUPABASE_URL === undefined) {
       delete process.env.NEXT_PUBLIC_SUPABASE_URL;
-    }
-    if (originalEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY !== undefined) {
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = originalEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     } else {
+      process.env.NEXT_PUBLIC_SUPABASE_URL = originalEnv.NEXT_PUBLIC_SUPABASE_URL;
+    }
+    if (originalEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY === undefined) {
       delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    }
-    if (originalEnv.SUPABASE_SERVICE_ROLE_KEY !== undefined) {
-      process.env.SUPABASE_SERVICE_ROLE_KEY = originalEnv.SUPABASE_SERVICE_ROLE_KEY;
     } else {
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = originalEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    }
+    if (originalEnv.SUPABASE_SERVICE_ROLE_KEY === undefined) {
       delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+    } else {
+      process.env.SUPABASE_SERVICE_ROLE_KEY = originalEnv.SUPABASE_SERVICE_ROLE_KEY;
     }
   });
 
   it("throws when NEXT_PUBLIC_SUPABASE_URL is missing", async () => {
-    delete process.env.NEXT_PUBLIC_SUPABASE_URL;
-    vi.resetModules();
-
-    await expect(async () => {
-      await import("@/config/env.public");
-    }).rejects.toThrow("NEXT_PUBLIC_SUPABASE_URL");
+    await expectMissingEnv(
+      "NEXT_PUBLIC_SUPABASE_URL",
+      "@/config/env.public",
+      "NEXT_PUBLIC_SUPABASE_URL"
+    );
   });
 
   it("throws when NEXT_PUBLIC_SUPABASE_ANON_KEY is missing", async () => {
-    delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    vi.resetModules();
-
-    await expect(async () => {
-      await import("@/config/env.public");
-    }).rejects.toThrow("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+    await expectMissingEnv(
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "@/config/env.public",
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY"
+    );
   });
 
   it("throws when SUPABASE_SERVICE_ROLE_KEY is missing", async () => {
-    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
-    vi.resetModules();
-
-    await expect(async () => {
-      await import("@/config/env.server-entry");
-    }).rejects.toThrow("SUPABASE_SERVICE_ROLE_KEY");
+    await expectMissingEnv(
+      "SUPABASE_SERVICE_ROLE_KEY",
+      "@/config/env.server-entry",
+      "SUPABASE_SERVICE_ROLE_KEY"
+    );
   });
 });
 
