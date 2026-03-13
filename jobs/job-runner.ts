@@ -16,10 +16,17 @@ export type JobHandler = (job: Job) => Promise<void>;
 
 export type JobRunResult = {
   jobId: string;
-  status: "completed" | "retryable_failure" | "failed";
+  status: "completed" | "retryable_failure" | "terminal_failure";
   attemptCount: number;
   errorMessage?: string;
 };
+
+export class NonRetryableJobError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "NonRetryableJobError";
+  }
+}
 
 export const JOB_QUEUE_CLAIM_SQL = `
 select id, type, payload, status, 
@@ -66,9 +73,16 @@ export async function runJob(job: Job): Promise<JobRunResult> {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown job execution error";
 
+    let status: JobRunResult["status"];
+    if (error instanceof NonRetryableJobError) {
+      status = "terminal_failure";
+    } else {
+      status = canRetryJob(job) ? "retryable_failure" : "terminal_failure";
+    }
+
     return {
       jobId: job.id,
-      status: canRetryJob(job) ? "retryable_failure" : "failed",
+      status,
       attemptCount: job.attemptCount + 1,
       errorMessage
     };
