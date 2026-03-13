@@ -262,7 +262,8 @@ feat(ai): add hint generation
 Deployment Flow
 
 Deployment follows this flow:
-[13/03/26 09.01] Sutansyah: feature/* → preview deployment
+
+feature/* → preview deployment
 main → production deployment
 
 Preview deployments allow testing before merging.
