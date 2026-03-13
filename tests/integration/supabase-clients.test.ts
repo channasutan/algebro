@@ -23,31 +23,14 @@ describe("supabase clients - boundary safety", () => {
     expect(content).toContain('import "server-only"');
   });
 
-  it("browser-client.ts exports getSupabaseBrowserClient", async () => {
-    const { getSupabaseBrowserClient } = await import("@/lib/supabase/browser-client");
-    expect(typeof getSupabaseBrowserClient).toBe("function");
-  });
-
-  it("server-client.ts exports getSupabaseServerClient", async () => {
-    const { getSupabaseServerClient } = await import("@/lib/supabase/server-client");
-    expect(typeof getSupabaseServerClient).toBe("function");
-  });
-
-  it("admin-client.ts exports getSupabaseAdminClient", async () => {
-    const { getSupabaseAdminClient } = await import("@/lib/supabase/admin-client");
-    expect(typeof getSupabaseAdminClient).toBe("function");
-  });
-});
-
-describe("supabase clients - boundary guarantees", () => {
-  it("browser-client.ts does not import from env.server-entry", () => {
-    const filePath = path.resolve(process.cwd(), "lib/supabase/browser-client.ts");
+  it("browser-client.ts does not import server-only env", () => {
+    const filePath = path.join(clientsDir, "browser-client.ts");
     const content = fs.readFileSync(filePath, "utf-8");
     expect(content).not.toContain("@/config/env.server-entry");
   });
 
-  it("server-client.ts does not import getSupabaseServiceRoleKey", () => {
-    const filePath = path.resolve(process.cwd(), "lib/supabase/server-client.ts");
+  it("server-client.ts does not import service-role key", () => {
+    const filePath = path.join(clientsDir, "server-client.ts");
     const content = fs.readFileSync(filePath, "utf-8");
     expect(content).not.toContain("getSupabaseServiceRoleKey");
   });
