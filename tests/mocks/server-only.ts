@@ -8,4 +8,5 @@
  * when imported in browser contexts. This mock bypasses that behavior
  * for testing purposes only.
  */
-export {};
+// Mock module used by Vitest to resolve Next.js "server-only" imports in tests.
+export default {};
