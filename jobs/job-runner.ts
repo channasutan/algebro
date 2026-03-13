@@ -21,6 +21,16 @@ export type JobRunResult = {
   errorMessage?: string;
 };
 
+/**
+ * Error type that signals a permanent job failure.
+ *
+ * Job handlers should throw this when they determine that the job
+ * cannot succeed on any subsequent attempt.
+ *
+ * When runJob catches this error it will:
+ * - return JobRunResult.status = "terminal_failure"
+ * - prevent further retries for the job.
+ */
 export class NonRetryableJobError extends Error {
   constructor(message: string) {
     super(message);
