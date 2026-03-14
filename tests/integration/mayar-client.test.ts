@@ -21,10 +21,10 @@ async function withMissingEnvVar(
 
     await callback(freshClient);
   } finally {
-    if (original !== undefined) {
-      process.env[envVar] = original;
-    } else {
+    if (original === undefined) {
       delete process.env[envVar];
+    } else {
+      process.env[envVar] = original;
     }
   }
 }
