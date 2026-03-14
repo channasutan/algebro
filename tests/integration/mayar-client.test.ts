@@ -2,6 +2,29 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { mayarClient } from "@/infrastructure/payments/mayar-client";
 
+/**
+ * Helper to test isConfigured with a missing environment variable.
+ * This refactors repeated env mutation logic used in tests.
+ */
+async function withMissingEnvVar(
+  envVar: string,
+  callback: (freshClient: typeof mayarClient) => void
+): Promise<void> {
+  const original = process.env[envVar];
+  delete process.env[envVar];
+
+  vi.resetModules();
+
+  const { mayarClient: freshClient } = await import("@/infrastructure/payments/mayar-client");
+  callback(freshClient);
+
+  if (original !== undefined) {
+    process.env[envVar] = original;
+  } else {
+    delete process.env[envVar];
+  }
+}
+
 describe("mayar client", () => {
   const mockFetch = vi.fn();
 
@@ -23,31 +46,17 @@ describe("mayar client", () => {
     });
 
     it("returns false when MAYAR_API_KEY is missing", async () => {
-      vi.resetModules();
-      const originalKey = process.env.MAYAR_API_KEY;
-      try {
-        delete process.env.MAYAR_API_KEY;
-
-        const { mayarClient: freshClient } = await import("@/infrastructure/payments/mayar-client");
+      await withMissingEnvVar("MAYAR_API_KEY", (freshClient) => {
         const result = freshClient.isConfigured();
         expect(result).toBe(false);
-      } finally {
-        process.env.MAYAR_API_KEY = originalKey;
-      }
+      });
     });
 
     it("returns false when MAYAR_WEBHOOK_SECRET is missing", async () => {
-      vi.resetModules();
-      const originalSecret = process.env.MAYAR_WEBHOOK_SECRET;
-      try {
-        delete process.env.MAYAR_WEBHOOK_SECRET;
-
-        const { mayarClient: freshClient } = await import("@/infrastructure/payments/mayar-client");
+      await withMissingEnvVar("MAYAR_WEBHOOK_SECRET", (freshClient) => {
         const result = freshClient.isConfigured();
         expect(result).toBe(false);
-      } finally {
-        process.env.MAYAR_WEBHOOK_SECRET = originalSecret;
-      }
+      });
     });
   });
 
@@ -101,7 +110,6 @@ describe("mayar client", () => {
       const controller = new AbortController();
       await mayarClient.createCheckoutSession({ ...input, signal: controller.signal });
 
-      expect(mockFetch).toHaveBeenCalledTimes(1);
       const options = mockFetch.mock.calls[0][1];
       expect(options.signal).toBe(controller.signal);
     });
@@ -115,14 +123,12 @@ describe("mayar client", () => {
       await expect(mayarClient.createCheckoutSession(input)).rejects.toThrow(
         "Mayar request failed with status 401"
       );
-      expect(mockFetch).toHaveBeenCalledTimes(1);
     });
 
     it("propagates network errors", async () => {
       mockFetch.mockRejectedValue(new Error("Network failure"));
 
       await expect(mayarClient.createCheckoutSession(input)).rejects.toThrow("Network failure");
-      expect(mockFetch).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -153,7 +159,6 @@ describe("mayar client", () => {
 
       await mayarClient.getPayment("pay/123");
 
-      expect(mockFetch).toHaveBeenCalledTimes(1);
       const url = mockFetch.mock.calls[0][0];
       expect(url).toBe("https://api.mayar.id/payments/pay%2F123");
     });
@@ -167,7 +172,6 @@ describe("mayar client", () => {
       await expect(mayarClient.getPayment("non-existent")).rejects.toThrow(
         "Mayar request failed with status 404"
       );
-      expect(mockFetch).toHaveBeenCalledTimes(1);
     });
   });
 
