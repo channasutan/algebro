@@ -41,21 +41,45 @@ describe("supabase realtime", () => {
 
   describe("isConfigured", () => {
     it("returns true when the browser client is available", async () => {
-      const { supabaseRealtime, getSupabaseBrowserClient } = await loadRealtimeModule();
+      // Test with default test environment which has NEXT_PUBLIC_SUPABASE_URL and
+      // NEXT_PUBLIC_SUPABASE_ANON_KEY set in vitest setup
+      const { supabaseRealtime } = await loadRealtimeModule();
 
       expect(supabaseRealtime.isConfigured()).toBe(true);
-      expect(getSupabaseBrowserClient).toHaveBeenCalledTimes(1);
     });
 
-    it("returns false when browser client initialization fails", async () => {
-      const { supabaseRealtime, getSupabaseBrowserClient } = await loadRealtimeModule({
-        clientFactory: () => {
-          throw new Error("Missing Supabase public configuration");
-        }
-      });
+    it("returns false when Supabase public configuration is missing", async () => {
+      // Set up mock BEFORE deleting env vars and re-importing
+      // This ensures the mock is in place when browser-client is imported
+      const mockClient: MockBrowserClient = {
+        channel: vi.fn(),
+        removeChannel: vi.fn()
+      };
 
-      expect(supabaseRealtime.isConfigured()).toBe(false);
-      expect(getSupabaseBrowserClient).toHaveBeenCalledTimes(1);
+      vi.doMock("@/lib/supabase/browser-client", () => ({
+        getSupabaseBrowserClient: vi.fn(() => mockClient)
+      }));
+
+      // Save original values
+      const originalUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const originalKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+      try {
+        // Remove the env vars to test the missing case
+        delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+        delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+        // Reset modules and re-import to get fresh module state
+        vi.resetModules();
+        const { supabaseRealtime: freshRealtime } = await import("@/infrastructure/realtime/supabase-realtime");
+        const result = freshRealtime.isConfigured();
+
+        expect(result).toBe(false);
+      } finally {
+        // Restore original values
+        process.env.NEXT_PUBLIC_SUPABASE_URL = originalUrl;
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = originalKey;
+      }
     });
   });
 
@@ -69,7 +93,7 @@ describe("supabase realtime", () => {
       });
 
       const options = { config: { private: true } };
-      const result = supabaseRealtime.createChannel("duel:test-room", options);
+      const result = await supabaseRealtime.createChannel("duel:test-room", options);
 
       expect(getSupabaseBrowserClient).toHaveBeenCalledTimes(1);
       expect(mockClient.channel).toHaveBeenCalledWith("duel:test-room", options);
