@@ -1,7 +1,12 @@
 /**
- * Mock for server-only package in test environment.
- * 
- * In tests, we allow importing server-only modules to verify their behavior.
- * The actual build-time protection is enforced by Next.js bundler in production.
+ * Vitest mock for the "server-only" Next.js boundary module.
+ *
+ * This empty module allows Node-based test environments to resolve
+ * the "server-only" import used by server-only modules.
+ *
+ * In production builds, the actual server-only package throws an error
+ * when imported in browser contexts. This mock bypasses that behavior
+ * for testing purposes only.
  */
-export {};
+// Mock module used by Vitest to resolve Next.js "server-only" imports in tests.
+export default {};

@@ -1,13 +1,11 @@
 /**
- * Test environment setup.
- * 
- * This file runs before all tests to configure the test environment.
+ * Test setup for Supabase-related tests.
+ *
+ * Sets only the required Supabase environment variables globally.
+ * AI and Mayar variables should be set in tests that specifically require them.
  */
 
-// Set up test environment variables
-process.env.NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://test.supabase.co";
-process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "test-anon-key";
-process.env.SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "test-service-role-key";
-process.env.AI_PROVIDER_API_KEY = process.env.AI_PROVIDER_API_KEY || "test-ai-key";
-process.env.MAYAR_API_KEY = process.env.MAYAR_API_KEY || "test-mayar-key";
-process.env.MAYAR_WEBHOOK_SECRET = process.env.MAYAR_WEBHOOK_SECRET || "test-webhook-secret";
+// Use ??= to avoid overriding empty strings with defaults
+process.env.NEXT_PUBLIC_SUPABASE_URL ??= "https://test.supabase.co";
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??= "test-anon-key";
+process.env.SUPABASE_SERVICE_ROLE_KEY ??= "test-service-role-key";
