@@ -25,7 +25,8 @@ async function getClient(): Promise<SupabaseClient> {
 
 function isConfigured(): boolean {
   // Pure configuration check - does not instantiate the Supabase client
-  // Only checks for presence of NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY
+  // Reads process.env directly to bypass config layer eager validation
+  // (getPublicEnv() throws on missing env vars; this allows safe false return)
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   return Boolean(supabaseUrl?.trim() && supabaseAnonKey?.trim());
