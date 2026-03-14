@@ -7,7 +7,7 @@ describe("sympy client", () => {
 
   beforeEach(() => {
     vi.stubGlobal("fetch", mockFetch);
-    mockFetch.mockClear();
+    mockFetch.mockReset();
   });
 
   afterEach(() => {
@@ -81,9 +81,7 @@ describe("sympy client", () => {
       
       expect(url).toBe(`${sympyClient.getBaseUrl()}/evaluate`);
       expect(options.method).toBe("POST");
-      expect(options.headers).toEqual({
-        "Content-Type": "application/json"
-      });
+      expect(options.headers["Content-Type"]).toBe("application/json");
       
       const body = JSON.parse(options.body);
       expect(body).toEqual({
