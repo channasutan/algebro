@@ -27,9 +27,7 @@ describe("environment smoke tests", () => {
       ["whitespace", "   "]
     ])("throws error when NEXT_PUBLIC_SUPABASE_URL is %s", async (_, value) => {
       if (value === undefined) {
-        vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", ""); // Use empty to trigger validation in stubEnv or just stub with empty
-        // Actually, Vitest stubEnv doesn't allow undefined easily for "missing", 
-        // so we'll stub with empty string to trigger the "Missing" error in the implementation.
+        delete process.env.NEXT_PUBLIC_SUPABASE_URL;
       } else {
         vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", value);
       }
@@ -47,7 +45,7 @@ describe("environment smoke tests", () => {
     ])("throws error when NEXT_PUBLIC_SUPABASE_ANON_KEY is %s", async (_, value) => {
       vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "http://localhost:54321");
       if (value === undefined) {
-        vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "");
+        delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
       } else {
         vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", value);
       }
@@ -67,7 +65,7 @@ describe("environment smoke tests", () => {
       vi.stubEnv("MAYAR_WEBHOOK_SECRET", "test-webhook-secret");
       
       vi.resetModules();
-      const { getInfrastructureServerEnv } = await import("@/config/env.server");
+      const { getInfrastructureServerEnv } = await import("@/config/env.server-entry");
       
       const env = getInfrastructureServerEnv();
       expect(env.supabaseUrl).toBe("http://localhost:54321");
@@ -79,7 +77,8 @@ describe("environment smoke tests", () => {
     it.each([
       ["SUPABASE_SERVICE_ROLE_KEY", "required for admin database access"],
       ["AI_PROVIDER_API_KEY", "required for AI service"],
-      ["MAYAR_API_KEY", "required for payment service"]
+      ["MAYAR_API_KEY", "required for payment service"],
+      ["MAYAR_WEBHOOK_SECRET", "required for payment webhooks"]
     ])("throws error when %s is missing", async (key, description) => {
       vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "http://localhost:54321");
       vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
@@ -89,10 +88,10 @@ describe("environment smoke tests", () => {
         if (k !== key) vi.stubEnv(k, "valid-value");
       });
       
-      vi.stubEnv(key, ""); // Empty string to trigger validation in env.server.ts
+      delete process.env[key];
       
       vi.resetModules();
-      const { getInfrastructureServerEnv } = await import("@/config/env.server");
+      const { getInfrastructureServerEnv } = await import("@/config/env.server-entry");
       
       expect(() => getInfrastructureServerEnv()).toThrow(new RegExp(String.raw`Missing required environment variable: ${key} \(${description}\)`));
     });
@@ -104,7 +103,7 @@ describe("environment smoke tests", () => {
       vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
       
       vi.resetModules();
-      const { getServerEnv } = await import("@/config/env.server");
+      const { getServerEnv } = await import("@/config/env.server-entry");
       
       const env = getServerEnv();
       expect(env.supabaseUrl).toBe("http://localhost:54321");
@@ -116,7 +115,7 @@ describe("environment smoke tests", () => {
       vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
       
       vi.resetModules();
-      const { getServerEnv } = await import("@/config/env.server");
+      const { getServerEnv } = await import("@/config/env.server-entry");
       
       // Note: server-side getPublicEnv in env.server.ts uses a different template than env.public.ts
       expect(() => getServerEnv()).toThrow(/Missing required environment variable: NEXT_PUBLIC_SUPABASE_URL/);
