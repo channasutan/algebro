@@ -5,6 +5,7 @@ import { mayarClient } from "@/infrastructure/payments/mayar-client";
 /**
  * Helper to test isConfigured with a missing environment variable.
  * Uses dynamic import to get fresh module state after env mutation.
+ * Uses try/finally to ensure environment is always restored.
  */
 async function withMissingEnvVar(
   envVar: string,
@@ -16,12 +17,15 @@ async function withMissingEnvVar(
   vi.resetModules();
 
   const { mayarClient: freshClient } = await import("@/infrastructure/payments/mayar-client");
-  callback(freshClient);
 
-  if (original !== undefined) {
-    process.env[envVar] = original;
-  } else {
-    delete process.env[envVar];
+  try {
+    callback(freshClient);
+  } finally {
+    if (original !== undefined) {
+      process.env[envVar] = original;
+    } else {
+      delete process.env[envVar];
+    }
   }
 }
 
