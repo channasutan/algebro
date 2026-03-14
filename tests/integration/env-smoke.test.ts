@@ -1,25 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-/**
- * Helper to test missing environment variables with proper cleanup.
- * Captures the original value before deletion and restores it in finally block.
- */
-async function withMissingEnvVar(key: string, fn: () => Promise<void>) {
-  const original = process.env[key];
-
-  try {
-    delete process.env[key];
-    vi.resetModules();
-    await fn();
-  } finally {
-    if (original === undefined) {
-      delete process.env[key];
-    } else {
-      process.env[key] = original;
-    }
-  }
-}
-
 describe("environment smoke tests", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
