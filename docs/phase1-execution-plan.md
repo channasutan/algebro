@@ -40,7 +40,7 @@ Finish shared infrastructure so it is operational, test-covered, and aligned wit
 
 ## Commit-by-Commit Sequence
 
-1. [ ] `refactor(events): finalize domain event contract`
+1. [x] `refactor(events): finalize domain event contract`
    - Short description: stabilize the shared event envelope and helper types so Phase 1 has one canonical event shape.
    - Affected files/folders:
      - `events/event-types.ts`
@@ -48,7 +48,7 @@ Finish shared infrastructure so it is operational, test-covered, and aligned wit
      - event payload, ids, timestamps, and shared handler types are finalized
      - downstream event bus and tests can safely depend on this contract
 
-2. [ ] `refactor(events): finalize event bus interface`
+2. [x] `refactor(events): finalize event bus interface`
    - Short description: complete the publish/subscribe/unsubscribe runtime contract for the global event bus.
    - Affected files/folders:
      - `events/event-bus.ts`
@@ -57,7 +57,7 @@ Finish shared infrastructure so it is operational, test-covered, and aligned wit
      - no business logic is introduced
      - event tests can now be written against a stable runtime
 
-3. [ ] `refactor(jobs): finalize job runner contract`
+3. [x] `refactor(jobs): finalize job runner contract`
    - Short description: complete the minimal job runner API, retry semantics, and queue-claim contract for the background job system.
    - Affected files/folders:
      - `jobs/job-runner.ts`
@@ -66,7 +66,7 @@ Finish shared infrastructure so it is operational, test-covered, and aligned wit
      - retry behavior is explicit
      - queue claim SQL matches the documented DB job queue pattern
 
-4. [ ] `chore(jobs): add placeholder job handler contract`
+4. [x] `chore(jobs): add placeholder job handler contract`
    - Short description: add one minimal handler proof point to demonstrate the runner-to-handler integration shape.
    - Affected files/folders:
      - `jobs/handlers/`
@@ -74,7 +74,7 @@ Finish shared infrastructure so it is operational, test-covered, and aligned wit
      - there is at least one placeholder handler module
      - downstream job tests can validate realistic registration/use patterns
 
-5. [ ] `refactor(config): finalize server env accessors`
+5. [x] `refactor(config): finalize server env accessors`
    - Short description: stabilize public vs server-only env access and expose the minimal infrastructure secret readers required by adapters.
    - Affected files/folders:
      - `config/env.ts`
@@ -87,7 +87,7 @@ Finish shared infrastructure so it is operational, test-covered, and aligned wit
      - server-only secret access is centralized
      - adapter implementations can depend on finalized env helpers
 
-6. [ ] `refactor(supabase): harden client boundary separation`
+6. [x] `refactor(supabase): harden client boundary separation`
    - Short description: complete the browser/server/admin Supabase client structure and ensure service-role access remains server-only.
    - Affected files/folders:
      - `lib/supabase/client.ts`
@@ -97,7 +97,7 @@ Finish shared infrastructure so it is operational, test-covered, and aligned wit
      - admin client uses service-role key only
      - secret-bearing code paths are isolated from browser-safe imports
 
-7. [ ] `feat(infra): complete ai adapter skeleton`
+7. [x] `feat(infra): complete ai adapter skeleton`
    - Short description: finish the minimal Gemini adapter runtime contract with config detection, request construction, and stable error behavior.
    - Affected files/folders:
      - `infrastructure/ai/gemini-client.ts`
@@ -106,7 +106,7 @@ Finish shared infrastructure so it is operational, test-covered, and aligned wit
      - no business logic is added
      - adapter tests can now target a stable API
 
-8. [ ] `feat(infra): complete math adapter skeleton`
+8. [x] `feat(infra): complete math adapter skeleton`
    - Short description: finish the minimal SymPy adapter runtime contract with base URL handling, request shape, and explicit errors.
    - Affected files/folders:
      - `infrastructure/math/sympy-client.ts`
@@ -115,7 +115,7 @@ Finish shared infrastructure so it is operational, test-covered, and aligned wit
      - no math-domain business logic is implemented
      - adapter tests can now target a stable API
 
-9. [ ] `feat(infra): complete payments adapter skeleton`
+9. [x] `feat(infra): complete payments adapter skeleton`
    - Short description: finish the minimal Mayar adapter contract including configuration detection, checkout request shape, payment lookup, and webhook secret access.
    - Affected files/folders:
      - `infrastructure/payments/mayar-client.ts`
@@ -124,7 +124,7 @@ Finish shared infrastructure so it is operational, test-covered, and aligned wit
      - billing-facing runtime primitives are ready for later modules
      - adapter tests can now target a stable API
 
-10. [ ] `feat(infra): complete realtime adapter skeleton`
+10. [x] `feat(infra): complete realtime adapter skeleton`
     - Short description: finish the minimal Supabase Realtime adapter with channel creation, subscribe lifecycle, and close behavior.
     - Affected files/folders:
       - `infrastructure/realtime/supabase-realtime.ts`
@@ -133,7 +133,7 @@ Finish shared infrastructure so it is operational, test-covered, and aligned wit
       - PvP-related modules can depend on it later
       - adapter tests can now target a stable API
 
-11. [ ] `test(events): add event bus integration coverage`
+11. [x] `test(events): add event bus integration coverage`
     - Short description: add integration tests for publish, unsubscribe, and multi-subscriber event behavior.
     - Affected files/folders:
       - `tests/integration/event-bus.test.ts`
@@ -141,14 +141,14 @@ Finish shared infrastructure so it is operational, test-covered, and aligned wit
       - event bus runtime behavior is verified
       - event contract regressions are easier to catch
 
-12. [ ] `test(jobs): add job runner integration coverage`
+12. [x] `test(jobs): add job runner integration coverage`
     - Short description: add integration tests for success, retryable failure, terminal failure, and missing-handler behavior.
     - Affected files/folders:
       - `tests/integration/job-runner.test.ts`
     - Expected outcome:
       - job runner semantics are verified against the finalized runtime contract
 
-13. [ ] `test(supabase): add client boundary integration tests`
+13. [x] `test(supabase): add client boundary integration tests`
     - Short description: add tests for browser/server/admin Supabase client factories and server-only guard behavior.
     - Affected files/folders:
       - `tests/integration/`
@@ -157,7 +157,7 @@ Finish shared infrastructure so it is operational, test-covered, and aligned wit
       - Supabase client boundary rules are verified
       - service-role leakage risks are checked in test form
 
-14. [ ] `test(infra): add gemini adapter tests`
+14. [x] `test(infra): add gemini adapter tests`
     - Short description: add tests for Gemini config detection, request construction, and error handling.
     - Affected files/folders:
       - `tests/integration/`
@@ -165,7 +165,7 @@ Finish shared infrastructure so it is operational, test-covered, and aligned wit
     - Expected outcome:
       - AI adapter behavior is validated independently of modules
 
-15. [ ] `test(infra): add sympy adapter tests`
+15. [x] `test(infra): add sympy adapter tests`
     - Short description: add tests for SymPy base URL handling, payload shape, and non-200 error behavior.
     - Affected files/folders:
       - `tests/integration/`
@@ -173,7 +173,7 @@ Finish shared infrastructure so it is operational, test-covered, and aligned wit
     - Expected outcome:
       - math adapter request contract is verified
 
-16. [ ] `test(infra): add mayar adapter tests`
+16. [x] `test(infra): add mayar adapter tests`
     - Short description: add tests for Mayar auth headers, checkout payload, payment lookup path, and webhook secret access.
     - Affected files/folders:
       - `tests/integration/`
@@ -181,7 +181,7 @@ Finish shared infrastructure so it is operational, test-covered, and aligned wit
     - Expected outcome:
       - payments adapter behavior is verified against the documented provider setup
 
-17. [ ] `test(infra): add realtime adapter tests`
+17. [x] `test(infra): add realtime adapter tests`
     - Short description: add tests for realtime channel creation, subscribe success/failure, and close behavior.
     - Affected files/folders:
       - `tests/integration/`
@@ -189,7 +189,7 @@ Finish shared infrastructure so it is operational, test-covered, and aligned wit
     - Expected outcome:
       - realtime adapter lifecycle behavior is covered
 
-18. [ ] `test(config): add environment smoke tests`
+18. [x] `test(config): add environment smoke tests`
     - Short description: add lightweight tests for public/server env validation and optional infrastructure overrides.
     - Affected files/folders:
       - `tests/integration/`
