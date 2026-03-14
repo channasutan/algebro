@@ -85,7 +85,7 @@ Setup Supabase client.
 
 Example:
 
-lib/supabase/db.ts
+lib/supabase/client.ts
 
 Deliverables:
 
@@ -121,7 +121,7 @@ Setup infrastructure clients:
 
 infrastructure/ai/gemini-client.ts
 infrastructure/sympy/sympy-client.ts
-infrastructure/payments/stripe-client.ts
+infrastructure/payments/mayar-client.ts
 infrastructure/realtime/supabase-realtime.ts
 
 Deliverables:
@@ -518,7 +518,7 @@ Tasks:
 
 Integrate:
 
-Stripe
+Mayar
 Midtrans (optional)
 
 Implement table:

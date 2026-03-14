@@ -6,6 +6,9 @@ The system is implemented as a modular monolith.
 
 Each module encapsulates a specific business domain and owns its internal logic and database tables.
 
+> [!NOTE]
+> Phase 1 focuses exclusively on establishing the shared infrastructure and adapter baseline. The core business logic and service implementations for the modules listed below are reserved for future phases.
+
 Modules interact only through service interfaces (synchronous) or domain events (asynchronous).
 Modules must never directly manipulate another module's database tables.
 
@@ -531,7 +534,7 @@ Dependencies
 
 Payment providers
 
-Stripe
+Mayar
 Midtrans
 Xendit
 
