@@ -30,12 +30,13 @@ describe("environment smoke tests", () => {
       
       if (value === undefined) {
         const original = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        let error: unknown;
         try {
           delete process.env.NEXT_PUBLIC_SUPABASE_URL;
           vi.resetModules();
-          await expect(import("@/config/env.public")).rejects.toThrow(
-            /Missing required public environment variable: NEXT_PUBLIC_SUPABASE_URL/
-          );
+          await import("@/config/env.public");
+        } catch (e) {
+          error = e;
         } finally {
           if (original === undefined) {
             delete process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -43,12 +44,19 @@ describe("environment smoke tests", () => {
             process.env.NEXT_PUBLIC_SUPABASE_URL = original;
           }
         }
+        expect(error).toBeInstanceOf(Error);
+        expect(String(error)).toMatch(/Missing required public environment variable: NEXT_PUBLIC_SUPABASE_URL/);
       } else {
         vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", value);
         vi.resetModules();
-        await expect(import("@/config/env.public")).rejects.toThrow(
-          /Missing required public environment variable: NEXT_PUBLIC_SUPABASE_URL/
-        );
+        let error: unknown;
+        try {
+          await import("@/config/env.public");
+        } catch (e) {
+          error = e;
+        }
+        expect(error).toBeInstanceOf(Error);
+        expect(String(error)).toMatch(/Missing required public environment variable: NEXT_PUBLIC_SUPABASE_URL/);
       }
     });
 
@@ -61,12 +69,13 @@ describe("environment smoke tests", () => {
       
       if (value === undefined) {
         const original = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        let error: unknown;
         try {
           delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
           vi.resetModules();
-          await expect(import("@/config/env.public")).rejects.toThrow(
-            /Missing required public environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY/
-          );
+          await import("@/config/env.public");
+        } catch (e) {
+          error = e;
         } finally {
           if (original === undefined) {
             delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -74,12 +83,19 @@ describe("environment smoke tests", () => {
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = original;
           }
         }
+        expect(error).toBeInstanceOf(Error);
+        expect(String(error)).toMatch(/Missing required public environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY/);
       } else {
         vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", value);
         vi.resetModules();
-        await expect(import("@/config/env.public")).rejects.toThrow(
-          /Missing required public environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY/
-        );
+        let error: unknown;
+        try {
+          await import("@/config/env.public");
+        } catch (e) {
+          error = e;
+        }
+        expect(error).toBeInstanceOf(Error);
+        expect(String(error)).toMatch(/Missing required public environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY/);
       }
     });
   });
