@@ -1,5 +1,25 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+/**
+ * Helper to test missing environment variables with proper cleanup.
+ * Captures the original value before deletion and restores it in finally block.
+ */
+async function withMissingEnvVar(key: string, fn: () => Promise<void>) {
+  const original = process.env[key];
+
+  try {
+    delete process.env[key];
+    vi.resetModules();
+    await fn();
+  } finally {
+    if (original === undefined) {
+      delete process.env[key];
+    } else {
+      process.env[key] = original;
+    }
+  }
+}
+
 describe("environment smoke tests", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -26,16 +46,30 @@ describe("environment smoke tests", () => {
       ["empty", ""],
       ["whitespace", "   "]
     ])("throws error when NEXT_PUBLIC_SUPABASE_URL is %s", async (_, value) => {
-      if (value === undefined) {
-        delete process.env.NEXT_PUBLIC_SUPABASE_URL;
-      } else {
-        vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", value);
-      }
       vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
       
-      vi.resetModules();
-      // env.public.ts validates at module level, so import() will reject
-      await expect(import("@/config/env.public")).rejects.toThrow(/Missing required public environment variable: NEXT_PUBLIC_SUPABASE_URL/);
+      if (value === undefined) {
+        const original = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        try {
+          delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+          vi.resetModules();
+          await expect(import("@/config/env.public")).rejects.toThrow(
+            /Missing required public environment variable: NEXT_PUBLIC_SUPABASE_URL/
+          );
+        } finally {
+          if (original === undefined) {
+            delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+          } else {
+            process.env.NEXT_PUBLIC_SUPABASE_URL = original;
+          }
+        }
+      } else {
+        vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", value);
+        vi.resetModules();
+        await expect(import("@/config/env.public")).rejects.toThrow(
+          /Missing required public environment variable: NEXT_PUBLIC_SUPABASE_URL/
+        );
+      }
     });
 
     it.each([
@@ -44,14 +78,29 @@ describe("environment smoke tests", () => {
       ["whitespace", "   "]
     ])("throws error when NEXT_PUBLIC_SUPABASE_ANON_KEY is %s", async (_, value) => {
       vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "http://localhost:54321");
+      
       if (value === undefined) {
-        delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        const original = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        try {
+          delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+          vi.resetModules();
+          await expect(import("@/config/env.public")).rejects.toThrow(
+            /Missing required public environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY/
+          );
+        } finally {
+          if (original === undefined) {
+            delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+          } else {
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = original;
+          }
+        }
       } else {
         vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", value);
+        vi.resetModules();
+        await expect(import("@/config/env.public")).rejects.toThrow(
+          /Missing required public environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY/
+        );
       }
-      
-      vi.resetModules();
-      await expect(import("@/config/env.public")).rejects.toThrow(/Missing required public environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY/);
     });
   });
 
@@ -88,12 +137,20 @@ describe("environment smoke tests", () => {
         if (k !== key) vi.stubEnv(k, "valid-value");
       });
       
-      delete process.env[key];
-      
-      vi.resetModules();
-      const { getInfrastructureServerEnv } = await import("@/config/env.server-entry");
-      
-      expect(() => getInfrastructureServerEnv()).toThrow(new RegExp(String.raw`Missing required environment variable: ${key} \(${description}\)`));
+      const original = process.env[key];
+      try {
+        delete process.env[key];
+        vi.resetModules();
+        const { getInfrastructureServerEnv } = await import("@/config/env.server-entry");
+        
+        expect(() => getInfrastructureServerEnv()).toThrow(new RegExp(String.raw`Missing required environment variable: ${key} \(${description}\)`));
+      } finally {
+        if (original === undefined) {
+          delete process.env[key];
+        } else {
+          process.env[key] = original;
+        }
+      }
     });
   });
 
