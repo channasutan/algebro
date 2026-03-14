@@ -107,6 +107,7 @@ describe("sympy client", () => {
 
       await sympyClient.evaluate(input);
 
+      expect(mockFetch).toHaveBeenCalledTimes(1);
       const options = mockFetch.mock.calls[0][1];
       const body = JSON.parse(options.body);
       
@@ -129,6 +130,7 @@ describe("sympy client", () => {
 
       await sympyClient.evaluate(input);
 
+      expect(mockFetch).toHaveBeenCalledTimes(1);
       const options = mockFetch.mock.calls[0][1];
       expect(options.signal).toBe(controller.signal);
     });
