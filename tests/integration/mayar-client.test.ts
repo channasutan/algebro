@@ -86,7 +86,7 @@ describe("mayar client", () => {
 
       expect(url).toBe("https://api.mayar.id/checkout-sessions");
       expect(options.method).toBe("POST");
-      expect(options.headers.get("Authorization")).toBe("Bearer test-mayar-key");
+      expect(options.headers.get("Authorization")).toBe(`Bearer ${process.env.MAYAR_API_KEY}`);
       expect(options.headers.get("Content-Type")).toBe("application/json");
       expect(JSON.parse(options.body as string)).toEqual({
         externalId: input.externalId,
@@ -147,7 +147,7 @@ describe("mayar client", () => {
 
       expect(url).toBe("https://api.mayar.id/payments/payment-123");
       expect(options.method).toBe("GET");
-      expect(options.headers.get("Authorization")).toBe("Bearer test-mayar-key");
+      expect(options.headers.get("Authorization")).toBe(`Bearer ${process.env.MAYAR_API_KEY}`);
       expect(result).toEqual(mockResponse);
     });
 
@@ -178,7 +178,7 @@ describe("mayar client", () => {
   describe("getWebhookSecret", () => {
     it("returns the webhook secret from the server environment", () => {
       const secret = mayarClient.getWebhookSecret();
-      expect(secret).toBe("test-webhook-secret");
+      expect(secret).toBe(process.env.MAYAR_WEBHOOK_SECRET);
     });
   });
 });
