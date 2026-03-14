@@ -94,7 +94,7 @@ describe("environment smoke tests", () => {
       vi.resetModules();
       const { getInfrastructureServerEnv } = await import("@/config/env.server");
       
-      expect(() => getInfrastructureServerEnv()).toThrow(new RegExp(`Missing required environment variable: ${key} \\(${description}\\)`));
+      expect(() => getInfrastructureServerEnv()).toThrow(new RegExp(String.raw`Missing required environment variable: ${key} \(${description}\)`));
     });
   });
 
