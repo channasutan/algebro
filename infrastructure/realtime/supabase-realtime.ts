@@ -4,19 +4,40 @@ import "client-only";
  * Browser-only realtime helper using the Supabase browser client.
  * Provides channel creation, subscription, and cleanup for realtime features.
  */
-import type { RealtimeChannel, RealtimeChannelOptions } from "@supabase/supabase-js";
-
-import { getSupabaseBrowserClient } from "@/lib/supabase/browser-client";
+import type { RealtimeChannel, RealtimeChannelOptions, SupabaseClient } from "@supabase/supabase-js";
 
 export type RealtimeChannelName = "lobby" | `duel:${string}`;
 
 const terminalStatuses = new Set(["CHANNEL_ERROR", "TIMED_OUT", "CLOSED"]);
 
-function createChannel(
+// Lazy-loaded browser client to avoid initialization at module load time
+// This allows isConfigured() to work without triggering client creation
+let cachedClient: SupabaseClient | null = null;
+
+async function getClient(): Promise<SupabaseClient> {
+  if (cachedClient) {
+    return cachedClient;
+  }
+  const { getSupabaseBrowserClient } = await import("@/lib/supabase/browser-client");
+  cachedClient = getSupabaseBrowserClient();
+  return cachedClient;
+}
+
+function isConfigured(): boolean {
+  // Pure configuration check - does not instantiate the Supabase client
+  // Reads process.env directly to bypass config layer eager validation
+  // (getPublicEnv() throws on missing env vars; this allows safe false return)
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  return Boolean(supabaseUrl?.trim() && supabaseAnonKey?.trim());
+}
+
+async function createChannel(
   channelName: RealtimeChannelName,
   options?: RealtimeChannelOptions
-): RealtimeChannel {
-  return getSupabaseBrowserClient().channel(channelName, options);
+): Promise<RealtimeChannel> {
+  const client = await getClient();
+  return client.channel(channelName, options);
 }
 
 async function subscribe(channel: RealtimeChannel): Promise<void> {
@@ -35,10 +56,12 @@ async function subscribe(channel: RealtimeChannel): Promise<void> {
 }
 
 async function closeChannel(channel: RealtimeChannel): Promise<"ok" | "timed out" | "error"> {
-  return getSupabaseBrowserClient().removeChannel(channel);
+  const client = await getClient();
+  return client.removeChannel(channel);
 }
 
 export const supabaseRealtime = {
+  isConfigured,
   createChannel,
   subscribe,
   closeChannel
