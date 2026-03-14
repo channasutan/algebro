@@ -40,26 +40,15 @@ describe("supabase realtime", () => {
   });
 
   describe("isConfigured", () => {
-    it("returns true when the browser client is available", async () => {
-      // Test with default test environment which has NEXT_PUBLIC_SUPABASE_URL and
-      // NEXT_PUBLIC_SUPABASE_ANON_KEY set in vitest setup
+    it("returns true when Supabase public configuration is available", async () => {
+      // Test environment has NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY
+      // set in tests/setup.ts
       const { supabaseRealtime } = await loadRealtimeModule();
 
       expect(supabaseRealtime.isConfigured()).toBe(true);
     });
 
     it("returns false when Supabase public configuration is missing", async () => {
-      // Set up mock BEFORE deleting env vars and re-importing
-      // This ensures the mock is in place when browser-client is imported
-      const mockClient: MockBrowserClient = {
-        channel: vi.fn(),
-        removeChannel: vi.fn()
-      };
-
-      vi.doMock("@/lib/supabase/browser-client", () => ({
-        getSupabaseBrowserClient: vi.fn(() => mockClient)
-      }));
-
       // Save original values
       const originalUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       const originalKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;

@@ -25,7 +25,7 @@ async function getClient(): Promise<SupabaseClient> {
 
 function isConfigured(): boolean {
   // Pure configuration check - verify Supabase public config exists without instantiating client
-  // NEXT_PUBLIC_* env vars are inlined at build time and safe to access in client code
+  // Uses config accessor, but validates env vars directly since the config layer throws on missing values
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   return Boolean(supabaseUrl?.trim() && supabaseAnonKey?.trim());
