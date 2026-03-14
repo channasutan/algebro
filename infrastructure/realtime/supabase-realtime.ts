@@ -12,6 +12,14 @@ export type RealtimeChannelName = "lobby" | `duel:${string}`;
 
 const terminalStatuses = new Set(["CHANNEL_ERROR", "TIMED_OUT", "CLOSED"]);
 
+function isConfigured(): boolean {
+  try {
+    return Boolean(getSupabaseBrowserClient());
+  } catch {
+    return false;
+  }
+}
+
 function createChannel(
   channelName: RealtimeChannelName,
   options?: RealtimeChannelOptions
@@ -39,6 +47,7 @@ async function closeChannel(channel: RealtimeChannel): Promise<"ok" | "timed out
 }
 
 export const supabaseRealtime = {
+  isConfigured,
   createChannel,
   subscribe,
   closeChannel
