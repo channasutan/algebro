@@ -30,7 +30,7 @@ describe("sympy client", () => {
         expect(freshClient.getBaseUrl()).toBe("http://127.0.0.1:8000");
       } finally {
         // Restore original value
-        if (originalUrl) {
+        if (originalUrl !== undefined) {
           process.env.SYMPY_SERVICE_URL = originalUrl;
         } else {
           delete process.env.SYMPY_SERVICE_URL;
@@ -50,7 +50,7 @@ describe("sympy client", () => {
         expect(freshClient.getBaseUrl()).toBe(testUrl);
       } finally {
         // Restore original value
-        if (originalUrl) {
+        if (originalUrl !== undefined) {
           process.env.SYMPY_SERVICE_URL = originalUrl;
         } else {
           delete process.env.SYMPY_SERVICE_URL;
