@@ -1,39 +1,64 @@
 import "server-only";
 
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { type SupabaseClient } from "@supabase/supabase-js";
+import { cookies } from "next/headers";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
 import { getPublicEnv } from "@/config/env.server-entry";
 
 type Database = Record<string, never>;
 
-let serverClient: SupabaseClient<Database> | undefined;
+/**
+ * Creates a cookie adapter that delegates to the provided cookie store.
+ * This adapter implements the interface expected by @supabase/ssr without type casting.
+ */
+function createCookieAdapter(cookieStore: Awaited<ReturnType<typeof cookies>>) {
+  return {
+    getAll() {
+      return cookieStore.getAll();
+    },
+    setAll(cookiesToSet: Array<{ name: string; value: string; options?: CookieOptions }>) {
+      try {
+        cookiesToSet.forEach(({ name, value, options }) => {
+          cookieStore.set(name, value, options);
+        });
+      } catch {
+        // Called from Server Component
+      }
+    },
+  };
+}
 
 /**
- * Server-side Supabase client using the anon key.
+ * Build a request-scoped Supabase server client around a provided cookie store.
+ * This is the lower-level helper that enables testing without Next.js request context.
  *
- * Intended for use in:
- * - Server components
- * - API routes
- * - Server actions
- *
- * Uses the public anon key with no session persistence.
- * For admin operations requiring elevated privileges, use `getSupabaseAdminClient` from `@/lib/supabase/admin-client`.
- *
- * @returns A singleton Supabase client instance for server-side use
+ * @param cookieStore - The cookie store to use for session persistence
+ * @returns A Supabase client instance configured with the provided cookie store
  */
-export function getSupabaseServerClient(): SupabaseClient<Database> {
-  if (serverClient) {
-    return serverClient;
-  }
-
+export function buildSupabaseServerClient(
+  cookieStore: Awaited<ReturnType<typeof cookies>>
+): SupabaseClient<Database> {
+  const cookieAdapter = createCookieAdapter(cookieStore);
   const { supabaseUrl, supabaseAnonKey } = getPublicEnv();
 
-  serverClient = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
+  return createServerClient<Database>(
+    supabaseUrl,
+    supabaseAnonKey,
+    {
+      cookies: cookieAdapter,
     }
-  });
+  );
+}
 
-  return serverClient;
+/**
+ * Creates a request-scoped Supabase client with session support.
+ * Uses cookies from the current request to maintain session state.
+ *
+ * This is the runtime entrypoint that should be used in server components,
+ * API routes, and server actions.
+ */
+export async function getSupabaseServerClient(): Promise<SupabaseClient<Database>> {
+  const cookieStore = await cookies();
+  return buildSupabaseServerClient(cookieStore);
 }

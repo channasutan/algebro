@@ -1,8 +1,6 @@
 import "server-only";
 
-import { getMayarApiKey, getMayarWebhookSecret } from "@/config/env.server-entry";
-
-const DEFAULT_MAYAR_API_BASE_URL = process.env.MAYAR_API_BASE_URL ?? "https://api.mayar.id";
+import { getMayarApiBaseUrl, getMayarApiKey, getMayarWebhookSecret } from "@/config/env.server-entry";
 
 export type MayarCheckoutItem = {
   name: string;
@@ -29,7 +27,7 @@ async function mayarRequest(path: string, init: RequestInit = {}): Promise<Mayar
   headers.set("Authorization", `Bearer ${getMayarApiKey()}`);
   headers.set("Content-Type", "application/json");
 
-  const response = await fetch(`${DEFAULT_MAYAR_API_BASE_URL}${path}`, {
+  const response = await fetch(`${getMayarApiBaseUrl()}${path}`, {
     ...init,
     headers
   });

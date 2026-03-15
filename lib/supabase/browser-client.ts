@@ -9,7 +9,8 @@ import "client-only";
  * @example
  * import { getSupabaseBrowserClient } from "@/lib/supabase/browser-client";
  */
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createBrowserClient } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { getPublicEnv } from "@/config/env.public";
 
@@ -24,12 +25,7 @@ export function getSupabaseBrowserClient(): SupabaseClient<Database> {
 
   const { supabaseUrl, supabaseAnonKey } = getPublicEnv();
 
-  browserClient = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true
-    }
-  });
+  browserClient = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
 
   return browserClient;
 }

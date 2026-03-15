@@ -9,13 +9,16 @@
  * import { getAiProviderApiKey } from "@/config/env.server-entry";
  */
 import "server-only";
-export { type PublicEnv, type ServerEnv, type InfrastructureServerEnv } from "./env.server";
+export { type PublicEnv, type PublicAuthEnv, type ServerEnv, type AuthEnv, type InfrastructureServerEnv } from "./env.server";
 export {
   getPublicEnv,
+  getAuthEnv,
   getServerEnv,
   getInfrastructureServerEnv,
   getSupabaseServiceRoleKey,
   getAiProviderApiKey,
   getMayarApiKey,
-  getMayarWebhookSecret
+  getMayarWebhookSecret,
+  getMayarApiBaseUrl,
+  getSympyServiceUrl
 } from "./env.server";

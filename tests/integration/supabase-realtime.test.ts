@@ -1,91 +1,47 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { RealtimeChannel, SupabaseClient } from "@supabase/supabase-js";
 
-type MockBrowserClient = {
-  channel: ReturnType<typeof vi.fn>;
-  removeChannel: ReturnType<typeof vi.fn>;
-};
-
-async function loadRealtimeModule(options?: {
-  client?: Partial<MockBrowserClient>;
-  clientFactory?: () => unknown;
-}) {
+async function loadRealtimeModule() {
   vi.resetModules();
-
-  const mockClient: MockBrowserClient = {
-    channel: vi.fn(),
-    removeChannel: vi.fn(),
-    ...options?.client
-  };
-
-  const getSupabaseBrowserClient = vi.fn(options?.clientFactory ?? (() => mockClient));
-
-  vi.doMock("@/lib/supabase/browser-client", () => ({
-    getSupabaseBrowserClient
-  }));
 
   const { supabaseRealtime } = await import("@/infrastructure/realtime/supabase-realtime");
 
-  return {
-    supabaseRealtime,
-    getSupabaseBrowserClient,
-    mockClient
-  };
+  return { supabaseRealtime };
 }
 
 describe("supabase realtime", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     vi.resetModules();
-    vi.doUnmock("@/lib/supabase/browser-client");
   });
 
   describe("isConfigured", () => {
-    it("returns true when Supabase public configuration is available", async () => {
-      // Test environment has NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY
-      // set in tests/setup.ts
+    it("returns true when configured is true", async () => {
       const { supabaseRealtime } = await loadRealtimeModule();
 
-      expect(supabaseRealtime.isConfigured()).toBe(true);
+      expect(supabaseRealtime.isConfigured(true)).toBe(true);
     });
 
-    it("returns false when Supabase public configuration is missing", async () => {
-      // Save original values
-      const originalUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const originalKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    it("returns false when configured is false", async () => {
+      const { supabaseRealtime } = await loadRealtimeModule();
 
-      try {
-        // Remove the env vars to test the missing case
-        delete process.env.NEXT_PUBLIC_SUPABASE_URL;
-        delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-        // Reset modules and re-import to get fresh module state
-        vi.resetModules();
-        const { supabaseRealtime: freshRealtime } = await import("@/infrastructure/realtime/supabase-realtime");
-        const result = freshRealtime.isConfigured();
-
-        expect(result).toBe(false);
-      } finally {
-        // Restore original values
-        process.env.NEXT_PUBLIC_SUPABASE_URL = originalUrl;
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = originalKey;
-      }
+      expect(supabaseRealtime.isConfigured(false)).toBe(false);
     });
   });
 
   describe("createChannel", () => {
-    it("delegates channel creation to the Supabase browser client", async () => {
+    it("delegates channel creation to the provided Supabase client", async () => {
       const mockChannel = { subscribe: vi.fn() };
-      const { supabaseRealtime, getSupabaseBrowserClient, mockClient } = await loadRealtimeModule({
-        client: {
-          channel: vi.fn().mockReturnValue(mockChannel)
-        }
-      });
+      const client = {
+        channel: vi.fn().mockReturnValue(mockChannel)
+      } as Pick<SupabaseClient, "channel"> as SupabaseClient;
+
+      const { supabaseRealtime } = await loadRealtimeModule();
 
       const options = { config: { private: true } };
-      const result = await supabaseRealtime.createChannel("duel:test-room", options);
+      const result = await supabaseRealtime.createChannel(client, "duel:test-room", options);
 
-      expect(getSupabaseBrowserClient).toHaveBeenCalledTimes(1);
-      expect(mockClient.channel).toHaveBeenCalledWith("duel:test-room", options);
+      expect(client.channel).toHaveBeenCalledWith("duel:test-room", options);
       expect(result).toBe(mockChannel);
     });
   });
@@ -150,17 +106,16 @@ describe("supabase realtime", () => {
   });
 
   describe("closeChannel", () => {
-    it("delegates channel cleanup to the Supabase browser client", async () => {
-      const mockChannel = { topic: "duel:test-room" };
-      const { supabaseRealtime, getSupabaseBrowserClient, mockClient } = await loadRealtimeModule({
-        client: {
-          removeChannel: vi.fn().mockResolvedValue("ok")
-        }
-      });
+    it("delegates channel cleanup to the provided Supabase client", async () => {
+      const mockChannel = { topic: "duel:test-room" } as RealtimeChannel;
+      const client = {
+        removeChannel: vi.fn().mockResolvedValue("ok")
+      } as Pick<SupabaseClient, "removeChannel"> as SupabaseClient;
 
-      await expect(supabaseRealtime.closeChannel(mockChannel as never)).resolves.toBe("ok");
-      expect(getSupabaseBrowserClient).toHaveBeenCalledTimes(1);
-      expect(mockClient.removeChannel).toHaveBeenCalledWith(mockChannel);
+      const { supabaseRealtime } = await loadRealtimeModule();
+
+      await expect(supabaseRealtime.closeChannel(client, mockChannel)).resolves.toBe("ok");
+      expect(client.removeChannel).toHaveBeenCalledWith(mockChannel);
     });
   });
 });

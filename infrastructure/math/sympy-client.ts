@@ -1,6 +1,6 @@
 import "server-only";
 
-const DEFAULT_SYMPY_SERVICE_URL = process.env.SYMPY_SERVICE_URL ?? "http://127.0.0.1:8000";
+import { getSympyServiceUrl } from "@/config/env.server-entry";
 
 export type SympyOperation = "simplify" | "expand" | "solve" | "equivalence";
 
@@ -16,7 +16,7 @@ export type SympyEvaluateResponse = {
 };
 
 async function evaluate(input: SympyEvaluateInput): Promise<SympyEvaluateResponse> {
-  const response = await fetch(`${DEFAULT_SYMPY_SERVICE_URL}/evaluate`, {
+  const response = await fetch(`${getSympyServiceUrl()}/evaluate`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -38,7 +38,7 @@ async function evaluate(input: SympyEvaluateInput): Promise<SympyEvaluateRespons
 
 export const sympyClient = {
   getBaseUrl(): string {
-    return DEFAULT_SYMPY_SERVICE_URL;
+    return getSympyServiceUrl();
   },
   evaluate
 };
