@@ -14,10 +14,11 @@ jobs:
       - run:
           name: Fetch full git history
           command: |
+            git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
+            git fetch --no-filter --refetch || true
             git fetch --unshallow || true
-            git fetch origin main || true
-            git fetch --tags || true
             git fetch --all
+            git fetch --tags
 
       - run:
           name: Install dependencies
