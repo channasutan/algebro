@@ -1,0 +1,31 @@
+version: 1
+perspectives:
+  - name: Layers
+    groups:
+      - name: App
+        selector: "**/app/**/*"
+      - name: Modules
+        selector: "**/modules/**/*"
+      - name: Infrastructure
+        selector: "**/infrastructure/**/*"
+      - name: Events
+        selector: "**/events/**/*"
+      - name: Config
+        selector: "**/config/**/*"
+constraints:
+  - name: "Infrastructure isolation"
+    from: Infrastructure
+    to: Modules
+    action: forbid
+  - name: "Events isolation"
+    from: Events
+    to: Modules
+    action: forbid
+  - name: "Config isolation"
+    from: Config
+    to: Modules
+    action: forbid
+  - name: "Internal module isolation"
+    from: Modules
+    to: Modules
+    action: forbid
