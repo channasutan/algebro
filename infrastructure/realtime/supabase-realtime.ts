@@ -6,14 +6,12 @@ import "client-only";
  */
 import type { RealtimeChannel, RealtimeChannelOptions, SupabaseClient } from "@supabase/supabase-js";
 
-import { hasPublicSupabaseEnv } from "@/config/env";
-
 export type RealtimeChannelName = "lobby" | `duel:${string}`;
 
 const terminalStatuses = new Set(["CHANNEL_ERROR", "TIMED_OUT", "CLOSED"]);
 
-function isConfigured(): boolean {
-  return hasPublicSupabaseEnv();
+function isConfigured(configured: boolean): boolean {
+  return configured;
 }
 
 async function createChannel(

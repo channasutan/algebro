@@ -11,42 +11,21 @@ async function loadRealtimeModule() {
 
 describe("supabase realtime", () => {
   afterEach(() => {
-    vi.unstubAllEnvs();
     vi.restoreAllMocks();
     vi.resetModules();
   });
 
   describe("isConfigured", () => {
-    it("returns true when Supabase public configuration is available", async () => {
+    it("returns true when configured is true", async () => {
       const { supabaseRealtime } = await loadRealtimeModule();
 
-      expect(supabaseRealtime.isConfigured()).toBe(true);
+      expect(supabaseRealtime.isConfigured(true)).toBe(true);
     });
 
-    it("returns false when Supabase public configuration is missing", async () => {
-      const originalUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const originalKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    it("returns false when configured is false", async () => {
+      const { supabaseRealtime } = await loadRealtimeModule();
 
-      try {
-        delete process.env.NEXT_PUBLIC_SUPABASE_URL;
-        delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-        const { supabaseRealtime } = await loadRealtimeModule();
-
-        expect(supabaseRealtime.isConfigured()).toBe(false);
-      } finally {
-        if (originalUrl === undefined) {
-          delete process.env.NEXT_PUBLIC_SUPABASE_URL;
-        } else {
-          process.env.NEXT_PUBLIC_SUPABASE_URL = originalUrl;
-        }
-
-        if (originalKey === undefined) {
-          delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-        } else {
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = originalKey;
-        }
-      }
+      expect(supabaseRealtime.isConfigured(false)).toBe(false);
     });
   });
 
