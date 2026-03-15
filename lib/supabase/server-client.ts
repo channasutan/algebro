@@ -40,10 +40,11 @@ export function buildSupabaseServerClient(
   cookieStore: Awaited<ReturnType<typeof cookies>>
 ): SupabaseClient<Database> {
   const cookieAdapter = createCookieAdapter(cookieStore);
+  const { supabaseUrl, supabaseAnonKey } = getPublicEnv();
 
   return createServerClient<Database>(
-    getPublicEnv().supabaseUrl,
-    getPublicEnv().supabaseAnonKey,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: cookieAdapter,
     }

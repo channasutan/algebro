@@ -162,15 +162,15 @@ Rules:
 - infrastructure code must receive Supabase clients through dependency injection instead of importing them directly
 - services must receive Supabase clients through dependency injection instead of importing them directly
 - application layers must not directly create Supabase clients
-- use `createSupabaseServerClient()` instead of manually constructing a Supabase server client
+- use `getSupabaseServerClient()` instead of manually constructing a Supabase server client
 
 Usage:
 
 ```ts
-import { createSupabaseServerClient } from "@/lib/supabase/server-client"
+import { getSupabaseServerClient } from "@/lib/supabase/server-client"
 
 export async function example() {
-  const supabase = await createSupabaseServerClient()
+  const supabase = await getSupabaseServerClient()
 }
 ```
 

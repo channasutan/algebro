@@ -5,6 +5,8 @@ Mayar Payment Gateway Integration Documentation
 Source: https://docs.mayar.id
 Headless API: https://api.mayar.id/headless/docs/
 
+**Disclaimer**: This document summarizes Mayar integration relevant to this project. Always refer to the official documentation for the canonical API specification.
+
 Dokumen ini merupakan knowledge base untuk AI agent yang akan mengimplementasikan Mayar Payment Gateway pada aplikasi web (Next.js / backend API / Supabase).
 
 Dokumentasi ini mencakup:
@@ -123,7 +125,7 @@ https://web.mayar.club/api-keys
 Contoh konfigurasi environment:
 
 MAYAR_API_KEY=your_api_key
-MAYAR_BASE_URL=https://api.mayar.id
+MAYAR_API_BASE_URL=https://api.mayar.id
 MAYAR_WEBHOOK_SECRET=your_secret
 APP_BASE_URL=https://yourdomain.com
 

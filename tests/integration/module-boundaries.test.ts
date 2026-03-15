@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import yaml from "js-yaml";
+
 import { describe, expect, it } from "vitest";
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -96,13 +98,16 @@ describe("module boundaries", () => {
 
   it("documents the repository-only Supabase rule in architecture.yml", () => {
     const architectureRules = fs.readFileSync(path.join(repoRoot, "architecture.yml"), "utf8");
+    const parsed = yaml.load(architectureRules) as {
+      directives: Array<{ constraint: string }>;
+    };
 
-    expect(architectureRules).toContain('constraint: "app -> supabase-clients"');
-    expect(architectureRules).toContain(
-      'constraint: "module-non-repositories -> supabase-clients"'
-    );
-    expect(architectureRules).toContain('constraint: "infrastructure -> supabase-clients"');
-    expect(architectureRules).toContain('constraint: "jobs -> supabase-clients"');
-    expect(architectureRules).toContain('constraint: "events -> supabase-clients"');
+    const constraints = parsed.directives.map((d) => d.constraint);
+
+    expect(constraints).toContain("app -> supabase-clients");
+    expect(constraints).toContain("module-non-repositories -> supabase-clients");
+    expect(constraints).toContain("infrastructure -> supabase-clients");
+    expect(constraints).toContain("jobs -> supabase-clients");
+    expect(constraints).toContain("events -> supabase-clients");
   });
 });

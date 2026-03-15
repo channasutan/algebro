@@ -65,7 +65,7 @@ describe("supabase client boundary", () => {
     it("has auth methods available for server-side operations", async () => {
       const client = await getSupabaseServerClient();
 
-      // Server client should have auth methods but without session persistence
+      // Server client exposes auth methods and uses cookie-based session handling via @supabase/ssr
       expect(client.auth.getSession).toBeDefined();
       expect(client.auth.getUser).toBeDefined();
     });
@@ -183,27 +183,27 @@ describe("supabase client boundary", () => {
   });
 
   describe("configuration validation", () => {
-    it("browser client requires NEXT_PUBLIC_SUPABASE_ANON_KEY", () => {
+    it("browser client initializes when NEXT_PUBLIC_SUPABASE_ANON_KEY is configured", () => {
       expect(() => {
         getSupabaseBrowserClient();
       }).not.toThrow();
     });
 
-    it("server client requires NEXT_PUBLIC_SUPABASE_URL", async () => {
+    it("server client initializes when NEXT_PUBLIC_SUPABASE_URL is configured", async () => {
       await expect(getSupabaseServerClient()).resolves.toBeDefined();
     });
 
-    it("server client requires NEXT_PUBLIC_SUPABASE_ANON_KEY", async () => {
+    it("server client initializes when NEXT_PUBLIC_SUPABASE_ANON_KEY is configured", async () => {
       await expect(getSupabaseServerClient()).resolves.toBeDefined();
     });
 
-    it("admin client requires NEXT_PUBLIC_SUPABASE_URL", () => {
+    it("admin client initializes when NEXT_PUBLIC_SUPABASE_URL is configured", () => {
       expect(() => {
         getSupabaseAdminClient();
       }).not.toThrow();
     });
 
-    it("admin client requires SUPABASE_SERVICE_ROLE_KEY", () => {
+    it("admin client initializes when SUPABASE_SERVICE_ROLE_KEY is configured", () => {
       expect(() => {
         getSupabaseAdminClient();
       }).not.toThrow();
