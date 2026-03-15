@@ -1,20 +1,52 @@
 version: 1
 components:
+  - name: app
+    paths:
+      - app/**
   - name: infrastructure
     paths:
       - infrastructure/**
   - name: events
     paths:
       - events/**
+  - name: jobs
+    paths:
+      - jobs/**
   - name: config
     paths:
       - config/**
   - name: modules
     paths:
       - modules/**
+  - name: module-repositories
+    paths:
+      - modules/**/repositories/**
+  - name: module-non-repositories
+    paths:
+      - modules/**/contracts/**
+      - modules/**/domain/**
+      - modules/**/events/**
+      - modules/**/services/**
+      - modules/**/tests/**
+      - modules/**/index.ts
+  - name: supabase-clients
+    paths:
+      - lib/supabase/**
 directives:
   - name: "Infrastructure isolation"
     constraint: "infrastructure -> modules"
+    action: forbid
+  - name: "App cannot import Supabase clients"
+    constraint: "app -> supabase-clients"
+    action: forbid
+  - name: "Infrastructure cannot import Supabase clients"
+    constraint: "infrastructure -> supabase-clients"
+    action: forbid
+  - name: "Events cannot import Supabase clients"
+    constraint: "events -> supabase-clients"
+    action: forbid
+  - name: "Jobs cannot import Supabase clients"
+    constraint: "jobs -> supabase-clients"
     action: forbid
   - name: "Events isolation"
     constraint: "events -> modules"
@@ -22,6 +54,12 @@ directives:
   - name: "Config isolation"
     constraint: "config -> modules"
     action: forbid
+  - name: "Config cannot import Supabase clients"
+    constraint: "config -> supabase-clients"
+    action: forbid
   - name: "Internal module isolation"
     constraint: "modules -> modules"
+    action: forbid
+  - name: "Non-repository module files cannot import Supabase clients"
+    constraint: "module-non-repositories -> supabase-clients"
     action: forbid

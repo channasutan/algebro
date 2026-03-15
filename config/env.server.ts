@@ -8,30 +8,33 @@
  */
 import "server-only";
 
-import type { PublicEnv } from "./env.public";
-export type { PublicEnv } from "./env.public";
+import {
+  getPublicAuthEnv as getClientSafePublicAuthEnv,
+  getPublicEnv as getClientSafePublicEnv,
+  type PublicAuthEnv,
+  type PublicEnv
+} from "./env.public";
+export type { PublicEnv, PublicAuthEnv } from "./env.public";
 
 type NodeEnv = PublicEnv["nodeEnv"];
 
 type RawServerEnv = {
   nodeEnv: string;
-  supabaseUrl?: string;
-  supabaseAnonKey?: string;
   supabaseServiceRoleKey?: string;
   aiProviderApiKey?: string;
   mayarApiKey?: string;
   mayarWebhookSecret?: string;
 };
 
-const rawEnv: RawServerEnv = {
-  nodeEnv: process.env.NODE_ENV ?? "development",
-  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-  supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-  supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-  aiProviderApiKey: process.env.AI_PROVIDER_API_KEY,
-  mayarApiKey: process.env.MAYAR_API_KEY,
-  mayarWebhookSecret: process.env.MAYAR_WEBHOOK_SECRET
-};
+function getRawServerEnv(): RawServerEnv {
+  return {
+    nodeEnv: process.env.NODE_ENV ?? "development",
+    supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    aiProviderApiKey: process.env.AI_PROVIDER_API_KEY,
+    mayarApiKey: process.env.MAYAR_API_KEY,
+    mayarWebhookSecret: process.env.MAYAR_WEBHOOK_SECRET
+  };
+}
 
 function readRequiredEnv(value: string | undefined, key: string, description?: string): string {
   if (!value || value.trim().length === 0) {
@@ -56,6 +59,7 @@ function readNodeEnv(value: string): NodeEnv {
 }
 
 export type ServerEnv = PublicEnv;
+export type AuthEnv = PublicEnv & PublicAuthEnv;
 
 export type InfrastructureServerEnv = ServerEnv & {
   supabaseServiceRoleKey: string;
@@ -65,20 +69,23 @@ export type InfrastructureServerEnv = ServerEnv & {
 };
 
 export function getPublicEnv(): PublicEnv {
-  return {
-    nodeEnv: readNodeEnv(rawEnv.nodeEnv),
-    supabaseUrl: readRequiredEnv(rawEnv.supabaseUrl, "NEXT_PUBLIC_SUPABASE_URL"),
-    supabaseAnonKey: readRequiredEnv(rawEnv.supabaseAnonKey, "NEXT_PUBLIC_SUPABASE_ANON_KEY")
-  };
+  return getPublicEnvFromClientSafeConfig();
 }
 
 export function getServerEnv(): ServerEnv {
-  return getPublicEnv();
+  return getPublicEnvFromClientSafeConfig();
+}
+
+export function getAuthEnv(): AuthEnv {
+  return {
+    ...getPublicEnvFromClientSafeConfig(),
+    ...getClientSafePublicAuthEnv()
+  };
 }
 
 export function getInfrastructureServerEnv(): InfrastructureServerEnv {
   return {
-    ...getPublicEnv(),
+    ...getPublicEnvFromClientSafeConfig(),
     supabaseServiceRoleKey: getSupabaseServiceRoleKey(),
     aiProviderApiKey: getAiProviderApiKey(),
     mayarApiKey: getMayarApiKey(),
@@ -87,6 +94,8 @@ export function getInfrastructureServerEnv(): InfrastructureServerEnv {
 }
 
 export function getSupabaseServiceRoleKey(): string {
+  const rawEnv = getRawServerEnv();
+
   return readRequiredEnv(
     rawEnv.supabaseServiceRoleKey,
     "SUPABASE_SERVICE_ROLE_KEY",
@@ -95,6 +104,8 @@ export function getSupabaseServiceRoleKey(): string {
 }
 
 export function getAiProviderApiKey(): string {
+  const rawEnv = getRawServerEnv();
+
   return readRequiredEnv(
     rawEnv.aiProviderApiKey,
     "AI_PROVIDER_API_KEY",
@@ -103,6 +114,8 @@ export function getAiProviderApiKey(): string {
 }
 
 export function getMayarApiKey(): string {
+  const rawEnv = getRawServerEnv();
+
   return readRequiredEnv(
     rawEnv.mayarApiKey,
     "MAYAR_API_KEY",
@@ -111,9 +124,20 @@ export function getMayarApiKey(): string {
 }
 
 export function getMayarWebhookSecret(): string {
+  const rawEnv = getRawServerEnv();
+
   return readRequiredEnv(
     rawEnv.mayarWebhookSecret,
     "MAYAR_WEBHOOK_SECRET",
     "required for payment webhooks"
   );
+}
+
+function getPublicEnvFromClientSafeConfig(): PublicEnv {
+  const publicEnv = getClientSafePublicEnv();
+
+  return {
+    ...publicEnv,
+    nodeEnv: readNodeEnv(publicEnv.nodeEnv)
+  };
 }

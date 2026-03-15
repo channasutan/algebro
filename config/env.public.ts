@@ -11,11 +11,42 @@ export type PublicEnv = {
   supabaseAnonKey: string;
 };
 
+export type PublicAuthEnv = {
+  siteUrl: string;
+  authCallbackUrl: string;
+};
+
+function readOptionalPublicEnv(value: string | undefined): string | undefined {
+  const trimmedValue = value?.trim();
+  return trimmedValue && trimmedValue.length > 0 ? trimmedValue : undefined;
+}
+
 function readRequiredPublicEnv(value: string | undefined, name: string): string {
-  if (!value || value.trim().length === 0) {
+  const normalizedValue = readOptionalPublicEnv(value);
+
+  if (!normalizedValue) {
     throw new Error(`Missing required public environment variable: ${name}`);
   }
-  return value;
+
+  return normalizedValue;
+}
+
+function readRequiredPublicUrlEnv(value: string | undefined, name: string): string {
+  const normalizedValue = readRequiredPublicEnv(value, name);
+
+  try {
+    const parsedUrl = new URL(normalizedValue);
+
+    if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+      throw new Error("Unsupported protocol");
+    }
+  } catch {
+    throw new Error(
+      `Invalid public environment variable: ${name}. Expected an absolute http or https URL.`
+    );
+  }
+
+  return normalizedValue;
 }
 
 function readNodeEnv(value: string | undefined): "development" | "test" | "production" {
@@ -25,12 +56,33 @@ function readNodeEnv(value: string | undefined): "development" | "test" | "produ
   return "development";
 }
 
-const publicEnv: PublicEnv = {
-  nodeEnv: readNodeEnv(process.env.NODE_ENV),
-  supabaseUrl: readRequiredPublicEnv(process.env.NEXT_PUBLIC_SUPABASE_URL, "NEXT_PUBLIC_SUPABASE_URL"),
-  supabaseAnonKey: readRequiredPublicEnv(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, "NEXT_PUBLIC_SUPABASE_ANON_KEY")
-};
-
 export function getPublicEnv(): PublicEnv {
-  return publicEnv;
+  return {
+    nodeEnv: readNodeEnv(process.env.NODE_ENV),
+    supabaseUrl: readRequiredPublicEnv(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      "NEXT_PUBLIC_SUPABASE_URL"
+    ),
+    supabaseAnonKey: readRequiredPublicEnv(
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY"
+    )
+  };
+}
+
+export function hasPublicSupabaseEnv(): boolean {
+  return Boolean(
+    readOptionalPublicEnv(process.env.NEXT_PUBLIC_SUPABASE_URL)
+    && readOptionalPublicEnv(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
+  );
+}
+
+export function getPublicAuthEnv(): PublicAuthEnv {
+  return {
+    siteUrl: readRequiredPublicUrlEnv(process.env.NEXT_PUBLIC_SITE_URL, "NEXT_PUBLIC_SITE_URL"),
+    authCallbackUrl: readRequiredPublicUrlEnv(
+      process.env.NEXT_PUBLIC_AUTH_CALLBACK_URL,
+      "NEXT_PUBLIC_AUTH_CALLBACK_URL"
+    )
+  };
 }

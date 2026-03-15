@@ -1,39 +1,64 @@
 import "server-only";
 
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { cookies } from "next/headers";
 
 import { getPublicEnv } from "@/config/env.server-entry";
 
 type Database = Record<string, never>;
 
-let serverClient: SupabaseClient<Database> | undefined;
+type RequestCookie = {
+  name: string;
+  value: string;
+};
+
+type RequestCookieStore = {
+  getAll(): RequestCookie[] | Promise<RequestCookie[]>;
+  set?(name: string, value: string, options: CookieOptions): void | Promise<void>;
+};
 
 /**
- * Server-side Supabase client using the anon key.
+ * Build a request-scoped Supabase server client around a request cookie store.
  *
- * Intended for use in:
- * - Server components
- * - API routes
- * - Server actions
- *
- * Uses the public anon key with no session persistence.
- * For admin operations requiring elevated privileges, use `getSupabaseAdminClient` from `@/lib/supabase/admin-client`.
- *
- * @returns A singleton Supabase client instance for server-side use
+ * Keep this internal so all callers go through createSupabaseServerClient()
+ * and get a fresh per-request client from Next.js cookies().
  */
-export function getSupabaseServerClient(): SupabaseClient<Database> {
-  if (serverClient) {
-    return serverClient;
-  }
-
+function buildSupabaseServerClient(
+  cookieStore: RequestCookieStore
+): SupabaseClient<Database> {
   const { supabaseUrl, supabaseAnonKey } = getPublicEnv();
 
-  serverClient = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll: async () => await cookieStore.getAll(),
+      setAll: async (cookiesToSet) => {
+        if (!cookieStore.set) {
+          return;
+        }
+
+        for (const { name, value, options } of cookiesToSet) {
+          await cookieStore.set(name, value, options);
+        }
+      }
+    },
     auth: {
       autoRefreshToken: false,
-      persistSession: false
+      detectSessionInUrl: false
     }
   });
+}
 
-  return serverClient;
+/**
+ * Creates a request-scoped Supabase server client.
+ *
+ * This function must be called inside a request context.
+ * Never cache or store the returned client in module scope.
+ * Each request must create its own client to ensure correct cookie isolation.
+ * Session persistence is handled through Next.js cookies().
+ */
+export async function createSupabaseServerClient(): Promise<SupabaseClient<Database>> {
+  const cookieStore = await cookies();
+
+  return buildSupabaseServerClient(cookieStore as RequestCookieStore);
 }

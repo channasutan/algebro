@@ -130,6 +130,54 @@ Infrastructure calls must go through "/infrastructure".
 
 ---
 
+Environment Rules
+
+Environment variables must be read only inside `config/env.*`.
+
+Rules:
+
+- app routes, server actions, and modules must not read `process.env` directly outside the config layer
+- auth-specific configuration used by first-party flows must be accessed through `config/env.*`
+- auth-specific URLs such as site and callback URLs must be validated in `config/env.*` before use
+
+Correct:
+
+import { getAuthEnv } from "@/config/env.server-entry"
+
+Incorrect:
+
+const callbackUrl = process.env.NEXT_PUBLIC_AUTH_CALLBACK_URL
+
+---
+
+Supabase Client Rules
+
+Supabase client lifecycle must stay explicit and request-safe.
+
+Rules:
+
+- Supabase server clients must be created per request
+- never create a singleton Supabase server client in module scope
+- only repositories may import `lib/supabase/*`
+- infrastructure code must receive Supabase clients through dependency injection instead of importing them directly
+- services must receive Supabase clients through dependency injection instead of importing them directly
+- application layers must not directly create Supabase clients
+- use `createSupabaseServerClient()` instead of manually constructing a Supabase server client
+
+Usage:
+
+```ts
+import { createSupabaseServerClient } from "@/lib/supabase/server-client"
+
+export async function example() {
+  const supabase = await createSupabaseServerClient()
+}
+```
+
+This helper must be used instead of constructing Supabase clients manually.
+
+---
+
 Public Service Contract Rules
 
 Every public service must expose typed input and output contracts.
@@ -150,6 +198,7 @@ Repositories handle database access.
 Rules:
 
 - repositories may only access tables owned by the module
+- repositories are the only module layer allowed to import `lib/supabase/*`
 - repositories must not contain business logic
 - repository functions must be deterministic
 
