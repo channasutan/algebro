@@ -1,4 +1,17 @@
 version: 1
+components:
+  - name: infrastructure
+    paths:
+      - infrastructure/**
+  - name: events
+    paths:
+      - events/**
+  - name: config
+    paths:
+      - config/**
+  - name: modules
+    paths:
+      - modules/**
 directives:
   - name: "Infrastructure isolation"
     constraint: "infrastructure -> modules"
