@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  sonarcloud: sonarsource/sonarcloud@2.0.0
+
 jobs:
   validate:
     docker:
@@ -34,9 +37,7 @@ jobs:
           name: Run Production Build
           command: npm run build
 
-      - run:
-          name: SonarCloud Scan
-          command: npx sonar-scanner
+      - sonarcloud/scan
 
 workflows:
   version: 2
