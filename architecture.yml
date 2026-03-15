@@ -1,0 +1,14 @@
+version: 1
+directives:
+  - name: "Infrastructure isolation"
+    constraint: "infrastructure -> modules"
+    action: forbid
+  - name: "Events isolation"
+    constraint: "events -> modules"
+    action: forbid
+  - name: "Config isolation"
+    constraint: "config -> modules"
+    action: forbid
+  - name: "Internal module isolation"
+    constraint: "modules -> modules"
+    action: forbid
