@@ -1,0 +1,27 @@
+version: 1
+components:
+  - name: infrastructure
+    paths:
+      - infrastructure/**
+  - name: events
+    paths:
+      - events/**
+  - name: config
+    paths:
+      - config/**
+  - name: modules
+    paths:
+      - modules/**
+directives:
+  - name: "Infrastructure isolation"
+    constraint: "infrastructure -> modules"
+    action: forbid
+  - name: "Events isolation"
+    constraint: "events -> modules"
+    action: forbid
+  - name: "Config isolation"
+    constraint: "config -> modules"
+    action: forbid
+  - name: "Internal module isolation"
+    constraint: "modules -> modules"
+    action: forbid
