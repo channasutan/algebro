@@ -49,7 +49,7 @@ function isRepositoryFile(relativePath: string): boolean {
 
 function findSupabaseImports(source: string): string[] {
   return source.match(
-    /(?:^|\n)\s*import(?:[\s\S]*?)["']@\/lib\/supabase\/[^"']+["'];?/g
+    /(^|\n)\s*import[^\n]*["']@\/?lib\/supabase\/[^"']+["'];?/g
   ) ?? [];
 }
 
