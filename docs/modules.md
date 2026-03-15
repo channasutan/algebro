@@ -37,7 +37,7 @@ Core modules:
 
 ---
 
-Authentication
+## Authentication
 
 Responsibilities
 
@@ -74,7 +74,7 @@ Invariants
 
 ---
 
-User Profiles
+## User Profiles
 
 Responsibilities
 
@@ -109,7 +109,7 @@ Invariants
 
 ---
 
-Practice Engine
+## Practice Engine
 
 Responsibilities
 
@@ -184,7 +184,7 @@ Invariants
 
 ---
 
-Step Validation Engine
+## Step Validation Engine
 
 Responsibilities
 
@@ -250,7 +250,7 @@ Invariants
 
 ---
 
-AI Tutor
+## AI Tutor
 
 Responsibilities
 
@@ -303,7 +303,7 @@ Invariants
 
 ---
 
-Curriculum Engine
+## Curriculum Engine
 
 Responsibilities
 
@@ -346,7 +346,7 @@ Invariants
 
 ---
 
-Problem Generator
+## Problem Generator
 
 Responsibilities
 
@@ -402,7 +402,7 @@ Invariants
 
 ---
 
-PvP Duel Engine
+## PvP Duel Engine
 
 Responsibilities
 
@@ -480,7 +480,7 @@ Invariants
 
 ---
 
-Gamification Engine
+## Gamification Engine
 
 Responsibilities
 
@@ -518,7 +518,7 @@ Invariants
 
 ---
 
-Material Processing Engine
+## Material Processing Engine
 
 Responsibilities
 
@@ -581,7 +581,7 @@ processed_at
 
 ---
 
-Billing & Subscription
+## Billing & Subscription
 
 Responsibilities
 
@@ -619,7 +619,7 @@ Invariants
 
 ---
 
-Background Job System
+## Background Job System
 
 Responsibilities
 

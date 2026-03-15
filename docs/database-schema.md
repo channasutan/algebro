@@ -31,14 +31,15 @@ id uuid primary key references auth.users(id) on delete cascade
 email text unique
 display_name text
 avatar_url text
-timezone text default 'UTC'
+timezone text default 'UTC' NOT NULL
 created_at timestamptz default now()
-updated_at timestamptz default now()
+updated_at timestamptz NOT NULL DEFAULT now()
 
 Notes
 
 - `auth.users` remains the Supabase Auth identity source
 - `public.users` is owned by the `user-profiles` module
+- `updated_at` is maintained automatically by a database trigger on UPDATE
 - profile creation is idempotent and may happen from the auth registration event or a lazy fallback read
 
 Indexes
