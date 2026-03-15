@@ -1,9 +1,5 @@
 version: 2.1
 
-orbs:
-  node: circleci/node@5.0.0
-  sonarcloud: sonarsource/sonarcloud@2.0.0
-
 jobs:
   validate:
     docker:
@@ -14,8 +10,8 @@ jobs:
 
       - restore_cache:
           keys:
-            - v1-dependencies-{{ checksum "package-lock.json" }}
-            - v1-dependencies-
+            - v1-npm-deps-{{ checksum "package-lock.json" }}
+            - v1-npm-deps-
 
       - run:
           name: Install Dependencies
@@ -23,8 +19,8 @@ jobs:
 
       - save_cache:
           paths:
-            - node_modules
-          key: v1-dependencies-{{ checksum "package-lock.json" }}
+            - ~/.npm
+          key: v1-npm-deps-{{ checksum "package-lock.json" }}
 
       - run:
           name: Run Tests
@@ -38,7 +34,9 @@ jobs:
           name: Run Production Build
           command: npm run build
 
-      - sonarcloud/scan
+      - run:
+          name: SonarCloud Scan
+          command: npx sonar-scanner
 
 workflows:
   version: 2
