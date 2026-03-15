@@ -24,6 +24,8 @@ type RawServerEnv = {
   aiProviderApiKey?: string;
   mayarApiKey?: string;
   mayarWebhookSecret?: string;
+  mayarApiBaseUrl?: string;
+  sympyServiceUrl?: string;
 };
 
 function getRawServerEnv(): RawServerEnv {
@@ -32,7 +34,9 @@ function getRawServerEnv(): RawServerEnv {
     supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
     aiProviderApiKey: process.env.AI_PROVIDER_API_KEY,
     mayarApiKey: process.env.MAYAR_API_KEY,
-    mayarWebhookSecret: process.env.MAYAR_WEBHOOK_SECRET
+    mayarWebhookSecret: process.env.MAYAR_WEBHOOK_SECRET,
+    mayarApiBaseUrl: process.env.MAYAR_API_BASE_URL,
+    sympyServiceUrl: process.env.SYMPY_SERVICE_URL
   };
 }
 
@@ -66,6 +70,8 @@ export type InfrastructureServerEnv = ServerEnv & {
   aiProviderApiKey: string;
   mayarApiKey: string;
   mayarWebhookSecret: string;
+  mayarApiBaseUrl: string;
+  sympyServiceUrl: string;
 };
 
 export function getPublicEnv(): PublicEnv {
@@ -89,7 +95,9 @@ export function getInfrastructureServerEnv(): InfrastructureServerEnv {
     supabaseServiceRoleKey: getSupabaseServiceRoleKey(),
     aiProviderApiKey: getAiProviderApiKey(),
     mayarApiKey: getMayarApiKey(),
-    mayarWebhookSecret: getMayarWebhookSecret()
+    mayarWebhookSecret: getMayarWebhookSecret(),
+    mayarApiBaseUrl: getMayarApiBaseUrl(),
+    sympyServiceUrl: getSympyServiceUrl()
   };
 }
 
@@ -131,6 +139,18 @@ export function getMayarWebhookSecret(): string {
     "MAYAR_WEBHOOK_SECRET",
     "required for payment webhooks"
   );
+}
+
+export function getMayarApiBaseUrl(): string {
+  const rawEnv = getRawServerEnv();
+
+  return rawEnv.mayarApiBaseUrl ?? "https://api.mayar.id";
+}
+
+export function getSympyServiceUrl(): string {
+  const rawEnv = getRawServerEnv();
+
+  return rawEnv.sympyServiceUrl ?? "http://127.0.0.1:8000";
 }
 
 function getPublicEnvFromClientSafeConfig(): PublicEnv {
