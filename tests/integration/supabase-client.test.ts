@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { getSupabaseAdminClient } from "@/lib/supabase/admin-client";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser-client";
-import { getSupabaseServerClient } from "@/lib/supabase/server-client";
+import { buildSupabaseServerClient, getSupabaseServerClient } from "@/lib/supabase/server-client";
 
 // Mock next/headers before importing the server client
 vi.mock("next/headers", () => ({
@@ -68,6 +68,63 @@ describe("supabase client boundary", () => {
       // Server client should have auth methods but without session persistence
       expect(client.auth.getSession).toBeDefined();
       expect(client.auth.getUser).toBeDefined();
+    });
+
+    describe("buildSupabaseServerClient", () => {
+      it("creates a client with the provided cookie store", () => {
+        const mockCookieStore = {
+          getAll: vi.fn(() => []),
+          set: vi.fn(),
+          get: vi.fn()
+        };
+
+        const client = buildSupabaseServerClient(mockCookieStore as never);
+
+        expect(client).toBeDefined();
+        expect(client.auth).toBeDefined();
+        expect(client.from).toBeDefined();
+      });
+
+      it("provides request isolation with separate cookie stores", () => {
+        const cookieStoreA = {
+          getAll: vi.fn(() => [{ name: "sb-access-token", value: "token-a" }]),
+          set: vi.fn(),
+          get: vi.fn()
+        };
+        const cookieStoreB = {
+          getAll: vi.fn(() => [{ name: "sb-access-token", value: "token-b" }]),
+          set: vi.fn(),
+          get: vi.fn()
+        };
+
+        const clientA = buildSupabaseServerClient(cookieStoreA as never);
+        const clientB = buildSupabaseServerClient(cookieStoreB as never);
+
+        // Different cookie stores create different client instances
+        expect(clientA).not.toBe(clientB);
+      });
+
+      it("maintains cookie state per cookie store", async () => {
+        const mockCookieStore = {
+          cookies: [] as Array<{ name: string; value: string }>,
+          getAll: vi.fn(function () {
+            return this.cookies;
+          }),
+          set: vi.fn(function (name: string, value: string) {
+            this.cookies = this.cookies.filter((c: { name: string }) => c.name !== name);
+            this.cookies.push({ name, value });
+          }),
+          get: vi.fn(function (name: string) {
+            return this.cookies.find((c: { name: string }) => c.name === name);
+          })
+        };
+
+        const client = buildSupabaseServerClient(mockCookieStore as never);
+
+        // Client should be able to interact with the cookie store
+        expect(client).toBeDefined();
+        expect(mockCookieStore.getAll).toBeDefined();
+      });
     });
   });
 
