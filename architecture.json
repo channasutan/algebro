@@ -1,24 +1,55 @@
 {
   "version": 1,
-  "directives": [
+  "perspectives": [
+    {
+      "name": "Layers",
+      "groups": [
+        {
+          "name": "App",
+          "selector": "app/**"
+        },
+        {
+          "name": "Modules",
+          "selector": "modules/**"
+        },
+        {
+          "name": "Infrastructure",
+          "selector": "infrastructure/**"
+        },
+        {
+          "name": "Events",
+          "selector": "events/**"
+        },
+        {
+          "name": "Config",
+          "selector": "config/**"
+        }
+      ]
+    }
+  ],
+  "constraints": [
     {
       "name": "Infrastructure must not depend on modules",
-      "constraint": "infrastructure -> modules",
+      "from": "Infrastructure",
+      "to": "Modules",
       "action": "forbid"
     },
     {
       "name": "Events must not depend on modules",
-      "constraint": "events -> modules",
+      "from": "Events",
+      "to": "Modules",
       "action": "forbid"
     },
     {
       "name": "Config must not depend on modules",
-      "constraint": "config -> modules",
+      "from": "Config",
+      "to": "Modules",
       "action": "forbid"
     },
     {
-      "name": "Modules isolation",
-      "constraint": "modules -> modules",
+      "name": "Module isolation",
+      "from": "Modules",
+      "to": "Modules",
       "action": "forbid"
     }
   ]
