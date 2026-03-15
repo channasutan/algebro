@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getMayarApiBaseUrl, getMayarApiKey, getMayarWebhookSecret } from "@/config/env";
+import { getMayarApiBaseUrl, getMayarApiKey, getMayarWebhookSecret } from "@/config/env.server-entry";
 
 export type MayarCheckoutItem = {
   name: string;

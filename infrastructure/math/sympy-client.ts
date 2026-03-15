@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getSympyServiceUrl } from "@/config/env";
+import { getSympyServiceUrl } from "@/config/env.server-entry";
 
 export type SympyOperation = "simplify" | "expand" | "solve" | "equivalence";
 
