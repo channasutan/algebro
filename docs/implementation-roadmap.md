@@ -148,11 +148,14 @@ Tasks:
 
 Setup Supabase Auth.
 
-Create profile system.
+Extend `public.users` into the Phase 2 profile aggregate owned by the `user-profiles` module.
+
+Establish idempotent profile bootstrap from auth registration events and lazy profile reads.
 
 Tables:
 
-profiles
+auth.users (identity source)
+public.users (profile aggregate)
 
 Features:
 
@@ -160,6 +163,7 @@ Features:
 - login
 - session handling
 - profile initialization
+- profile update
 
 Deliverables:
 

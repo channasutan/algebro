@@ -50,18 +50,21 @@ ALTER TABLE public.material_topics
   ADD CONSTRAINT material_topics_topic_id_fkey 
   FOREIGN KEY (topic_id) REFERENCES public.topics (id) ON DELETE CASCADE;
 
--- 2. Enforce relational integrity in duel_answers
--- Ensure round_id belongs to the same duel_id as duel_answers.duel_id
+-- 2. Prepare duel_rounds for the composite FK added in later migrations
+-- PostgreSQL requires referenced columns to be backed by a UNIQUE or PRIMARY KEY
 
-ALTER TABLE public.duel_answers
-  ADD CONSTRAINT duel_answers_round_duel_match
-  CHECK (
-    EXISTS (
-      SELECT 1 FROM public.duel_rounds dr
-      WHERE dr.id = duel_answers.round_id
-        AND dr.duel_id = duel_answers.duel_id
-    )
-  );
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'duel_rounds_id_duel_id_unique'
+      AND conrelid = 'public.duel_rounds'::regclass
+  ) THEN
+    ALTER TABLE public.duel_rounds
+      ADD CONSTRAINT duel_rounds_id_duel_id_unique UNIQUE (id, duel_id);
+  END IF;
+END $$;
 
 -- 3. Remove redundant indexes (already created by unique constraints)
 -- - idx_duel_rounds_duel_id: NOT recreated (unique constraint on (duel_id, round_number) covers this)
@@ -105,44 +108,176 @@ ALTER TABLE public.jobs ENABLE ROW LEVEL SECURITY;
 -- Add RLS policies for topics (allow read access, restrict write to owners if needed)
 -- For topics, we'll allow public read access since it's a shared curriculum table
 
-CREATE POLICY IF NOT EXISTS topics_select_policy ON public.topics
-  FOR SELECT USING (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'topics'
+      AND policyname = 'topics_select_policy'
+  ) THEN
+    CREATE POLICY topics_select_policy ON public.topics
+      FOR SELECT USING (true);
+  END IF;
+END $$;
 
-CREATE POLICY IF NOT EXISTS topics_insert_policy ON public.topics
-  FOR INSERT WITH CHECK (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'topics'
+      AND policyname = 'topics_insert_policy'
+  ) THEN
+    CREATE POLICY topics_insert_policy ON public.topics
+      FOR INSERT WITH CHECK (true);
+  END IF;
+END $$;
 
-CREATE POLICY IF NOT EXISTS topics_update_policy ON public.topics
-  FOR UPDATE USING (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'topics'
+      AND policyname = 'topics_update_policy'
+  ) THEN
+    CREATE POLICY topics_update_policy ON public.topics
+      FOR UPDATE USING (true);
+  END IF;
+END $$;
 
-CREATE POLICY IF NOT EXISTS topics_delete_policy ON public.topics
-  FOR DELETE USING (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'topics'
+      AND policyname = 'topics_delete_policy'
+  ) THEN
+    CREATE POLICY topics_delete_policy ON public.topics
+      FOR DELETE USING (true);
+  END IF;
+END $$;
 
 -- Add RLS policies for duel_rounds
 
-CREATE POLICY IF NOT EXISTS duel_rounds_select_policy ON public.duel_rounds
-  FOR SELECT USING (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'duel_rounds'
+      AND policyname = 'duel_rounds_select_policy'
+  ) THEN
+    CREATE POLICY duel_rounds_select_policy ON public.duel_rounds
+      FOR SELECT USING (true);
+  END IF;
+END $$;
 
-CREATE POLICY IF NOT EXISTS duel_rounds_insert_policy ON public.duel_rounds
-  FOR INSERT WITH CHECK (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'duel_rounds'
+      AND policyname = 'duel_rounds_insert_policy'
+  ) THEN
+    CREATE POLICY duel_rounds_insert_policy ON public.duel_rounds
+      FOR INSERT WITH CHECK (true);
+  END IF;
+END $$;
 
-CREATE POLICY IF NOT EXISTS duel_rounds_update_policy ON public.duel_rounds
-  FOR UPDATE USING (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'duel_rounds'
+      AND policyname = 'duel_rounds_update_policy'
+  ) THEN
+    CREATE POLICY duel_rounds_update_policy ON public.duel_rounds
+      FOR UPDATE USING (true);
+  END IF;
+END $$;
 
-CREATE POLICY IF NOT EXISTS duel_rounds_delete_policy ON public.duel_rounds
-  FOR DELETE USING (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'duel_rounds'
+      AND policyname = 'duel_rounds_delete_policy'
+  ) THEN
+    CREATE POLICY duel_rounds_delete_policy ON public.duel_rounds
+      FOR DELETE USING (true);
+  END IF;
+END $$;
 
 -- Add RLS policies for jobs
 
-CREATE POLICY IF NOT EXISTS jobs_select_policy ON public.jobs
-  FOR SELECT USING (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'jobs'
+      AND policyname = 'jobs_select_policy'
+  ) THEN
+    CREATE POLICY jobs_select_policy ON public.jobs
+      FOR SELECT USING (true);
+  END IF;
+END $$;
 
-CREATE POLICY IF NOT EXISTS jobs_insert_policy ON public.jobs
-  FOR INSERT WITH CHECK (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'jobs'
+      AND policyname = 'jobs_insert_policy'
+  ) THEN
+    CREATE POLICY jobs_insert_policy ON public.jobs
+      FOR INSERT WITH CHECK (true);
+  END IF;
+END $$;
 
-CREATE POLICY IF NOT EXISTS jobs_update_policy ON public.jobs
-  FOR UPDATE USING (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'jobs'
+      AND policyname = 'jobs_update_policy'
+  ) THEN
+    CREATE POLICY jobs_update_policy ON public.jobs
+      FOR UPDATE USING (true);
+  END IF;
+END $$;
 
-CREATE POLICY IF NOT EXISTS jobs_delete_policy ON public.jobs
-  FOR DELETE USING (true);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename = 'jobs'
+      AND policyname = 'jobs_delete_policy'
+  ) THEN
+    CREATE POLICY jobs_delete_policy ON public.jobs
+      FOR DELETE USING (true);
+  END IF;
+END $$;
 
 COMMIT;

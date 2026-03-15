@@ -22,6 +22,8 @@ Architecture goals:
 
 Core modules:
 
+- Authentication
+- User Profiles
 - Practice Engine
 - Step Validation Engine
 - AI Tutor
@@ -35,7 +37,79 @@ Core modules:
 
 ---
 
-Practice Engine
+## Authentication
+
+Responsibilities
+
+Owns sign-up, sign-in, sign-out, session lookup, and auth callback orchestration.
+
+Identity Source
+
+Supabase Auth-managed `auth.users`
+
+Owned Tables
+
+None in `public`
+
+Public API
+
+signUp(email, password)
+
+signIn(email, password)
+
+signOut()
+
+getSession()
+
+handleAuthCallback()
+
+Events Emitted
+
+auth_user_registered
+
+Invariants
+
+- `auth.users` remains the source of identity truth
+- Authentication must not write directly to `public.users`
+
+---
+
+## User Profiles
+
+Responsibilities
+
+Owns profile bootstrap, profile reads, and profile updates for authenticated users.
+
+Owned Tables
+
+public.users
+
+Public API
+
+getCurrentProfile(user_id)
+
+initializeProfile(user_id, email)
+
+updateProfile(user_id, changes)
+
+Events Consumed
+
+auth_user_registered
+
+Events Emitted
+
+user_profile_initialized
+user_profile_updated
+
+Invariants
+
+- `public.users` is the canonical profile aggregate for application data
+- profile initialization must be idempotent across event-driven and lazy bootstrap paths
+- other modules may reference `public.users` through foreign keys but must not mutate it directly
+
+---
+
+## Practice Engine
 
 Responsibilities
 
@@ -110,7 +184,7 @@ Invariants
 
 ---
 
-Step Validation Engine
+## Step Validation Engine
 
 Responsibilities
 
@@ -176,7 +250,7 @@ Invariants
 
 ---
 
-AI Tutor
+## AI Tutor
 
 Responsibilities
 
@@ -229,7 +303,7 @@ Invariants
 
 ---
 
-Curriculum Engine
+## Curriculum Engine
 
 Responsibilities
 
@@ -272,7 +346,7 @@ Invariants
 
 ---
 
-Problem Generator
+## Problem Generator
 
 Responsibilities
 
@@ -328,7 +402,7 @@ Invariants
 
 ---
 
-PvP Duel Engine
+## PvP Duel Engine
 
 Responsibilities
 
@@ -406,7 +480,7 @@ Invariants
 
 ---
 
-Gamification Engine
+## Gamification Engine
 
 Responsibilities
 
@@ -444,7 +518,7 @@ Invariants
 
 ---
 
-Material Processing Engine
+## Material Processing Engine
 
 Responsibilities
 
@@ -507,7 +581,7 @@ processed_at
 
 ---
 
-Billing & Subscription
+## Billing & Subscription
 
 Responsibilities
 
@@ -545,7 +619,7 @@ Invariants
 
 ---
 
-Background Job System
+## Background Job System
 
 Responsibilities
 
@@ -614,6 +688,8 @@ Summary
 
 The modular architecture separates system responsibilities into isolated domains:
 
+Authentication
+User Profiles
 Practice
 Validation
 AI Tutoring

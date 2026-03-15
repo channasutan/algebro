@@ -20,25 +20,32 @@ All user-owned tables enforce Row Level Security (RLS).
 
 Identity
 
-profiles
+public.users
 
-Stores user profile information.
+Stores the canonical application profile for each authenticated user.
 
 Fields
 
 id uuid primary key references auth.users(id) on delete cascade
 
-username text unique
+email text unique
+display_name text
 avatar_url text
-
-xp integer default 0
-level integer default 1
-
+timezone text default 'UTC' NOT NULL
 created_at timestamptz default now()
+updated_at timestamptz NOT NULL DEFAULT now()
+
+Notes
+
+- `auth.users` remains the Supabase Auth identity source
+- `public.users` is owned by the `user-profiles` module
+- `updated_at` is maintained automatically by a database trigger on UPDATE
+- profile creation is idempotent and may happen from the auth registration event or a lazy fallback read
 
 Indexes
 
-index profiles_username_idx on username
+primary key on id
+unique index on email
 
 ---
 
@@ -52,7 +59,7 @@ Fields
 
 id uuid primary key
 
-user_id uuid references profiles(id) on delete cascade
+user_id uuid references public.users(id) on delete cascade
 
 plan_tier text
 status text
@@ -174,7 +181,7 @@ Fields
 
 id uuid primary key
 
-user_id uuid references profiles(id) on delete cascade
+user_id uuid references public.users(id) on delete cascade
 
 topic_id uuid references topics(id) on delete restrict
 
@@ -196,7 +203,7 @@ Fields
 
 id uuid primary key
 
-user_id uuid references profiles(id) on delete cascade
+user_id uuid references public.users(id) on delete cascade
 
 problem_id uuid references problems(id) on delete restrict
 
@@ -262,7 +269,7 @@ Fields
 
 id uuid primary key
 
-user_id uuid references profiles(id) on delete cascade
+user_id uuid references public.users(id) on delete cascade
 
 topic_id uuid references topics(id) on delete restrict
 
@@ -290,7 +297,7 @@ Fields
 
 id uuid primary key
 
-user_id uuid references profiles(id) on delete cascade
+user_id uuid references public.users(id) on delete cascade
 
 problem_id uuid references problems(id) on delete restrict
 
@@ -314,12 +321,12 @@ Fields
 
 id uuid primary key
 
-player1_id uuid references profiles(id) on delete restrict
-player2_id uuid references profiles(id) on delete restrict
+player1_id uuid references public.users(id) on delete restrict
+player2_id uuid references public.users(id) on delete restrict
 
 status text
 
-winner_id uuid references profiles(id)
+winner_id uuid references public.users(id)
 
 started_at timestamptz
 ended_at timestamptz
@@ -373,7 +380,7 @@ id uuid primary key
 
 round_id uuid references duel_rounds(id) on delete cascade
 
-player_id uuid references profiles(id) on delete restrict
+player_id uuid references public.users(id) on delete restrict
 
 answer_latex text
 
@@ -401,7 +408,7 @@ Fields
 
 id uuid primary key
 
-user_id uuid references profiles(id) on delete cascade
+user_id uuid references public.users(id) on delete cascade
 
 event_type text
 
@@ -443,7 +450,7 @@ Fields
 
 id uuid primary key
 
-user_id uuid references profiles(id) on delete cascade
+user_id uuid references public.users(id) on delete cascade
 
 badge_id uuid references badges(id) on delete restrict
 
@@ -469,7 +476,7 @@ Fields
 
 id uuid primary key
 
-user_id uuid references profiles(id) on delete cascade
+user_id uuid references public.users(id) on delete cascade
 
 title text
 
@@ -563,7 +570,7 @@ Fields
 
 id uuid primary key
 
-user_id uuid references profiles(id) on delete set null
+user_id uuid references public.users(id) on delete set null
 
 endpoint text
 
@@ -579,19 +586,19 @@ index api_logs_user_idx on user_id
 
 Relationships Overview
 
-profiles
+public.users
 → practice_sessions
 → attempts
 → solution_steps
 
-profiles
+public.users
 → topic_progress
 
-profiles
+public.users
 → duels
 → duel_answers
 
-profiles
+public.users
 → ai_hint_usage
 
 materials
