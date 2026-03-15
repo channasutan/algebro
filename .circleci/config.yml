@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  sonarcloud: sonarsource/sonarcloud@2.0.0
+
 jobs:
   validate:
     docker:
@@ -7,39 +10,13 @@ jobs:
 
     steps:
       - checkout
-
-      - restore_cache:
-          keys:
-            - v1-npm-deps-{{ checksum "package-lock.json" }}
-            - v1-npm-deps-
-
-      - run:
-          name: Install Dependencies
-          command: npm ci
-
-      - save_cache:
-          paths:
-            - ~/.npm
-          key: v1-npm-deps-{{ checksum "package-lock.json" }}
-
-      - run:
-          name: Run Tests
-          command: npm run test
-
-      - run:
-          name: Run Lint checks
-          command: npm run lint
-
-      - run:
-          name: Run Production Build
-          command: npm run build
-
-      - run:
-          name: SonarCloud Scan
-          command: npx sonar-scanner
+      - run: npm ci
+      - run: npm run test
+      - run: npm run lint
+      - run: npm run build
+      - sonarcloud/scan
 
 workflows:
-  version: 2
   validate_project:
     jobs:
       - validate:
