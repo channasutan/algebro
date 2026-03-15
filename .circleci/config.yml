@@ -11,36 +11,35 @@ jobs:
     steps:
       - checkout
 
-      - restore_cache:
-          keys:
-            - v1-npm-deps-{{ checksum "package-lock.json" }}
-            - v1-npm-deps-
-
+      # Fix SonarCloud MissingObjectException caused by shallow clone
       - run:
-          name: Install Dependencies
+          name: Fetch full git history
+          command: git fetch --unshallow || true
+
+      # Install dependencies
+      - run:
+          name: Install dependencies
           command: npm ci
 
-      - save_cache:
-          paths:
-            - ~/.npm
-          key: v1-npm-deps-{{ checksum "package-lock.json" }}
-
+      # Run tests
       - run:
-          name: Run Tests
+          name: Run tests
           command: npm run test
 
+      # Run lint
       - run:
-          name: Run Lint checks
+          name: Run lint
           command: npm run lint
 
+      # Build project
       - run:
-          name: Run Production Build
+          name: Build project
           command: npm run build
 
+      # SonarCloud analysis
       - sonarcloud/scan
 
 workflows:
-  version: 2
   validate_project:
     jobs:
       - validate:

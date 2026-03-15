@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "components": {
+    "app": "app/**",
+    "modules": "modules/**",
+    "infrastructure": "infrastructure/**",
+    "events": "events/**",
+    "config": "config/**"
+  },
+  "rules": [
+    {
+      "from": "infrastructure",
+      "to": "modules",
+      "action": "forbid"
+    },
+    {
+      "from": "events",
+      "to": "modules",
+      "action": "forbid"
+    },
+    {
+      "from": "modules",
+      "to": "infrastructure",
+      "action": "allow"
+    }
+  ]
+}
