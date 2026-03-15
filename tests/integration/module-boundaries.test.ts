@@ -23,12 +23,20 @@ function collectFiles(directory: string): string[] {
       return collectFiles(relativeEntryPath);
     }
 
-    if (!entry.isFile() || !entry.name.endsWith(".ts") && !entry.name.endsWith(".tsx")) {
+    if (!shouldIncludeFile(entry)) {
       return [];
     }
 
     return [absoluteEntryPath];
   });
+}
+
+function shouldIncludeFile(entry: fs.Dirent): boolean {
+  if (!entry.isFile()) {
+    return false;
+  }
+
+  return entry.name.endsWith(".ts") || entry.name.endsWith(".tsx");
 }
 
 function toRepoRelativePath(absolutePath: string): string {
