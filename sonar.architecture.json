@@ -1,27 +1,24 @@
 {
-  "version": 1,
-  "components": {
-    "app": "app/**",
-    "modules": "modules/**",
-    "infrastructure": "infrastructure/**",
-    "events": "events/**",
-    "config": "config/**"
-  },
-  "rules": [
+  "directives": [
     {
-      "from": "infrastructure",
-      "to": "modules",
+      "name": "Infrastructure must not depend on modules",
+      "constraint": "infrastructure -> modules",
       "action": "forbid"
     },
     {
-      "from": "events",
-      "to": "modules",
+      "name": "Events must not depend on modules",
+      "constraint": "events -> modules",
       "action": "forbid"
     },
     {
-      "from": "modules",
-      "to": "infrastructure",
-      "action": "allow"
+      "name": "Config must not depend on modules",
+      "constraint": "config -> modules",
+      "action": "forbid"
+    },
+    {
+      "name": "Modules must not depend on other modules",
+      "constraint": "modules -> modules",
+      "action": "forbid"
     }
   ]
 }
