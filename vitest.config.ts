@@ -9,7 +9,11 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/**/*.test.ts"],
-    setupFiles: ["./tests/setup.ts"]
+    setupFiles: ["./tests/setup.ts"],
+    coverage: {
+      reporter: ["text", "lcov"],
+      reportsDirectory: "./coverage"
+    }
   },
   resolve: {
     alias: {
