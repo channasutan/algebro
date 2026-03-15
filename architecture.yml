@@ -32,6 +32,12 @@ components:
   - name: supabase-clients
     paths:
       - lib/supabase/**
+  - name: lib
+    paths:
+      - lib/**
+  - name: tests
+    paths:
+      - tests/**
 directives:
   - name: "Infrastructure isolation"
     constraint: "infrastructure -> modules"
@@ -63,3 +69,6 @@ directives:
   - name: "Non-repository module files cannot import Supabase clients"
     constraint: "module-non-repositories -> supabase-clients"
     action: forbid
+  - name: "Tests can access lib for verification"
+    constraint: "tests -> lib"
+    action: allow
