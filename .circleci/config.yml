@@ -14,7 +14,9 @@ jobs:
       - run:
           name: Fetch full git history
           command: |
-            git fetch --prune --unshallow || true
+            git fetch --unshallow || true
+            git fetch origin main || true
+            git fetch --tags || true
             git fetch --all
 
       - run:
