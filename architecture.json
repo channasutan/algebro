@@ -6,23 +6,23 @@
       "groups": [
         {
           "name": "App",
-          "selector": "**/app/**/*"
+          "patterns": ["app/**/*"]
         },
         {
           "name": "Modules",
-          "selector": "**/modules/**/*"
+          "patterns": ["modules/**/*"]
         },
         {
           "name": "Infrastructure",
-          "selector": "**/infrastructure/**/*"
+          "patterns": ["infrastructure/**/*"]
         },
         {
           "name": "Events",
-          "selector": "**/events/**/*"
+          "patterns": ["events/**/*"]
         },
         {
           "name": "Config",
-          "selector": "**/config/**/*"
+          "patterns": ["config/**/*"]
         }
       ]
     }
