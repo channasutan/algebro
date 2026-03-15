@@ -2,8 +2,9 @@
  * Client-safe environment configuration entry point.
  *
  * This file can be safely imported in both client and server code.
- * Server-only functions (getServerEnv, getAuthEnv, getInfrastructureServerEnv) are intentionally stubbed in this client-safe entry point and will always throw if called.
- * Server code must import the real implementations from "@/config/env.server-entry".
+ * Server-only functions (getServerEnv, getAuthEnv, getInfrastructureServerEnv, getSympyServiceUrl, getMayarApiBaseUrl)
+ * are re-exported from env.server for server-side usage.
+ * Client code should not call these functions as they require server-side environment access.
  */
 import {
   getPublicAuthEnv as getClientPublicAuthEnv,
@@ -15,6 +16,18 @@ import {
 export { type ServerEnv, type AuthEnv, type InfrastructureServerEnv } from "./env.server-entry";
 
 export type { PublicEnv, PublicAuthEnv } from "./env.public";
+
+// Re-export server-only functions for infrastructure usage
+// These are safe to import in server-side code (infrastructure, API routes, etc.)
+export {
+  getPublicEnv,
+  getAuthEnv,
+  getInfrastructureServerEnv,
+  getSympyServiceUrl,
+  getMayarApiBaseUrl,
+  getMayarApiKey,
+  getMayarWebhookSecret
+} from "./env.server-entry";
 
 /**
  * Lazily resolve public env values so client-safe helpers can still answer
@@ -36,26 +49,10 @@ export const env: PublicEnv = new Proxy({} as PublicEnv, {
   }
 });
 
-export function getPublicEnv(): PublicEnv {
-  return getClientPublicEnv();
-}
-
 export function getPublicAuthEnv(): PublicAuthEnv {
   return getClientPublicAuthEnv();
 }
 
 export function hasPublicSupabaseEnv(): boolean {
   return hasClientPublicSupabaseEnv();
-}
-
-export function getServerEnv() {
-  throw new Error("getServerEnv() must be called from server context");
-}
-
-export function getAuthEnv() {
-  throw new Error("getAuthEnv() must be called from server context");
-}
-
-export function getInfrastructureServerEnv() {
-  throw new Error("getInfrastructureServerEnv() must be called from server context");
 }
