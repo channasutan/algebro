@@ -324,7 +324,7 @@ redirectUrl
 
 
 ---
-[16/03/26 00.53] Sutansyah: 11. Dynamic QR Code
+11. Dynamic QR Code
 
 Endpoint:
 
