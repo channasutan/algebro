@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 export type JobPayload = Record<string, unknown>;
 
 export type JobStatus = "pending" | "running" | "completed" | "failed";
@@ -13,6 +15,11 @@ export type Job = {
 };
 
 export type JobHandler = (job: Job) => Promise<void>;
+
+export type JobDefinition = {
+  handler: JobHandler;
+  schema?: z.ZodSchema;
+};
 
 export type JobRunResult = {
   jobId: string;
@@ -57,10 +64,17 @@ limit $1
 for update skip locked
 `.trim();
 
-const jobHandlers = new Map<string, JobHandler>();
+const jobHandlers = new Map<string, JobDefinition>();
 
-export function registerJobHandler(jobType: string, handler: JobHandler): void {
-  jobHandlers.set(jobType, handler);
+export function registerJobHandler(
+  jobType: string,
+  handlerOrDefinition: JobHandler | JobDefinition
+): void {
+  if (typeof handlerOrDefinition === "function") {
+    jobHandlers.set(jobType, { handler: handlerOrDefinition });
+  } else {
+    jobHandlers.set(jobType, handlerOrDefinition);
+  }
 }
 
 export function clearJobHandlers(): void {
@@ -72,13 +86,26 @@ export function canRetryJob(job: Job): boolean {
 }
 
 export async function runJob(job: Job): Promise<JobRunResult> {
-  const handler = jobHandlers.get(job.type);
+  const definition = jobHandlers.get(job.type);
 
-  if (!handler) {
+  if (!definition) {
     throw new Error(`No job handler registered for type: ${job.type}`);
   }
 
+  const { handler, schema } = definition;
+
   try {
+    // Optional runtime payload validation
+    if (schema) {
+      try {
+        schema.parse(job.payload);
+      } catch (validationError) {
+        throw new NonRetryableJobError(
+          `Invalid payload for job "${job.type}": ${validationError}`
+        );
+      }
+    }
+
     await handler({ ...job, status: "running" });
 
     return {
