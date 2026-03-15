@@ -60,8 +60,26 @@ directives:
   - name: "Config isolation"
     constraint: "config -> modules"
     action: forbid
+  - name: "App can read configuration"
+    constraint: "app -> config"
+    action: allow
+  - name: "Modules can read configuration"
+    constraint: "modules -> config"
+    action: allow
+  - name: "Infrastructure can read configuration"
+    constraint: "infrastructure -> config"
+    action: allow
+  - name: "Jobs can read configuration"
+    constraint: "jobs -> config"
+    action: allow
   - name: "Config cannot import Supabase clients"
     constraint: "config -> supabase-clients"
+    action: forbid
+  - name: "Modules cannot depend on infrastructure"
+    constraint: "modules -> infrastructure"
+    action: forbid
+  - name: "App cannot depend on infrastructure"
+    constraint: "app -> infrastructure"
     action: forbid
   - name: "Internal module isolation"
     constraint: "modules -> modules"
@@ -69,6 +87,12 @@ directives:
   - name: "Non-repository module files cannot import Supabase clients"
     constraint: "module-non-repositories -> supabase-clients"
     action: forbid
-  - name: "Tests can access lib for verification"
-    constraint: "tests -> lib"
+  - name: "Tests can access Supabase clients"
+    constraint: "tests -> supabase-clients"
+    action: allow
+  - name: "Tests can access infrastructure"
+    constraint: "tests -> infrastructure"
+    action: allow
+  - name: "Tests can access modules"
+    constraint: "tests -> modules"
     action: allow
