@@ -10,10 +10,33 @@ jobs:
 
     steps:
       - checkout
-      - run: npm ci
-      - run: npm run test
-      - run: npm run lint
-      - run: npm run build
+
+      # Fix SonarCloud MissingObjectException caused by shallow clone
+      - run:
+          name: Fetch full git history
+          command: git fetch --unshallow || true
+
+      # Install dependencies
+      - run:
+          name: Install dependencies
+          command: npm ci
+
+      # Run tests
+      - run:
+          name: Run tests
+          command: npm run test
+
+      # Run lint
+      - run:
+          name: Run lint
+          command: npm run lint
+
+      # Build project
+      - run:
+          name: Build project
+          command: npm run build
+
+      # SonarCloud analysis
       - sonarcloud/scan
 
 workflows:
