@@ -55,18 +55,24 @@ User
 
 Users represent registered platform accounts.
 
-Table: `users`
+Table: `public.users`
 
 Fields:
 
 id (uuid)  
 email (text)  
+display_name (text)  
+avatar_url (text)  
+timezone (text)  
 created_at (timestamp)  
+updated_at (timestamp)  
 
 Notes:
 
-- Authentication handled by Supabase Auth
+- Authentication is handled by Supabase Auth in `auth.users`
+- `public.users` is the canonical profile aggregate owned by the `user-profiles` module
 - `id` corresponds to `auth.users.id`
+- profile creation is idempotent and may happen from the auth registration event or a lazy profile lookup fallback
 
 ---
 
