@@ -41,7 +41,7 @@ Modules communicate through:
 
 The backend separates responsibilities into layers:
 
-Application Layer ↓ Modules ↓ Infrastructure Adapters ↓ External Services
+Application Layer ↓ Modules ↓ Repositories ↓ Infrastructure Adapters ↓ External Services
 
 Each layer has strict responsibilities.
 
@@ -91,9 +91,30 @@ Module responsibilities:
 - internal workflows
 - event emission
 
-Modules should not call external services directly.
+Modules must not import infrastructure adapters directly.
+Modules must not import `lib/supabase/*` directly.
 
-Instead they rely on adapters.
+Instead they rely on repository files inside the same module.
+
+---
+
+## Repositories
+
+Repositories are the persistence and integration boundary owned by a module.
+
+Repository responsibilities:
+
+- database access
+- infrastructure adapter orchestration
+- Supabase client usage when required
+
+Repositories are the only module files allowed to:
+
+- import infrastructure adapters
+- import `lib/supabase/*`
+- translate persistence or adapter responses into module-friendly data
+
+Application layers, services, domain files, and events must not create or import Supabase clients directly.
 
 ---
 
@@ -147,7 +168,7 @@ Examples:
 
 Gemini Adapter SymPy Adapter Mayar Adapter Supabase Adapter Realtime Adapter
 
-Modules should only interact with adapters, never external APIs directly.
+Infrastructure adapters are accessed through repositories, never directly from application layers or non-repository module files.
 
 ---
 
@@ -258,6 +279,7 @@ The backend architecture is built around:
 
 - modular monolith structure
 - strict layer boundaries
+- repository-mediated access to infrastructure
 - event-driven workflows
 - infrastructure adapters
 

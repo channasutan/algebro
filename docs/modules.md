@@ -9,6 +9,18 @@ Each module encapsulates a specific business domain and owns its internal logic 
 > [!NOTE]
 > Phase 1 focuses exclusively on establishing the shared infrastructure and adapter baseline. The core business logic and service implementations for the modules listed below are reserved for future phases.
 
+> [!NOTE]
+> Phase 2 Task 3 adds the `authentication` and `user-profiles` module scaffolds plus `modules/bootstrap.ts`.
+> This task defines public contracts and domain shapes only. Service and repository implementations arrive in later Phase 2 tasks.
+
+> [!IMPORTANT]
+> `modules/bootstrap.ts` is the server bootstrap contract for the modular monolith.
+> Server entry points such as route handlers, server actions, job startup, and
+> other server-only integration boundaries must call
+> `ensureModulesBootstrapped()` before they invoke module services.
+> It is idempotent and exists to prevent duplicate job registrations or event
+> subscriber wiring as Phase 2 adds more runtime behavior.
+
 Modules interact only through service interfaces (synchronous) or domain events (asynchronous).
 Modules must never directly manipulate another module's database tables.
 
@@ -38,6 +50,14 @@ Core modules:
 ---
 
 ## Authentication
+
+Scaffold Shape
+
+`index.ts`
+`contracts/sign-up.ts`
+`contracts/sign-in.ts`
+`contracts/session.ts`
+`domain/auth-session.ts`
 
 Responsibilities
 
@@ -75,6 +95,13 @@ Invariants
 ---
 
 ## User Profiles
+
+Scaffold Shape
+
+`index.ts`
+`contracts/get-profile.ts`
+`contracts/update-profile.ts`
+`domain/profile.ts`
 
 Responsibilities
 

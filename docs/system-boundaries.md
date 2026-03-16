@@ -19,7 +19,7 @@ Strict boundaries prevent architectural drift and maintain the modular monolith 
 
 The system is organized into the following layers:
 
-Frontend ↓ Application Layer ↓ Modules ↓ Infrastructure Adapters ↓ External Services
+Frontend ↓ Application Layer ↓ Modules ↓ Repositories ↓ Infrastructure Adapters ↓ External Services
 
 Each layer has specific responsibilities and allowed interactions.
 
@@ -82,17 +82,40 @@ Each module owns:
 Modules may:
 
 - call other modules through events
-- use infrastructure adapters
+- call repositories owned by the same module
 
 Allowed interactions:
 
-Module → Adapter Module → Event System
+Module → Repository
+Module → Event System
 
 Forbidden interactions:
 
-Module → External API directly Module → Database driver directly Module → Payment provider directly
+Module → Infrastructure Adapter
+Module → `lib/supabase/*`
+Module → External API directly
+Module → Database driver directly
+Module → Payment provider directly
 
-All external communication must go through adapters.
+All external communication must go through repositories and adapters.
+
+---
+
+# Repository Boundary
+
+Repositories are the only module files allowed to cross from domain logic into persistence and infrastructure.
+
+Allowed interactions:
+
+Repository → Infrastructure Adapter
+Repository → `lib/supabase/*`
+Repository → Database through Supabase clients
+
+Rules:
+
+- only repository files may import `lib/supabase/*`
+- repositories may call infrastructure adapters on behalf of module services
+- application layers, services, domain files, and events must not create Supabase clients directly
 
 ---
 
@@ -113,7 +136,8 @@ Gemini Adapter SymPy Adapter Mayar Adapter Supabase Adapter Realtime Adapter
 
 Allowed interactions:
 
-Adapter → External Service Adapter → Module (returning results)
+Repository → Adapter
+Adapter → External Service
 
 Adapters must not implement domain logic.
 
@@ -134,7 +158,7 @@ External services are accessed only through adapters.
 
 Example flow:
 
-Module ↓ Adapter ↓ External Service
+Module ↓ Repository ↓ Adapter ↓ External Service
 
 This ensures that external APIs do not leak into domain logic.
 
@@ -185,7 +209,7 @@ The frontend must not call the SymPy service directly.
 
 Correct flow:
 
-Frontend ↓ Backend Module ↓ SymPy Adapter ↓ SymPy Service
+Frontend ↓ Backend Module ↓ Module Repository ↓ SymPy Adapter ↓ SymPy Service
 
 ---
 
@@ -195,7 +219,7 @@ Payments are handled through the Mayar adapter.
 
 Correct flow:
 
-Frontend ↓ Backend Module ↓ Mayar Adapter ↓ Mayar API
+Frontend ↓ Backend Module ↓ Module Repository ↓ Mayar Adapter ↓ Mayar API
 
 The frontend must not call payment providers directly.
 
@@ -206,9 +230,10 @@ The frontend must not call payment providers directly.
 The database is managed through Supabase.
 
 Rules:
-- database access occurs only inside backend modules
+- database access occurs only inside repositories owned by backend modules
 - frontend must not query database tables directly
-- infrastructure adapters may assist database access
+- only repository files may import `lib/supabase/*`
+- infrastructure adapters may assist repositories, but application layers must not create Supabase clients directly
 
 Forbidden flow:
 
@@ -218,13 +243,13 @@ Frontend → Supabase Database
 
 # Allowed Interaction Summary
 
-Frontend → Backend Backend → Modules Modules → Adapters Adapters → External Services
+Frontend → Backend Backend → Modules Modules → Repositories Repositories → Adapters Repositories → `lib/supabase/*` Adapters → External Services
 
 ---
 
 # Forbidden Interaction Summary
 
-Frontend → Database Frontend → External APIs Frontend → Adapters Modules → External APIs directly Adapters → Domain Logic
+Frontend → Database Frontend → External APIs Frontend → Adapters Modules → Infrastructure Modules → `lib/supabase/*` Modules → External APIs directly Adapters → Domain Logic
 
 ---
 
@@ -234,8 +259,9 @@ Developers must follow these rules when adding new features:
 
 - do not bypass system layers
 - do not embed business logic in UI
-- do not connect modules directly to external APIs
-- always introduce adapters for external integrations
+- do not connect modules directly to infrastructure or external APIs
+- always route external integrations through repositories and adapters
+- only repositories may import `lib/supabase/*`
 
 Violating these boundaries will degrade the system architecture.
 
@@ -249,6 +275,6 @@ The architecture enforces:
 
 - modular backend design
 - thin frontend
-- adapter-based infrastructure integration
+- repository-mediated infrastructure integration
 
 These boundaries allow the system to remain scalable, maintainable, and predictable.

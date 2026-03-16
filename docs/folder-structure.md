@@ -20,6 +20,9 @@ Top-Level Structure
 
 app/
 modules/
+  bootstrap.ts
+  authentication/
+  user-profiles/
 lib/
 infrastructure/
 events/
@@ -90,6 +93,8 @@ Modules encapsulate:
 Example modules:
 
 modules/
+  authentication/
+  user-profiles/
   practice/
   step-validation/
   ai-tutor/
@@ -116,6 +121,11 @@ modules/<module>/
   events/
   tests/
 
+Shared module bootstrap:
+
+modules/
+  bootstrap.ts
+
 Directory| Purpose
 index.ts| Public module interface
 contracts| Input/output types
@@ -124,6 +134,15 @@ services| Application orchestration
 repositories| Database access
 events| Domain event handlers
 tests| Module unit tests
+bootstrap.ts| Server-side one-time registration for shared handlers and module wiring
+
+Contracts should be split by use case when a module grows, for example:
+
+- `contracts/sign-up.ts`
+- `contracts/sign-in.ts`
+- `contracts/session.ts`
+- `contracts/get-profile.ts`
+- `contracts/update-profile.ts`
 
 ---
 
