@@ -49,6 +49,46 @@ export function createSupabaseAuthRepository(): AuthRepository {
   return createRepositoryFromClientFactory(getClient);
 }
 
+function extractUserId(user: AuthUser | null | undefined): string | null {
+  return user?.id ?? null;
+}
+
+function extractConfirmedEmail(user: AuthUser | null | undefined): string | null {
+  return user?.email ?? null;
+}
+
+/**
+ * Determines whether the user needs to confirm their email.
+ *
+ * Conditions requiring confirmation:
+ * 1. No identities found (user created but not fully provisioned)
+ * 2. User exists but no session created (email confirmation pending)
+ */
+function determineRequiresEmailConfirmation(
+  user: AuthUser | null | undefined,
+  session: Session | null | undefined
+): boolean {
+  const hasNoIdentities = (user?.identities?.length ?? 0) === 0;
+  const hasUserButNoSession = user !== null && session === null;
+
+  return hasNoIdentities || hasUserButNoSession;
+}
+
+interface AuthUser {
+  id: string;
+  email: string | null;
+  identities?: Array<unknown>;
+}
+
+interface Session {
+  access_token: string;
+}
+
+interface SignUpResponse {
+  user: AuthUser | null;
+  session: Session | null;
+}
+
 function createRepositoryFromClientFactory(
   getClient: () => Promise<Awaited<ReturnType<typeof getSupabaseServerClient>>>
 ): AuthRepository {
@@ -61,13 +101,15 @@ function createRepositoryFromClientFactory(
         throw new Error(error.message);
       }
 
-      const userId = data.user?.id ?? null;
-      const confirmedEmail = data.user?.email ?? null;
-      const requiresEmailConfirmation =
-        data.user?.identities?.length === 0 ||
-        (data.user !== null && data.session === null);
+      const response = data as SignUpResponse;
+      const userId = extractUserId(response.user);
+      const email_ = extractConfirmedEmail(response.user);
+      const requiresEmailConfirmation = determineRequiresEmailConfirmation(
+        response.user,
+        response.session
+      );
 
-      return { userId, email: confirmedEmail, requiresEmailConfirmation };
+      return { userId, email: email_, requiresEmailConfirmation };
     },
 
     async signIn({ email, password }) {
