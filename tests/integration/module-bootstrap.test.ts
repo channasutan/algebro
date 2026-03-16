@@ -56,7 +56,15 @@ describe("module bootstrap", () => {
   it("exposes only the authentication module public API through index.ts", async () => {
     const authenticationModule = await import("@/modules/authentication");
 
-    expect(Object.keys(authenticationModule).sort()).toEqual(["authenticationModule"]);
+    expect(Object.keys(authenticationModule).sort()).toEqual([
+      "authenticationModule",
+      "buildAuthRepository",
+      "getCurrentSession",
+      "handleAuthCallback",
+      "signInUser",
+      "signOutUser",
+      "signUpUser"
+    ]);
     expect(authenticationModule.authenticationModule).toEqual({
       name: "authentication"
     });
