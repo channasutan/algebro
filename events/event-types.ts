@@ -1,14 +1,23 @@
 export type DomainEventPayload = Record<string, unknown>;
 
 export type CoreDomainEventType =
+  // step events
   | "step_submitted"
   | "step_validated"
   | "attempt_completed"
+  // material events
   | "material_uploaded"
   | "material_processed"
+  // duel events
   | "duel_started"
   | "duel_finished"
-  | "subscription_updated";
+  // subscription events
+  | "subscription_updated"
+  // authentication events
+  | "auth_user_registered"
+  // user profile events
+  | "user_profile_initialized"
+  | "user_profile_updated";
 
 export type DomainEventType = CoreDomainEventType | (string & {});
 
