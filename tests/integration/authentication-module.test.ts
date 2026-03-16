@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 import { eventBus } from "@/events/event-bus";
@@ -9,6 +8,7 @@ import {
   buildAuthRepository,
 } from "@/modules/authentication";
 import { buildSupabaseServerClient } from "@/lib/supabase/server-client";
+import type { SupabaseClient } from "@/lib/supabase/server-client";
 
 // Minimal mock of next/headers cookies
 vi.mock("next/headers", () => ({
@@ -30,23 +30,34 @@ vi.mock("@/events/event-bus", () => ({
 }));
 
 describe("Authentication Module Integration", () => {
-  let mockSupabaseAuth: any;
+  // Typed mock for Supabase auth client
+  const createMockSupabaseAuth = () => ({
+    signUp: vi.fn(),
+    signInWithPassword: vi.fn(),
+    signOut: vi.fn(),
+    getSession: vi.fn(),
+    exchangeCodeForSession: vi.fn(),
+  });
+
+  type MockSupabaseAuth = ReturnType<typeof createMockSupabaseAuth>;
+  type MockCookieStore = {
+    getAll: ReturnType<typeof vi.fn>;
+    get: ReturnType<typeof vi.fn>;
+    set: ReturnType<typeof vi.fn>;
+    delete: ReturnType<typeof vi.fn>;
+  };
+
+  let mockSupabaseAuth: MockSupabaseAuth;
 
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockSupabaseAuth = {
-      signUp: vi.fn(),
-      signInWithPassword: vi.fn(),
-      signOut: vi.fn(),
-      getSession: vi.fn(),
-      exchangeCodeForSession: vi.fn(),
-    };
+    mockSupabaseAuth = createMockSupabaseAuth();
 
     // Replace the built client with our mock
     vi.mocked(buildSupabaseServerClient).mockReturnValue({
       auth: mockSupabaseAuth,
-    } as any);
+    } as unknown as SupabaseClient);
   });
 
   it("completes the full loop: service -> repository -> database client -> event bus", async () => {
@@ -60,7 +71,12 @@ describe("Authentication Module Integration", () => {
     });
 
     // 2. Setup the real repository injected with a mock cookie store
-    const mockCookieStore: any = { getAll: vi.fn(), setAll: vi.fn() };
+    const mockCookieStore: MockCookieStore = {
+      getAll: vi.fn().mockReturnValue([]),
+      get: vi.fn(),
+      set: vi.fn(),
+      delete: vi.fn(),
+    };
     const repo = buildAuthRepository(mockCookieStore);
 
     // 3. Act - call the top-level service

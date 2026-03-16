@@ -22,7 +22,7 @@ import type { AuthSession } from "../domain/auth-session";
  */
 
 export type AuthRepository = {
-  signUp(input: SignUpInput): Promise<SignUpResult & { userId: string | null; email: string | null }>;
+  signUp(input: SignUpInput): Promise<SignUpResult & { email: string | null }>;
   signIn(input: SignInInput): Promise<SignInResult>;
   signOut(): Promise<void>;
   getSession(): Promise<SessionLookupResult>;
@@ -144,9 +144,15 @@ function createRepositoryFromClientFactory(
         return { session: null };
       }
 
+      // An authenticated session must have a valid email.
+      // If email is missing, treat as unauthenticated.
+      if (!data.session.user.email) {
+        return { session: null };
+      }
+
       const session: AuthSession = {
         userId: data.session.user.id,
-        email: data.session.user.email ?? "",
+        email: data.session.user.email,
         isAuthenticated: true,
       };
 
