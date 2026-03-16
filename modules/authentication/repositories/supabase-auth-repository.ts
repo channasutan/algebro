@@ -63,13 +63,20 @@ function extractConfirmedEmail(user: AuthUser | null | undefined): string | null
  * Conditions requiring confirmation:
  * 1. No identities found (user created but not fully provisioned)
  * 2. User exists but no session created (email confirmation pending)
+ *
+ * If user is null/undefined, returns false - there's no user to require confirmation.
  */
 function determineRequiresEmailConfirmation(
   user: AuthUser | null | undefined,
   session: Session | null | undefined
 ): boolean {
-  const hasNoIdentities = (user?.identities?.length ?? 0) === 0;
-  const hasUserButNoSession = user !== null && session === null;
+  // No user exists - nothing to confirm
+  if (user == null) {
+    return false;
+  }
+
+  const hasNoIdentities = (user.identities?.length ?? 0) === 0;
+  const hasUserButNoSession = session === null;
 
   return hasNoIdentities || hasUserButNoSession;
 }

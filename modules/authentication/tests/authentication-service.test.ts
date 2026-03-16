@@ -84,6 +84,27 @@ describe("Authentication Services", () => {
 
       expect(eventBus.publish).not.toHaveBeenCalled();
     });
+
+    it("does not throw if event publishing fails (best-effort)", async () => {
+      const repo = mockRepository();
+      vi.mocked(repo.signUp).mockResolvedValue({
+        userId: "user-456",
+        email: "test@example.com",
+        requiresEmailConfirmation: false,
+      });
+
+      // Simulate event bus failure
+      vi.mocked(eventBus.publish).mockRejectedValue(new Error("Event bus unavailable"));
+
+      // Should not throw - event publishing is best-effort
+      const result = await signUpUser(
+        { email: "test@example.com", password: TEST_PASSWORD },
+        repo
+      );
+
+      expect(result.userId).toBe("user-456");
+      expect(eventBus.publish).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("signInUser", () => {
