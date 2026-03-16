@@ -4,33 +4,44 @@ import type { ProfileRepository } from "../repositories/supabase-profile-reposit
 import type { UpdateProfileInput, UpdateProfileResult } from "../contracts/update-profile";
 import { ensureProfileExists } from "./ensure-profile-exists";
 
+function getSupportedTimezones(): string[] | undefined {
+  if (typeof Intl === "undefined" || typeof Intl.supportedValuesOf !== "function") {
+    return undefined;
+  }
+
+  try {
+    return Intl.supportedValuesOf("timeZone");
+  } catch {
+    return undefined;
+  }
+}
+
+function validateWithIntl(timezone: string, supported: string[]): void {
+  if (!supported.includes(timezone)) {
+    throw new Error(`Invalid timezone: ${timezone}`);
+  }
+}
+
+function validateWithRegex(timezone: string): void {
+  const IANA_REGEX = /^[A-Za-z_]+(?:\/[A-Za-z0-9._+-]+)+$/;
+  if (!IANA_REGEX.test(timezone)) {
+    throw new Error(`Invalid timezone format: ${timezone}`);
+  }
+}
+
 function validateTimezone(timezone: string | undefined): void {
   if (timezone === undefined) {
     return;
   }
 
-  let supported: string[] | undefined;
-
-  if (typeof Intl !== "undefined" && typeof Intl.supportedValuesOf === "function") {
-    try {
-      supported = Intl.supportedValuesOf("timeZone");
-    } catch {
-      supported = undefined;
-    }
-  }
+  const supported = getSupportedTimezones();
 
   if (supported) {
-    if (!supported.includes(timezone)) {
-      throw new Error(`Invalid timezone: ${timezone}`);
-    }
+    validateWithIntl(timezone, supported);
     return;
   }
 
-  // Fallback to safe IANA timezone regex validation
-  const IANA_REGEX = /^[A-Za-z_]+(?:\/[A-Za-z0-9._+-]+)+$/;
-  if (!IANA_REGEX.test(timezone)) {
-    throw new Error(`Invalid timezone format: ${timezone}`);
-  }
+  validateWithRegex(timezone);
 }
 
 export async function updateProfile(
