@@ -9,7 +9,7 @@ import { createDomainEvent } from "@/events/event-types";
 
 export const USER_PROFILE_UPDATED = "user_profile_updated" as const satisfies CoreDomainEventType;
 
-type ProfileFieldValue = string | number | boolean | null;
+type ProfileFieldValue = string | null;
 
 /**
  * Profile fields that can appear in a profile update event.
