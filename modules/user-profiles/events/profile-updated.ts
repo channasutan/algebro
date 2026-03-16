@@ -18,7 +18,7 @@ type ProfileFieldValue = string | number | boolean | null;
  * When a migration adds a new mutable profile column, update this
  * union accordingly.
  */
-type ProfileField = "display_name" | "avatar_url" | "bio" | "timezone";
+type ProfileField = "display_name" | "avatar_url" | "timezone";
 
 /** Contains only the fields that were modified during the profile update. */
 type ProfileFieldMap = Partial<Record<ProfileField, ProfileFieldValue>>;
