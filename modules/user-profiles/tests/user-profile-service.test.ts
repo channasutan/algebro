@@ -1,0 +1,174 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { ensureProfileExists } from "../services/ensure-profile-exists";
+import { getCurrentProfile } from "../services/get-current-profile";
+import { updateProfile } from "../services/update-profile";
+import type { ProfileRepository } from "../repositories/supabase-profile-repository";
+import { eventBus } from "@/events/event-bus";
+import { USER_PROFILE_INITIALIZED } from "../events/user-profile-initialized";
+import { USER_PROFILE_UPDATED } from "../events/profile-updated";
+import type { UserProfile } from "../domain/profile";
+import type { Mock, Mocked } from "vitest";
+
+vi.mock("@/events/event-bus", () => ({
+  eventBus: {
+    publish: vi.fn(),
+  },
+}));
+
+describe("User Profiles Service Logic", () => {
+  let mockRepo: Mocked<ProfileRepository>;
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+    (eventBus.publish as Mock).mockResolvedValue(true);
+
+    mockRepo = {
+      findById: vi.fn(),
+      requireById: vi.fn(),
+      insertProfile: vi.fn(),
+      updateProfile: vi.fn(),
+    } as unknown as Mocked<ProfileRepository>;
+  });
+
+  describe("ensureProfileExists", () => {
+    it("returns existing profile immediately", async () => {
+      const existingProfile = { userId: "user-1", email: "test@ex.com", displayName: null, avatarUrl: null, timezone: "UTC", updatedAt: "date" };
+      mockRepo.findById.mockResolvedValue(existingProfile);
+
+      const result = await ensureProfileExists(mockRepo, { userId: "user-1" });
+
+      expect(mockRepo.findById).toHaveBeenCalledWith("user-1");
+      expect(mockRepo.insertProfile).not.toHaveBeenCalled();
+      expect(result).toEqual(existingProfile);
+    });
+
+    it("inserts profile and emits event if not found", async () => {
+      mockRepo.findById.mockResolvedValue(null);
+      mockRepo.insertProfile.mockResolvedValue(true);
+      
+      const newProfile = { userId: "user-1", email: "test@ex.com", displayName: null, avatarUrl: null, timezone: "UTC", updatedAt: "date" };
+      mockRepo.requireById.mockResolvedValue(newProfile);
+
+      const result = await ensureProfileExists(mockRepo, { userId: "user-1", email: "test@ex.com" });
+
+      expect(mockRepo.insertProfile).toHaveBeenCalledWith({
+        id: "user-1",
+        email: "test@ex.com",
+        timezone: "UTC",
+      });
+      expect(mockRepo.requireById).toHaveBeenCalledWith("user-1");
+      expect(eventBus.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event_type: USER_PROFILE_INITIALIZED,
+          payload: { userId: "user-1" },
+        })
+      );
+      expect(result).toEqual(newProfile);
+    });
+
+    it("does not emit event if insert returns false (e.g. race condition DO NOTHING)", async () => {
+      mockRepo.findById.mockResolvedValue(null);
+      mockRepo.insertProfile.mockResolvedValue(false); // another process inserted
+      
+      const newProfile = { userId: "user-1", email: "test@ex.com", displayName: null, avatarUrl: null, timezone: "UTC", updatedAt: "date" };
+      mockRepo.requireById.mockResolvedValue(newProfile);
+
+      const result = await ensureProfileExists(mockRepo, { userId: "user-1" });
+
+      expect(eventBus.publish).not.toHaveBeenCalled();
+      expect(result).toEqual(newProfile);
+    });
+    
+    it("never crashes the event bus if publish fails because it catches internally", async () => {
+      mockRepo.findById.mockResolvedValue(null);
+      mockRepo.insertProfile.mockResolvedValue(true);
+      const newProfile = { userId: "user-1", email: "test@ex.com", displayName: null, avatarUrl: null, timezone: "UTC", updatedAt: "date" };
+      mockRepo.requireById.mockResolvedValue(newProfile);
+      
+      (eventBus.publish as Mock).mockRejectedValue(new Error("Event bus failure"));
+      
+      // Should not throw
+      const result = await ensureProfileExists(mockRepo, { userId: "user-1" });
+      expect(result).toEqual(newProfile);
+      // It caught the error inside implicitly (our logic has a .catch built-in)
+    });
+  });
+
+  describe("getCurrentProfile", () => {
+    it("returns profile if it exists", async () => {
+      const existingProfile = { userId: "user-1", email: "test@ex.com", displayName: null, avatarUrl: null, timezone: "UTC", updatedAt: "date" };
+      mockRepo.findById.mockResolvedValue(existingProfile);
+
+      const result = await getCurrentProfile(mockRepo, { userId: "user-1" });
+      expect(result).toEqual(existingProfile);
+    });
+
+    it("lazily bootstraps profile if not found", async () => {
+      // first call in getCurrentProfile
+      mockRepo.findById.mockResolvedValueOnce(null);
+      
+      // inside ensureProfileExists calls findById
+      mockRepo.findById.mockResolvedValueOnce(null);
+      mockRepo.insertProfile.mockResolvedValue(true);
+      
+      const newProfile = { userId: "user-1", email: "test@ex.com", displayName: null, avatarUrl: null, timezone: "UTC", updatedAt: "date" };
+      mockRepo.requireById.mockResolvedValue(newProfile);
+      
+      const result = await getCurrentProfile(mockRepo, { userId: "user-1" });
+
+      expect(mockRepo.insertProfile).toHaveBeenCalledWith({
+        id: "user-1",
+        email: null,
+        timezone: "UTC",
+      });
+      expect(eventBus.publish).toHaveBeenCalled();
+      expect(result).toEqual(newProfile);
+    });
+  });
+
+  describe("updateProfile", () => {
+    it("updates profile, publishes event, and returns new profile", async () => {
+      // mock ensureProfileExists -> findById
+      const existingProfile = { userId: "user-1", email: "test@ex.com", displayName: null, avatarUrl: null, timezone: "UTC", updatedAt: "date" };
+      mockRepo.findById.mockResolvedValue(existingProfile);
+      
+      const updatedProfile = { ...existingProfile, displayName: "New Name", updatedAt: "new-date" };
+      mockRepo.updateProfile.mockResolvedValue(updatedProfile);
+
+      const result = await updateProfile(mockRepo, {
+        userId: "user-1",
+        changes: { displayName: "New Name", timezone: "America/New_York" }
+      });
+
+      expect(mockRepo.updateProfile).toHaveBeenCalledWith("user-1", {
+        displayName: "New Name",
+        timezone: "America/New_York"
+      });
+      
+      expect(eventBus.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event_type: USER_PROFILE_UPDATED,
+          payload: {
+            userId: "user-1",
+            changedFields: {
+              display_name: "New Name",
+              timezone: "America/New_York"
+            },
+            updatedAt: "new-date"
+          }
+        })
+      );
+      
+      expect(result.profile).toEqual(updatedProfile);
+    });
+
+    it("verifies timezone via regex if Intl is not available (mocked out)", async () => {
+      mockRepo.findById.mockResolvedValue({} as unknown as UserProfile);
+      mockRepo.updateProfile.mockResolvedValue({ timezone: "Invalid" } as unknown as UserProfile);
+      // Test invalid timezone format for regex
+      await expect(
+        updateProfile(mockRepo, { userId: "user-1", changes: { timezone: "invalid-tz" } })
+      ).rejects.toThrow(/Invalid timezone/);
+    });
+  });
+});

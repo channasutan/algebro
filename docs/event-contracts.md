@@ -110,6 +110,41 @@ Fields:
 
 # Core Domain Events
 
+## Authentication Events
+
+This category handles identity events from the underlying auth provider.
+
+### auth_user_registered
+
+Emitted by the authentication module after a user successfully completes registration via Supabase Auth. Consumed by user-profiles to bootstrap the profile row.
+
+Emitter:
+
+```
+Authentication Module
+```
+
+Payload:
+
+```json
+{
+  "userId": "uuid",
+  "email": "user@example.com",
+  "registeredAt": "timestamp",
+  "source": "string"
+}
+```
+
+Consumers:
+
+```
+User Profiles Module
+```
+
+---
+
+## Learning Events
+
 ## step_submitted
 
 Emitted when a student submits a new step during problem solving.
@@ -470,6 +505,7 @@ learning events
 content events
 gameplay events
 billing events
+authentication events
 ```
 
 This event system enables:

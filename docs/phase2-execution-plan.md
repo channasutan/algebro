@@ -337,7 +337,7 @@ Objective: implement the repository and services that own `public.users`, subscr
 Files to create or modify:
 
 - `supabase/migrations/<timestamp>_add_users_rls_policies.sql`
-- `modules/user-profiles/repositories/supabase-user-profile-repository.ts`
+- `modules/user-profiles/repositories/supabase-profile-repository.ts`
 - `modules/user-profiles/services/ensure-profile-exists.ts`
 - `modules/user-profiles/services/get-current-profile.ts`
 - `modules/user-profiles/services/update-profile.ts`

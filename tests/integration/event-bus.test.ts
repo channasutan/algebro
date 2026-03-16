@@ -140,5 +140,50 @@ describe("event bus", () => {
       expect(received.event_type).toBe("auth_user_registered");
       expect(received.payload.userId).toBe("user-789");
     });
+
+    it("delivers user_profile_initialized events to subscribers", async () => {
+      const bus = createBus();
+      const subscriber = vi.fn();
+      
+      const event: DomainEvent = createDomainEvent({
+        eventType: "user_profile_initialized",
+        payload: { userId: "user-123" }
+      });
+
+      bus.subscribe("user_profile_initialized", subscriber);
+
+      await bus.publish(event);
+
+      expect(subscriber).toHaveBeenCalledTimes(1);
+      const received = subscriber.mock.calls[0][0];
+      expect(received.event_type).toBe("user_profile_initialized");
+      expect(received.payload.userId).toBe("user-123");
+    });
+
+    it("delivers user_profile_updated events to subscribers", async () => {
+      const bus = createBus();
+      const subscriber = vi.fn();
+      
+      const event: DomainEvent = createDomainEvent({
+        eventType: "user_profile_updated",
+        payload: {
+          userId: "user-123",
+          changedFields: {
+            display_name: "Test Name"
+          },
+          updatedAt: "2024-01-01T00:00:00Z"
+        }
+      });
+
+      bus.subscribe("user_profile_updated", subscriber);
+
+      await bus.publish(event);
+
+      expect(subscriber).toHaveBeenCalledTimes(1);
+      const received = subscriber.mock.calls[0][0];
+      expect(received.event_type).toBe("user_profile_updated");
+      expect(received.payload.userId).toBe("user-123");
+      expect(received.payload.changedFields.display_name).toBe("Test Name");
+    });
   });
 });

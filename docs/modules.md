@@ -83,6 +83,15 @@ getSession()
 
 handleAuthCallback()
 
+> [!NOTE]
+> Authentication services use the repository injection pattern. This prevents developers from importing internal repository factories directly.
+> 
+> Example usage:
+> ```typescript
+> const repo = buildAuthRepository(cookieStore)
+> await signUpUser(repo, input)
+> ```
+
 Events Emitted
 
 auth_user_registered
@@ -691,6 +700,15 @@ Modules must follow these rules:
 3. Database writes must happen only inside the owning module.
 4. Domain events are used for side effects across modules.
 5. Circular dependencies between modules are not allowed.
+
+### Repository Naming Convention
+
+Internal module repositories must follow this naming convention:
+`supabase-[aggregate]-repository.ts`
+
+Examples:
+- `supabase-auth-repository.ts`
+- `supabase-profile-repository.ts`
 
 Example interaction
 

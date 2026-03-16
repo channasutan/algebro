@@ -4,4 +4,5 @@ export type UserProfile = {
   displayName: string | null;
   avatarUrl: string | null;
   timezone: string;
+  updatedAt: string;
 };

@@ -1,5 +1,10 @@
 import "server-only";
 
+import { eventBus } from "@/events/event-bus";
+import { AUTH_USER_REGISTERED } from "@/modules/authentication/events/auth-user-registered";
+import { handleAuthUserRegistered } from "@/modules/user-profiles/events/on-auth-user-registered";
+import { createSupabaseProfileRepository } from "@/modules/user-profiles/repositories/supabase-profile-repository";
+
 import {
   MATERIAL_PROCESSING_JOB,
   materialProcessingHandler
@@ -18,7 +23,12 @@ function registerAuthenticationModule(): void {
 }
 
 function registerUserProfilesModule(): void {
-  // Task 3 scaffolds the module boundary only. Profile subscribers arrive later.
+  const profileRepo = createSupabaseProfileRepository();
+
+  eventBus.subscribe(
+    AUTH_USER_REGISTERED,
+    handleAuthUserRegistered(profileRepo)
+  );
 }
 
 function registerOptionalJobs(): void {
