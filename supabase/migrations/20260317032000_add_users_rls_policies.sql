@@ -8,11 +8,11 @@ BEGIN;
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.users FORCE ROW LEVEL SECURITY;
 
--- 1. Read Policy: Users can only read their own profile
+-- 1. Read Policy: Users can only read their own profile, and service_role can read any profile
 DROP POLICY IF EXISTS users_read_own_profile ON public.users;
 CREATE POLICY users_read_own_profile ON public.users
   FOR SELECT
-  USING (auth.uid() = id);
+  USING (auth.uid() = id OR auth.role() = 'service_role');
 
 -- 2. Insert Policy: Users can insert their own profile, and service_role can bootstrap profiles
 DROP POLICY IF EXISTS users_insert_own_profile ON public.users;

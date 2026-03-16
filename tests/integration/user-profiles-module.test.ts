@@ -4,7 +4,7 @@ import { createSupabaseProfileRepository } from "@/modules/user-profiles/reposit
 import { getCurrentProfile } from "@/modules/user-profiles/services/get-current-profile";
 import { updateProfile } from "@/modules/user-profiles/services/update-profile";
 import { eventBus } from "@/events/event-bus";
-import { USER_PROFILE_INITIALIZED } from "@/modules/user-profiles/events/user-profile-initialized";
+import { USER_PROFILE_INITIALIZED } from "@/modules/user-profiles/events/profile-initialized";
 import { USER_PROFILE_UPDATED } from "@/modules/user-profiles/events/profile-updated";
 
 import * as ServerClientAuth from "@/lib/supabase/server-client";

@@ -1,5 +1,5 @@
 import { eventBus } from "@/events/event-bus";
-import { createUserProfileInitializedEvent } from "../events/user-profile-initialized";
+import { createUserProfileInitializedEvent } from "../events/profile-initialized";
 import type { ProfileRepository } from "../repositories/supabase-profile-repository";
 import type { UserProfile } from "../domain/profile";
 
@@ -28,7 +28,13 @@ export async function ensureProfileExists(
   const profile = await repo.requireById(userId);
 
   if (inserted) {
-    const event = createUserProfileInitializedEvent({ userId });
+    const event = createUserProfileInitializedEvent({
+      userId,
+      email: email ?? "",
+      displayName: "",
+      initializedAt: new Date().toISOString(),
+      initializationSource: "lazy_bootstrap",
+    });
     void eventBus.publish(event).catch((err) => {
       console.error("[user-profiles] failed to publish event", err);
     });

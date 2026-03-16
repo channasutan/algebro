@@ -9,20 +9,25 @@ function validateTimezone(timezone: string | undefined): void {
     return;
   }
 
+  let supported: string[] | undefined;
+
   if (typeof Intl !== "undefined" && typeof Intl.supportedValuesOf === "function") {
     try {
-      const supported = Intl.supportedValuesOf("timeZone");
-      if (!supported.includes(timezone)) {
-        throw new Error(`Invalid timezone: ${timezone}`);
-      }
-      return; // Validation passed
+      supported = Intl.supportedValuesOf("timeZone");
     } catch {
-      // Fallback if Intl throws
+      supported = undefined;
     }
   }
-  
+
+  if (supported) {
+    if (!supported.includes(timezone)) {
+      throw new Error(`Invalid timezone: ${timezone}`);
+    }
+    return;
+  }
+
   // Fallback to safe IANA timezone regex validation
-  const IANA_REGEX = /^[A-Za-z_]+\/[A-Za-z_]+$/;
+  const IANA_REGEX = /^[A-Za-z_]+(?:\/[A-Za-z0-9._+-]+)+$/;
   if (!IANA_REGEX.test(timezone)) {
     throw new Error(`Invalid timezone format: ${timezone}`);
   }

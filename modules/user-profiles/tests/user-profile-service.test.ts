@@ -4,7 +4,7 @@ import { getCurrentProfile } from "../services/get-current-profile";
 import { updateProfile } from "../services/update-profile";
 import type { ProfileRepository } from "../repositories/supabase-profile-repository";
 import { eventBus } from "@/events/event-bus";
-import { USER_PROFILE_INITIALIZED } from "../events/user-profile-initialized";
+import { USER_PROFILE_INITIALIZED } from "../events/profile-initialized";
 import { USER_PROFILE_UPDATED } from "../events/profile-updated";
 import type { UserProfile } from "../domain/profile";
 import type { Mock, Mocked } from "vitest";
@@ -60,7 +60,7 @@ describe("User Profiles Service Logic", () => {
       expect(eventBus.publish).toHaveBeenCalledWith(
         expect.objectContaining({
           event_type: USER_PROFILE_INITIALIZED,
-          payload: { userId: "user-1" },
+          payload: expect.objectContaining({ userId: "user-1" }),
         })
       );
       expect(result).toEqual(newProfile);
@@ -169,6 +169,37 @@ describe("User Profiles Service Logic", () => {
       await expect(
         updateProfile(mockRepo, { userId: "user-1", changes: { timezone: "invalid-tz" } })
       ).rejects.toThrow(/Invalid timezone/);
+    });
+
+    it("rejects invalid timezone formats when Intl.supportedValuesOf is unavailable", async () => {
+      // Save original and mock Intl.supportedValuesOf as undefined
+      const originalIntl = globalThis.Intl;
+      const originalSupportedValuesOf = (globalThis.Intl as Record<string, unknown>).supportedValuesOf;
+      delete (globalThis.Intl as Record<string, unknown>).supportedValuesOf;
+
+      try {
+        mockRepo.findById.mockResolvedValue({} as unknown as UserProfile);
+        mockRepo.updateProfile.mockResolvedValue({ timezone: "America/Argentina/Buenos_Aires" } as unknown as UserProfile);
+
+        // Test invalid format - should fail with regex fallback
+        await expect(
+          updateProfile(mockRepo, { userId: "user-1", changes: { timezone: "invalid-tz" } })
+        ).rejects.toThrow(/Invalid timezone/);
+
+        // Test valid IANA format with regex fallback - should pass
+        const result = await updateProfile(mockRepo, {
+          userId: "user-1",
+          changes: { timezone: "America/Argentina/Buenos_Aires" }
+        });
+        expect(result.profile.timezone).toBe("America/Argentina/Buenos_Aires");
+      } finally {
+        // Restore original Intl
+        if (originalSupportedValuesOf) {
+          (globalThis.Intl as Record<string, unknown>).supportedValuesOf = originalSupportedValuesOf;
+        } else {
+          globalThis.Intl = originalIntl;
+        }
+      }
     });
   });
 });

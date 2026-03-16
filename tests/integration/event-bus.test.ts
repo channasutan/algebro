@@ -19,7 +19,6 @@ function subscribeAndPublish<T extends { userId: string }>(
   });
 
   bus.subscribe(eventType, subscriber);
-  // eslint-disable-next-line @typescript-eslint/no/promise-constructor-promise
   return event;
 }
 
