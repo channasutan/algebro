@@ -98,7 +98,7 @@ function createRepositoryFromClientFactory(
       const { data, error } = await client.auth.signUp({ email, password });
 
       if (error) {
-        throw new Error(error.message);
+        throw new Error(error.message, { cause: error });
       }
 
       const response = data as SignUpResponse;
@@ -117,7 +117,7 @@ function createRepositoryFromClientFactory(
       const { error } = await client.auth.signInWithPassword({ email, password });
 
       if (error) {
-        throw new Error(error.message);
+        throw new Error(error.message, { cause: error });
       }
 
       return { success: true };
@@ -128,7 +128,7 @@ function createRepositoryFromClientFactory(
       const { error } = await client.auth.signOut();
 
       if (error) {
-        throw new Error(error.message);
+        throw new Error(error.message, { cause: error });
       }
     },
 
@@ -137,7 +137,7 @@ function createRepositoryFromClientFactory(
       const { data, error } = await client.auth.getSession();
 
       if (error) {
-        throw new Error(error.message);
+        throw new Error(error.message, { cause: error });
       }
 
       if (!data.session) {
@@ -164,7 +164,7 @@ function createRepositoryFromClientFactory(
       const { error } = await client.auth.exchangeCodeForSession(code);
 
       if (error) {
-        throw new Error(error.message);
+        throw new Error(error.message, { cause: error });
       }
     },
   };
