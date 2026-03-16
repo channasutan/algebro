@@ -2,6 +2,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 import { eventBus } from "@/events/event-bus";
+import { TEST_PASSWORD } from "@/tests/test-constants";
 import { AUTH_USER_REGISTERED } from "@/modules/authentication/events/auth-user-registered";
 import {
   signUpUser,
@@ -64,14 +65,14 @@ describe("Authentication Module Integration", () => {
 
     // 3. Act - call the top-level service
     const result = await signUpUser(
-      { email: "integration@example.com", password: "strongpassword" },
+      { email: "integration@example.com", password: TEST_PASSWORD },
       repo
     );
 
     // 4. Assert client was called correctly
     expect(mockSupabaseAuth.signUp).toHaveBeenCalledWith({
       email: "integration@example.com",
-      password: "strongpassword"
+      password: TEST_PASSWORD
     });
 
     // 5. Assert service response matches

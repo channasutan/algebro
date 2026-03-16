@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { eventBus } from "@/events/event-bus";
+import { TEST_PASSWORD } from "@/tests/test-constants";
 import { AUTH_USER_REGISTERED } from "@/modules/authentication/events/auth-user-registered";
 
 import { signUpUser } from "../services/sign-up-user";
@@ -37,11 +38,11 @@ describe("Authentication Services", () => {
       });
 
       const result = await signUpUser(
-        { email: "test@example.com", password: "password123" },
+        { email: "test@example.com", password: TEST_PASSWORD },
         repo
       );
 
-      expect(repo.signUp).toHaveBeenCalledWith({ email: "test@example.com", password: "password123" });
+      expect(repo.signUp).toHaveBeenCalledWith({ email: "test@example.com", password: TEST_PASSWORD });
       expect(result.userId).toBe("user-123");
       expect(result.requiresEmailConfirmation).toBe(true);
 
@@ -63,7 +64,7 @@ describe("Authentication Services", () => {
       vi.mocked(eventBus.publish).mockClear();
 
       const result = await signUpUser(
-        { email: "existing@example.com", password: "password123" },
+        { email: "existing@example.com", password: TEST_PASSWORD },
         repo
       );
 
@@ -78,7 +79,7 @@ describe("Authentication Services", () => {
       vi.mocked(eventBus.publish).mockClear();
 
       await expect(
-        signUpUser({ email: "test@example.com", password: "password123" }, repo)
+        signUpUser({ email: "test@example.com", password: TEST_PASSWORD }, repo)
       ).rejects.toThrow("Database error");
 
       expect(eventBus.publish).not.toHaveBeenCalled();
@@ -91,11 +92,11 @@ describe("Authentication Services", () => {
       vi.mocked(repo.signIn).mockResolvedValue({ success: true, redirectTo: "/dashboard" });
 
       const result = await signInUser(
-        { email: "test@example.com", password: "password123" },
+        { email: "test@example.com", password: TEST_PASSWORD },
         repo
       );
 
-      expect(repo.signIn).toHaveBeenCalledWith({ email: "test@example.com", password: "password123" });
+      expect(repo.signIn).toHaveBeenCalledWith({ email: "test@example.com", password: TEST_PASSWORD });
       expect(result.success).toBe(true);
       expect(result.redirectTo).toBe("/dashboard");
     });
