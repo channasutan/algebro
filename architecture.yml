@@ -96,3 +96,9 @@ directives:
   - name: "Tests can access modules"
     constraint: "tests -> modules"
     action: allow
+  - name: "Modules can access event registry"
+    constraint: "modules -> events"
+    action: allow
+  - name: "Tests can access events"
+    constraint: "tests -> events"
+    action: allow

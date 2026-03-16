@@ -630,3 +630,13 @@ The schema supports:
 - gamification
 - SaaS billing
 - personalized learning materials
+
+---
+
+Profile Schema Changes Checklist
+
+When a migration modifies the mutable columns of public.users:
+
+- review ProfileField in modules/user-profiles/events/profile-updated.ts
+- update the union if a new mutable profile field is introduced
+- verify related profile events still match the schema
