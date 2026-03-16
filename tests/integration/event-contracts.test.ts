@@ -22,14 +22,12 @@ import {
 
 // Compile-time assertion: each constant must be assignable to CoreDomainEventType.
 // If a constant drifts from the registry this file will fail to compile.
-const _typeCheckAuthRegistered: CoreDomainEventType = AUTH_USER_REGISTERED;
-const _typeCheckProfileInitialized: CoreDomainEventType = USER_PROFILE_INITIALIZED;
-const _typeCheckProfileUpdated: CoreDomainEventType = USER_PROFILE_UPDATED;
-
-// Prevent unused variable warnings - these exist only for compile-time type checking
-void _typeCheckAuthRegistered;
-void _typeCheckProfileInitialized;
-void _typeCheckProfileUpdated;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _assertAuthRegistered: CoreDomainEventType = AUTH_USER_REGISTERED;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _assertProfileInitialized: CoreDomainEventType = USER_PROFILE_INITIALIZED;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _assertProfileUpdated: CoreDomainEventType = USER_PROFILE_UPDATED;
 
 const ISO_TIMESTAMP_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
