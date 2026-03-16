@@ -39,6 +39,11 @@ export async function updateProfile(
 ): Promise<UpdateProfileResult> {
   const { userId, changes } = input;
 
+  // Prevent empty update operations
+  if (Object.keys(changes).length === 0) {
+    throw new Error("No profile fields provided for update");
+  }
+
   validateTimezone(changes.timezone);
 
   // Guarantee row exists before updating, to prevent silent failures
