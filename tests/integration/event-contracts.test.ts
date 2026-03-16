@@ -56,7 +56,7 @@ describe("auth_user_registered event contract", () => {
   it("factory produces a valid event object", () => {
     const event = createAuthUserRegisteredEvent(samplePayload);
 
-    expect(event.event_type).toBe("auth_user_registered");
+    expect(event.event_type).toBe(AUTH_USER_REGISTERED);
     expect(event.event_id).toMatch(UUID_REGEX);
     expect(event.timestamp).toMatch(ISO_TIMESTAMP_REGEX);
     expect(event.payload.userId).toBe("user-001");
@@ -92,7 +92,7 @@ describe("user_profile_initialized event contract", () => {
   it("factory produces a valid event object", () => {
     const event = createUserProfileInitializedEvent(samplePayload);
 
-    expect(event.event_type).toBe("user_profile_initialized");
+    expect(event.event_type).toBe(USER_PROFILE_INITIALIZED);
     expect(event.event_id).toMatch(UUID_REGEX);
     expect(event.timestamp).toMatch(ISO_TIMESTAMP_REGEX);
     expect(event.payload.userId).toBe("user-002");
@@ -127,12 +127,13 @@ describe("user_profile_updated event contract", () => {
   it("factory produces a valid event object", () => {
     const event = createUserProfileUpdatedEvent(samplePayload);
 
-    expect(event.event_type).toBe("user_profile_updated");
+    expect(event.event_type).toBe(USER_PROFILE_UPDATED);
     expect(event.event_id).toMatch(UUID_REGEX);
     expect(event.timestamp).toMatch(ISO_TIMESTAMP_REGEX);
     expect(event.payload.userId).toBe("user-003");
     expect(event.payload.changedFields).toEqual({ display_name: "Alice Updated", avatar_url: "https://example.com/avatar.png" });
     expect(event.payload.updatedAt).toBe("2026-03-16T10:00:00.000Z");
     expect(Object.isFrozen(event.payload)).toBe(true);
+    expect(Object.isFrozen(event.payload.changedFields)).toBe(true);
   });
 });
