@@ -113,4 +113,32 @@ describe("event bus", () => {
     expect(successfulHandler).toHaveBeenCalledTimes(1);
     expect(successfulHandler).toHaveBeenCalledWith(event);
   });
+
+  describe("Phase 2 Event Subscribers", () => {
+    it("delivers auth_user_registered events to subscribers", async () => {
+      const bus = createBus();
+      const subscriber = vi.fn();
+      const payload = {
+        userId: "user-789",
+        email: "subscriber@example.com",
+        registeredAt: new Date().toISOString(),
+        source: "email"
+      };
+
+      // We explicitly bypass the factory helper to test raw bus routing
+      const event: DomainEvent = createDomainEvent({
+        eventType: "auth_user_registered",
+        payload
+      });
+
+      bus.subscribe("auth_user_registered", subscriber);
+
+      await bus.publish(event);
+
+      expect(subscriber).toHaveBeenCalledTimes(1);
+      const received = subscriber.mock.calls[0][0];
+      expect(received.event_type).toBe("auth_user_registered");
+      expect(received.payload.userId).toBe("user-789");
+    });
+  });
 });
