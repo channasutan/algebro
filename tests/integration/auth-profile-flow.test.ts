@@ -23,9 +23,11 @@ describe("Auth-to-Profile Cross-Module Flow", () => {
   it("handles the registered event to lazily bootstrap a profile", async () => {
     // We mock ensureProfileExists using the mocked repository
     const mockRepo = {
-      findById: vi.fn().mockResolvedValue(null),
+      findById: vi.fn()
+        .mockResolvedValueOnce(null)  // First call - no existing profile
+        .mockResolvedValueOnce({ id: "user-999", email: "test@ex.com" }),  // Second call - after insert
       insertProfile: vi.fn().mockResolvedValue(true),
-      requireById: vi.fn().mockResolvedValue({ id: "user-999" }),
+      requireById: vi.fn(),
       updateProfile: vi.fn(),
     };
 
@@ -50,9 +52,8 @@ describe("Auth-to-Profile Cross-Module Flow", () => {
       timezone: "UTC",
     });
 
-    // Submits the follow-up USER_PROFILE_INITIALIZED event implicitly via ensureProfileExists
-    // BUT we didn't mock ensureProfileExists, we are running the real code via `handleAuthUserRegistered` which imports it!
-    expect(mockRepo.requireById).toHaveBeenCalledWith("user-999");
+    // After insert, findById is called again to get the profile
+    expect(mockRepo.findById).toHaveBeenCalledTimes(2);
     expect(eventBus.publish).toHaveBeenCalled();
   });
 });

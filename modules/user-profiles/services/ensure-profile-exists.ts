@@ -30,7 +30,11 @@ export async function ensureProfileExists(
     timezone: "UTC",
   });
 
-  const profile = await repo.requireById(userId);
+  // After insert, fetch the profile
+  const profile = await repo.findById(userId);
+  if (!profile) {
+    throw new Error("[user-profiles] failed to create or load profile");
+  }
 
   if (inserted) {
     const event = createUserProfileInitializedEvent({

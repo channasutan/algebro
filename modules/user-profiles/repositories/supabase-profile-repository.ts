@@ -67,19 +67,13 @@ function createRepositoryFromClientFactory(
   };
 
   const requireById = async (userId: string): Promise<UserProfile> => {
-    let profile = await findById(userId);
+    const profile = await findById(userId);
 
-    if (!profile) {
-      // Wait ~10ms to guard against rare read-after-write consistency delays
-      await new Promise((resolve) => setTimeout(resolve, 10));
-      profile = await findById(userId);
+    if (profile) {
+      return profile;
     }
 
-    if (!profile) {
-      throw new Error("[user-profiles] failed to create or load profile");
-    }
-
-    return profile;
+    throw new Error("[user-profiles] failed to create or load profile");
   };
 
   const insertProfile = async (input: InsertProfileInput): Promise<boolean> => {
@@ -95,9 +89,13 @@ function createRepositoryFromClientFactory(
         { onConflict: "id", ignoreDuplicates: true }
       )
       .select("id")
-      .maybeSingle();
+      .single();
 
     if (error) {
+      // If error is "duplicate key ignore" (PGRST116), treat as success
+      if (error.code === "PGRST116") {
+        return true;
+      }
       throw new Error(error.message, { cause: error });
     }
 
