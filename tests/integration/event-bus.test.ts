@@ -1,7 +1,40 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, type Mock } from "vitest";
 
-import { createEventBus } from "@/events/event-bus";
+import { createEventBus, type EventBus } from "@/events/event-bus";
 import { createDomainEvent, type DomainEvent } from "@/events/event-types";
+
+/**
+ * Helper to create a test event and subscribe a handler.
+ * Publishing is done explicitly in tests.
+ */
+function subscribeAndCreateEvent<T extends { userId: string }>(
+  bus: EventBus,
+  eventType: string,
+  payload: T,
+  subscriber: Mock
+): DomainEvent {
+  const event = createDomainEvent({
+    eventType,
+    payload
+  });
+
+  bus.subscribe(eventType, subscriber);
+  return event;
+}
+
+/**
+ * Helper to verify event delivery assertions.
+ */
+function expectEventDelivered(
+  subscriber: Mock,
+  eventType: string,
+  expectedUserId: string
+): void {
+  expect(subscriber).toHaveBeenCalledTimes(1);
+  const received = subscriber.mock.calls[0][0];
+  expect(received.event_type).toBe(eventType);
+  expect(received.payload.userId).toBe(expectedUserId);
+}
 
 describe("event bus", () => {
   const createBus = () => createEventBus();
@@ -125,20 +158,45 @@ describe("event bus", () => {
         source: "email"
       };
 
-      // We explicitly bypass the factory helper to test raw bus routing
-      const event: DomainEvent = createDomainEvent({
-        eventType: "auth_user_registered",
-        payload
-      });
+      const event = subscribeAndCreateEvent(bus, "auth_user_registered", payload, subscriber);
 
-      bus.subscribe("auth_user_registered", subscriber);
+      await bus.publish(event);
+
+      expectEventDelivered(subscriber, "auth_user_registered", "user-789");
+    });
+
+    it("delivers user_profile_initialized events to subscribers", async () => {
+      const bus = createBus();
+      const subscriber = vi.fn();
+      const payload = { userId: "user-123" };
+
+      const event = subscribeAndCreateEvent(bus, "user_profile_initialized", payload, subscriber);
+
+      await bus.publish(event);
+
+      expectEventDelivered(subscriber, "user_profile_initialized", "user-123");
+    });
+
+    it("delivers user_profile_updated events to subscribers", async () => {
+      const bus = createBus();
+      const subscriber = vi.fn();
+      const payload = {
+        userId: "user-123",
+        changedFields: {
+          display_name: "Test Name"
+        },
+        updatedAt: "2024-01-01T00:00:00Z"
+      };
+
+      const event = subscribeAndCreateEvent(bus, "user_profile_updated", payload, subscriber);
 
       await bus.publish(event);
 
       expect(subscriber).toHaveBeenCalledTimes(1);
       const received = subscriber.mock.calls[0][0];
-      expect(received.event_type).toBe("auth_user_registered");
-      expect(received.payload.userId).toBe("user-789");
+      expect(received.event_type).toBe("user_profile_updated");
+      expect(received.payload.userId).toBe("user-123");
+      expect(received.payload.changedFields.display_name).toBe("Test Name");
     });
   });
 });

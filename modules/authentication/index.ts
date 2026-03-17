@@ -8,7 +8,7 @@ export { signInUser } from "./services/sign-in-user";
 export { signOutUser } from "./services/sign-out-user";
 export { getCurrentSession } from "./services/get-current-session";
 export { handleAuthCallback } from "./services/handle-auth-callback";
-export { buildAuthRepository, createSupabaseAuthRepository, type AuthRepository } from "./repositories/supabase-auth-repository";
+export { buildAuthRepository, type AuthRepository } from "./repositories/supabase-auth-repository";
 
 export const authenticationModule = {
   name: "authentication"

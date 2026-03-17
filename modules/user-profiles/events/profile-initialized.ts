@@ -11,7 +11,7 @@ export const USER_PROFILE_INITIALIZED = "user_profile_initialized" as const sati
 export type UserProfileInitializedPayload = {
   userId: string;
   email: string;
-  displayName: string;
+  displayName: string | null;
   initializedAt: string;
   initializationSource: string;
 };
