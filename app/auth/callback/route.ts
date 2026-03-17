@@ -3,6 +3,21 @@ import { NextRequest } from "next/server";
 import { ensureModulesBootstrapped } from "@/modules/bootstrap";
 import { handleAuthCallback } from "@/modules/authentication";
 
+/**
+ * Validates that a redirect path is safe (relative, not absolute).
+ * Returns true if the path:
+ * - Starts with a single "/"
+ * - Is not protocol-relative (not "//")
+ * - Is not an absolute URL
+ */
+function isSafeRelativePath(path: string): boolean {
+  const isRelative = path.startsWith("/");
+  const isProtocolRelative = path.startsWith("//");
+  const hasProtocol = /^[a-zA-Z]+:/.exec(path) !== null;
+
+  return isRelative && !isProtocolRelative && !hasProtocol;
+}
+
 function getSafeRedirectPath(nextParam: string | null): string {
   if (!nextParam) return "/";
 
@@ -13,8 +28,7 @@ function getSafeRedirectPath(nextParam: string | null): string {
     return "/";
   }
 
-  // Must start with single "/" and not be "//" or absolute URL
-  if (!decoded.startsWith("/") || decoded.startsWith("//") || decoded.match(/^[a-zA-Z]+:/)) {
+  if (!isSafeRelativePath(decoded)) {
     return "/";
   }
 
