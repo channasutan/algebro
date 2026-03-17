@@ -12,7 +12,7 @@ export function handleAuthUserRegistered(
       await ensureProfileExists(repo, {
         userId: typedEvent.payload.userId,
         email: typedEvent.payload.email,
-        initializationSource: "auth_event",
+        initializationSource: "auth_user_registered",
       });
     } catch (error) {
       console.error("[user-profiles] failed to bootstrap profile", error);
