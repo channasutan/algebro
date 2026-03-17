@@ -89,7 +89,7 @@ handleAuthCallback()
 > Example usage:
 > ```typescript
 > const repo = buildAuthRepository(cookieStore)
-> await signUpUser(repo, input)
+> await signUpUser(input, repo)
 > ```
 
 Events Emitted

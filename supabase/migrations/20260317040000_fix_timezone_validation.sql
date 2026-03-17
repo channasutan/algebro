@@ -1,4 +1,4 @@
--- Migration: Fix timezone validation to support UTC and IANA format
+-- Migration: Fix timezone validation for public.users table (user profiles)
 -- Updates CHECK constraint to match service-layer validation
 
 BEGIN;

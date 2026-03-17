@@ -4,6 +4,8 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 vi.mock("next/headers", () => ({
   cookies: () => ({
     get: () => undefined,
+    set: () => undefined,
+    remove: () => undefined,
   }),
 }));
 

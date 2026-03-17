@@ -25,18 +25,16 @@ export interface ProfileRepository {
 }
 
 export function buildProfileRepository(client: SupabaseClient): ProfileRepository {
-  const getClient = async () => client;
+  const getClient = () => Promise.resolve(client);
   return createRepositoryFromClientFactory(getClient);
 }
 
 export function createSupabaseProfileRepository(): ProfileRepository {
-  const getClient = async () => await getSupabaseServerClient();
-  return createRepositoryFromClientFactory(getClient);
+  return createRepositoryFromClientFactory(getSupabaseServerClient);
 }
 
 export function createServiceRoleProfileRepository(): ProfileRepository {
-  const getClient = async () => await getSupabaseAdminClient();
-  return createRepositoryFromClientFactory(getClient);
+  return createRepositoryFromClientFactory(getSupabaseAdminClient);
 }
 
 function createRepositoryFromClientFactory(

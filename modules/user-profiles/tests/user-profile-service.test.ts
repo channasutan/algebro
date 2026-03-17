@@ -174,10 +174,11 @@ describe("User Profiles Service Logic", () => {
     });
 
     it("rejects invalid timezone formats when Intl.supportedValuesOf is unavailable", async () => {
-      // Save original and mock Intl.supportedValuesOf as undefined
-      const originalIntl = globalThis.Intl;
-      const originalSupportedValuesOf = (globalThis.Intl as Record<string, unknown>).supportedValuesOf;
-      delete (globalThis.Intl as Record<string, unknown>).supportedValuesOf;
+      // Stub Intl.supportedValuesOf to simulate unavailable API
+      vi.stubGlobal("Intl", {
+        ...globalThis.Intl,
+        supportedValuesOf: undefined,
+      });
 
       try {
         mockRepo.findById.mockResolvedValue({} as unknown as UserProfile);
@@ -195,20 +196,16 @@ describe("User Profiles Service Logic", () => {
         });
         expect(result.profile.timezone).toBe("America/Argentina/Buenos_Aires");
       } finally {
-        // Restore original Intl
-        if (originalSupportedValuesOf) {
-          (globalThis.Intl as Record<string, unknown>).supportedValuesOf = originalSupportedValuesOf;
-        } else {
-          globalThis.Intl = originalIntl;
-        }
+        vi.unstubAllGlobals();
       }
     });
 
     it("accepts UTC timezone in regex fallback path", async () => {
-      // Save original and mock Intl.supportedValuesOf as undefined
-      const originalIntl = globalThis.Intl;
-      const originalSupportedValuesOf = (globalThis.Intl as Record<string, unknown>).supportedValuesOf;
-      delete (globalThis.Intl as Record<string, unknown>).supportedValuesOf;
+      // Stub Intl.supportedValuesOf to simulate unavailable API
+      vi.stubGlobal("Intl", {
+        ...globalThis.Intl,
+        supportedValuesOf: undefined,
+      });
 
       try {
         mockRepo.findById.mockResolvedValue({} as unknown as UserProfile);
@@ -220,12 +217,7 @@ describe("User Profiles Service Logic", () => {
         });
         expect(result.profile.timezone).toBe("UTC");
       } finally {
-        // Restore original Intl
-        if (originalSupportedValuesOf) {
-          (globalThis.Intl as Record<string, unknown>).supportedValuesOf = originalSupportedValuesOf;
-        } else {
-          globalThis.Intl = originalIntl;
-        }
+        vi.unstubAllGlobals();
       }
     });
   });
