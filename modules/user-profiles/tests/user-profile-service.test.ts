@@ -47,11 +47,11 @@ describe("User Profiles Service Logic", () => {
 
       await expect(
         ensureProfileExists(mockRepo, { userId: "user-1", email: "" })
-      ).rejects.toThrow("Cannot create profile without email");
+      ).rejects.toThrow(/Cannot create profile without email/);
 
       await expect(
         ensureProfileExists(mockRepo, { userId: "user-1", email: "   " })
-      ).rejects.toThrow("Cannot create profile without email");
+      ).rejects.toThrow(/Cannot create profile without email/);
 
       expect(mockRepo.insertProfile).not.toHaveBeenCalled();
     });

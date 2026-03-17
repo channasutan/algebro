@@ -3,9 +3,10 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 // Mock next/headers to prevent server-client crashes in Vitest
 vi.mock("next/headers", () => ({
   cookies: () => ({
-    get: () => undefined,
-    set: () => undefined,
-    remove: () => undefined,
+    get: vi.fn(),
+    getAll: vi.fn(() => []),
+    set: vi.fn(),
+    delete: vi.fn(),
   }),
 }));
 
