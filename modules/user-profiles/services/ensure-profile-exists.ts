@@ -19,17 +19,26 @@ export async function ensureProfileExists(
     throw new Error("[user-profiles] Cannot create profile without email");
   }
 
+  // Check if profile already exists
   const existing = await repo.findById(userId);
   if (existing) {
     return existing;
   }
 
+  // Attempt to insert profile - returns null if insert didn't create a row
+  // (e.g., another process already created it)
   const profile = await repo.insertProfile({
     id: userId,
     email,
     timezone: "UTC",
   });
 
+  // Handle case where profile could not be created or fetched
+  if (!profile) {
+    throw new Error("[user-profiles] failed to create or load profile");
+  }
+
+  // Emit event only when a new profile was created (profile is truthy)
   if (profile) {
     const event = createUserProfileInitializedEvent({
       userId,

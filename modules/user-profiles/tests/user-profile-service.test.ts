@@ -77,14 +77,13 @@ describe("User Profiles Service Logic", () => {
       expect(result).toEqual(newProfile);
     });
 
-    it("does not emit event if insert returns null (e.g. race condition DO NOTHING)", async () => {
+    it("throws if insert returns null (e.g. race condition prevents creation)", async () => {
       mockRepo.findById.mockResolvedValue(null);
-      mockRepo.insertProfile.mockResolvedValue(null); // another process inserted
+      mockRepo.insertProfile.mockResolvedValue(null); // insert failed to create or fetch profile
 
-      const result = await ensureProfileExists(mockRepo, { userId: "user-1", email: "test@ex.com" });
-
-      expect(eventBus.publish).not.toHaveBeenCalled();
-      expect(result).toBeNull();
+      await expect(
+        ensureProfileExists(mockRepo, { userId: "user-1", email: "test@ex.com" })
+      ).rejects.toThrow(/failed to create or load profile/);
     });
     
     it("never crashes the event bus if publish fails because it catches internally", async () => {
