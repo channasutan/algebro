@@ -3,8 +3,7 @@
  * for a user, whether triggered by the auth_user_registered event or the
  * lazy fallback path inside getCurrentProfile.
  */
-import type { CoreDomainEventType, DomainEvent } from "@/events/event-types";
-import { createDomainEvent } from "@/events/event-types";
+import { createDomainEvent, type CoreDomainEventType, type DomainEvent } from "@/events/event-types";
 
 export const USER_PROFILE_INITIALIZED = "user_profile_initialized" as const satisfies CoreDomainEventType;
 

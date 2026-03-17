@@ -8,9 +8,9 @@ export const metadata: Metadata = {
   description: "Phase 0 scaffold"
 };
 
-type RootLayoutProps = {
+type RootLayoutProps = Readonly<{
   children: ReactNode;
-};
+}>;
 
 export default async function RootLayout({ children }: RootLayoutProps) {
   await ensureModulesBootstrapped();
