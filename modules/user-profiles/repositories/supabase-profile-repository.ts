@@ -38,7 +38,7 @@ export function createServiceRoleProfileRepository(): ProfileRepository {
 }
 
 function createRepositoryFromClientFactory(
-  getClient: () => Promise<SupabaseClient>
+  getClient: () => SupabaseClient | Promise<SupabaseClient>
 ): ProfileRepository {
   const findById = async (userId: string): Promise<UserProfile | null> => {
     const client = await getClient();

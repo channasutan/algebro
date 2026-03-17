@@ -47,11 +47,11 @@ describe("User Profiles Service Logic", () => {
 
       await expect(
         ensureProfileExists(mockRepo, { userId: "user-1", email: "" })
-      ).rejects.toThrow(/Cannot create profile without email/);
+      ).rejects.toThrow(/\[user-profiles\] Cannot create profile without email/);
 
       await expect(
         ensureProfileExists(mockRepo, { userId: "user-1", email: "   " })
-      ).rejects.toThrow(/Cannot create profile without email/);
+      ).rejects.toThrow(/\[user-profiles\] Cannot create profile without email/);
 
       expect(mockRepo.insertProfile).not.toHaveBeenCalled();
     });
@@ -122,7 +122,7 @@ describe("User Profiles Service Logic", () => {
 
       await expect(
         getCurrentProfile(mockRepo, { userId: "user-1" })
-      ).rejects.toThrow("Profile not found. Email is required to create a new profile.");
+      ).rejects.toThrow(/\[user-profiles\] Profile not found/);
 
       expect(mockRepo.insertProfile).not.toHaveBeenCalled();
     });
