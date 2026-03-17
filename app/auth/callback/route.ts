@@ -20,7 +20,12 @@ export async function GET(request: NextRequest) {
     // Validate next is a safe relative path to avoid open redirect vulnerabilities
     const decodedNext = decodeURIComponent(next);
     // Must start with single "/" and not be "//" or absolute URL
-    if (decodedNext.startsWith("/") && !decodedNext.startsWith("//") && !decodedNext.match(/^[a-zA-Z]+:/)) {
+    const isSafeRedirectPath =
+      decodedNext.startsWith("/") &&
+      !decodedNext.startsWith("//") &&
+      !decodedNext.match(/^[a-zA-Z]+:/);
+
+    if (isSafeRedirectPath) {
       redirectUrl = decodedNext;
     }
   } catch {
