@@ -44,7 +44,7 @@ function isConfigured(): boolean {
     const apiKey = getMayarApiKey();
     const webhookSecret = getMayarWebhookSecret();
     return Boolean(apiKey && webhookSecret);
-  } catch (err) {
+  } catch {
     console.warn("[mayar-client] Failed to verify configuration, returning false");
     return false;
   }

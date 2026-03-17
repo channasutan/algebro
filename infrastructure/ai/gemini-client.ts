@@ -27,7 +27,7 @@ export type GeminiGenerateContentResponse = {
 function isConfigured(): boolean {
   try {
     return Boolean(getAiProviderApiKey()?.trim());
-  } catch (err) {
+  } catch {
     console.warn("[gemini-client] Failed to get API key, returning false");
     return false;
   }
