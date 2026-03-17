@@ -8,12 +8,12 @@ ALTER TABLE public.users
 DROP CONSTRAINT IF EXISTS users_timezone_valid_check;
 
 -- Add updated CHECK constraint matching service validation
+-- Note: timezone column is NOT NULL, so no need to check for NULL
 -- Supports: "UTC" or IANA format like "America/Argentina/Buenos_Aires"
 ALTER TABLE public.users
 ADD CONSTRAINT users_timezone_valid_check
 CHECK (
-    timezone IS NULL 
-    OR timezone = 'UTC' 
+    timezone = 'UTC' 
     OR timezone ~ '^[A-Za-z_]+(?:/[A-Za-z0-9._+-]+)+$'
 );
 

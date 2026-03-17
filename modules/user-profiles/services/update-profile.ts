@@ -64,13 +64,13 @@ function buildChangedFields(changes: UpdateProfileChanges): ProfileFieldMap {
   return changedFields;
 }
 
-function publishProfileUpdatedEvent(
-  userId: string,
-  changedFields: ProfileFieldMap,
-  updatedAt: string
-): void {
-  // Convert to record for event payload
+/**
+ * Builds the event payload from changed fields.
+ * Maps service-layer field names to event payload field names.
+ */
+function buildEventPayload(changedFields: ProfileFieldMap): Record<string, string | null> {
   const payload: Record<string, string | null> = {};
+
   if (changedFields.displayName !== null) {
     payload.display_name = changedFields.displayName;
   }
@@ -80,6 +80,16 @@ function publishProfileUpdatedEvent(
   if (changedFields.timezone) {
     payload.timezone = changedFields.timezone;
   }
+
+  return payload;
+}
+
+function publishProfileUpdatedEvent(
+  userId: string,
+  changedFields: ProfileFieldMap,
+  updatedAt: string
+): void {
+  const payload = buildEventPayload(changedFields);
 
   if (Object.keys(payload).length === 0) {
     return;
