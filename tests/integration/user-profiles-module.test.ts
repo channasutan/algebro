@@ -194,7 +194,7 @@ describe("User Profiles Module Integration", () => {
     // Assert warning was logged exactly once
     expect(warnSpy).toHaveBeenCalledTimes(1);
     expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining("requireById failed"),
+      expect.stringContaining("findById failed"),
       expect.objectContaining({ userId: expect.any(String) })
     );
 

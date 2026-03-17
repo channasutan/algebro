@@ -34,7 +34,7 @@ import { signUpUser, signInUser, signOutUser, handleAuthCallback } from "@/modul
 
 describe("Auth UI Actions Transport Layer", () => {
   beforeEach(() => {
-    vi.resetAllMocks();
+    vi.clearAllMocks();
   });
 
     it("1. sign up success calls ensureModulesBootstrapped BEFORE auth service", async () => {
@@ -133,7 +133,7 @@ import { NextRequest } from "next/server";
 
 describe("Auth Callback Route Handler", () => {
   beforeEach(() => {
-    vi.resetAllMocks();
+    vi.clearAllMocks();
   });
 
   it("1. rejects request with missing query param code by triggering redirect", async () => {

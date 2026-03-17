@@ -3,6 +3,24 @@ import { NextRequest } from "next/server";
 import { ensureModulesBootstrapped } from "@/modules/bootstrap";
 import { handleAuthCallback } from "@/modules/authentication";
 
+function getSafeRedirectPath(nextParam: string | null): string {
+  if (!nextParam) return "/";
+
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(nextParam);
+  } catch {
+    return "/";
+  }
+
+  // Must start with single "/" and not be "//" or absolute URL
+  if (!decoded.startsWith("/") || decoded.startsWith("//") || decoded.match(/^[a-zA-Z]+:/)) {
+    return "/";
+  }
+
+  return decoded;
+}
+
 export async function GET(request: NextRequest) {
   await ensureModulesBootstrapped();
 
@@ -17,17 +35,8 @@ export async function GET(request: NextRequest) {
   let redirectUrl = "/";
   try {
     await handleAuthCallback(code);
-    // Validate next is a safe relative path to avoid open redirect vulnerabilities
-    const decodedNext = decodeURIComponent(next);
-    // Must start with single "/" and not be "//" or absolute URL
-    const isSafeRedirectPath =
-      decodedNext.startsWith("/") &&
-      !decodedNext.startsWith("//") &&
-      !decodedNext.match(/^[a-zA-Z]+:/);
-
-    if (isSafeRedirectPath) {
-      redirectUrl = decodedNext;
-    }
+    // Safely decode and validate the redirect path
+    redirectUrl = getSafeRedirectPath(next);
   } catch {
     redirectUrl = "/sign-in?error=auth_failed";
   }
