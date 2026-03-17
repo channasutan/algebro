@@ -65,7 +65,7 @@ function createRepositoryFromClientFactory(
     };
   };
 
-  const insertProfile = async (input: InsertProfileInput): Promise<UserProfile | null> => {
+  const insertProfile = async (input: InsertProfileInput): Promise<UserProfile> => {
     const client = await getClient();
     
     // Upsert without selecting - makes behavior deterministic
