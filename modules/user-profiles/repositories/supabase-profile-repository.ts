@@ -42,108 +42,113 @@ export function createServiceRoleProfileRepository(): ProfileRepository {
 function createRepositoryFromClientFactory(
   getClient: () => Promise<SupabaseClient>
 ): ProfileRepository {
-  return {
-    async findById(userId: string): Promise<UserProfile | null> {
-      const client = await getClient();
-      const { data, error } = await client
-        .from("users")
-        .select("*")
-        .eq("id", userId)
-        .maybeSingle();
+  const findById = async (userId: string): Promise<UserProfile | null> => {
+    const client = await getClient();
+    const { data, error } = await client
+      .from("users")
+      .select("*")
+      .eq("id", userId)
+      .maybeSingle();
 
-      if (error) {
-        throw new Error(error.message, { cause: error });
-      }
-
-      if (!data) {
-        return null;
-      }
-
-      return {
-        userId: data.id,
-        email: data.email,
-        displayName: data.display_name,
-        avatarUrl: data.avatar_url,
-        timezone: data.timezone,
-        updatedAt: data.updated_at,
-      };
-    },
-
-    async requireById(userId: string): Promise<UserProfile> {
-      let profile = await this.findById(userId);
-
-      if (!profile) {
-        // Wait ~10ms to guard against rare read-after-write consistency delays
-        await new Promise((resolve) => setTimeout(resolve, 10));
-        profile = await this.findById(userId);
-      }
-
-      if (!profile) {
-        throw new Error("[user-profiles] failed to create or load profile");
-      }
-
-      return profile;
-    },
-
-    async insertProfile(input: InsertProfileInput): Promise<boolean> {
-      const client = await getClient();
-      const { data, error } = await client
-        .from("users")
-        .upsert(
-          {
-            id: input.id,
-            email: input.email,
-            timezone: input.timezone,
-          },
-          { onConflict: "id", ignoreDuplicates: true }
-        )
-        .select("id")
-        .maybeSingle();
-
-      if (error) {
-        throw new Error(error.message, { cause: error });
-      }
-
-      return data !== null;
-    },
-
-    async updateProfile(userId: string, changes: UpdateProfileInput): Promise<UserProfile> {
-      const dbChanges: Record<string, string | null> = {};
-
-      if (changes.displayName !== undefined) {
-        dbChanges.display_name = changes.displayName;
-      }
-      if (changes.avatarUrl !== undefined) {
-        dbChanges.avatar_url = changes.avatarUrl;
-      }
-      if (changes.timezone !== undefined) {
-        dbChanges.timezone = changes.timezone;
-      }
-
-      const client = await getClient();
-      const { data, error } = await client
-        .from("users")
-        .update(dbChanges)
-        .eq("id", userId)
-        .select("*")
-        .maybeSingle();
-
-      if (error) {
-        throw new Error(error.message, { cause: error });
-      }
-
-      if (!data) {
-        throw new Error("[user-profiles] failed to update profile: not found");
-      }
-
-      return {
-        userId: data.id,
-        email: data.email,
-        displayName: data.display_name,
-        avatarUrl: data.avatar_url,
-        timezone: data.timezone,
-        updatedAt: data.updated_at,
-      };
+    if (error) {
+      throw new Error(error.message, { cause: error });
     }
+
+    if (!data) {
+      return null;
+    }
+
+    return {
+      userId: data.id,
+      email: data.email,
+      displayName: data.display_name,
+      avatarUrl: data.avatar_url,
+      timezone: data.timezone,
+      updatedAt: data.updated_at,
+    };
+  };
+
+  const requireById = async (userId: string): Promise<UserProfile> => {
+    let profile = await findById(userId);
+
+    if (!profile) {
+      // Wait ~10ms to guard against rare read-after-write consistency delays
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      profile = await findById(userId);
+    }
+
+    if (!profile) {
+      throw new Error("[user-profiles] failed to create or load profile");
+    }
+
+    return profile;
+  };
+
+  const insertProfile = async (input: InsertProfileInput): Promise<boolean> => {
+    const client = await getClient();
+    const { data, error } = await client
+      .from("users")
+      .upsert(
+        {
+          id: input.id,
+          email: input.email,
+          timezone: input.timezone,
+        },
+        { onConflict: "id", ignoreDuplicates: true }
+      )
+      .select("id")
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message, { cause: error });
+    }
+
+    return data !== null;
+  };
+
+  const updateProfile = async (userId: string, changes: UpdateProfileInput): Promise<UserProfile> => {
+    const dbChanges: Record<string, string | null> = {};
+
+    if (changes.displayName !== undefined) {
+      dbChanges.display_name = changes.displayName;
+    }
+    if (changes.avatarUrl !== undefined) {
+      dbChanges.avatar_url = changes.avatarUrl;
+    }
+    if (changes.timezone !== undefined) {
+      dbChanges.timezone = changes.timezone;
+    }
+
+    const client = await getClient();
+    const { data, error } = await client
+      .from("users")
+      .update(dbChanges)
+      .eq("id", userId)
+      .select("*")
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(error.message, { cause: error });
+    }
+
+    if (!data) {
+      throw new Error("[user-profiles] failed to update profile: not found");
+    }
+
+    return {
+      userId: data.id,
+      email: data.email,
+      displayName: data.display_name,
+      avatarUrl: data.avatar_url,
+      timezone: data.timezone,
+      updatedAt: data.updated_at,
+    };
+  };
+
+  return {
+    findById,
+    requireById,
+    insertProfile,
+    updateProfile,
   };
 }

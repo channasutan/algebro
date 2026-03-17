@@ -85,12 +85,17 @@ export async function updateProfile(
 ): Promise<UpdateProfileResult> {
   const { userId, changes } = input;
 
+  // Normalize changes - filter out undefined values
+  const normalizedChanges = Object.fromEntries(
+    Object.entries(changes).filter(([, v]) => v !== undefined)
+  ) as UpdateProfileChanges;
+
   // Prevent empty update operations
-  if (Object.keys(changes).length === 0) {
-    throw new Error("No profile fields provided for update");
+  if (Object.keys(normalizedChanges).length === 0) {
+    throw new Error("[user-profiles] No profile fields provided for update");
   }
 
-  validateTimezone(changes.timezone);
+  validateTimezone(normalizedChanges.timezone);
 
   // Verify profile exists before updating
   const existingProfile = await repo.findById(userId);
@@ -98,9 +103,9 @@ export async function updateProfile(
     throw new Error("[user-profiles] Profile not found. Cannot update non-existent profile.");
   }
 
-  const updatedProfile = await repo.updateProfile(userId, changes);
+  const updatedProfile = await repo.updateProfile(userId, normalizedChanges);
 
-  const changedFields = buildChangedFields(changes);
+  const changedFields = buildChangedFields(normalizedChanges);
   publishProfileUpdatedEvent(userId, changedFields, updatedProfile.updatedAt);
 
   return { profile: updatedProfile };

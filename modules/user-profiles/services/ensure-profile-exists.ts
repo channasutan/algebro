@@ -35,7 +35,7 @@ export async function ensureProfileExists(
     const event = createUserProfileInitializedEvent({
       userId,
       email,
-      displayName: "",
+      displayName: null,
       initializedAt: new Date().toISOString(),
       initializationSource: "lazy_bootstrap",
     });

@@ -130,7 +130,7 @@ describe("User Profiles Service Logic", () => {
 
   describe("updateProfile", () => {
     it("updates profile, publishes event, and returns new profile", async () => {
-      // mock ensureProfileExists -> findById
+      // Mock findById to return existing profile
       const existingProfile = { userId: "user-1", email: "test@ex.com", displayName: null, avatarUrl: null, timezone: "UTC", updatedAt: "date" };
       mockRepo.findById.mockResolvedValue(existingProfile);
       
