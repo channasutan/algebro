@@ -18,7 +18,7 @@ describe("User Profiles Service Logic", () => {
   let mockRepo: Mocked<ProfileRepository>;
 
   beforeEach(() => {
-    vi.resetAllMocks();
+    vi.clearAllMocks();
     (eventBus.publish as Mock).mockResolvedValue(true);
 
     mockRepo = {
