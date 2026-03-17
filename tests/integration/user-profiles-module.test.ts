@@ -1,5 +1,12 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
+// Mock next/headers to prevent server-client crashes in Vitest
+vi.mock("next/headers", () => ({
+  cookies: () => ({
+    get: () => undefined,
+  }),
+}));
+
 import { createSupabaseProfileRepository } from "@/modules/user-profiles/repositories/supabase-profile-repository";
 import { getCurrentProfile } from "@/modules/user-profiles/services/get-current-profile";
 import { updateProfile } from "@/modules/user-profiles/services/update-profile";
