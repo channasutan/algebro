@@ -22,8 +22,8 @@ function createCookieAdapter(cookieStore: Awaited<ReturnType<typeof cookies>>) {
         cookiesToSet.forEach(({ name, value, options }) => {
           cookieStore.set(name, value, options);
         });
-      } catch {
-        // Called from Server Component
+      } catch (err) {
+        console.warn("[supabase-server-client] Cannot set cookies in Server Component context");
       }
     },
   };

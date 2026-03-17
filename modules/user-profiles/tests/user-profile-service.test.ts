@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, type Mock, type Mocked } from "vitest";
 import { ensureProfileExists } from "../services/ensure-profile-exists";
 import { getCurrentProfile } from "../services/get-current-profile";
 import { updateProfile } from "../services/update-profile";
@@ -7,7 +7,6 @@ import { eventBus } from "@/events/event-bus";
 import { USER_PROFILE_INITIALIZED } from "../events/profile-initialized";
 import { USER_PROFILE_UPDATED } from "../events/profile-updated";
 import type { UserProfile } from "../domain/profile";
-import type { Mock, Mocked } from "vitest";
 
 vi.mock("@/events/event-bus", () => ({
   eventBus: {

@@ -40,7 +40,8 @@ function readRequiredPublicUrlEnv(value: string | undefined, name: string): stri
     if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
       throw new Error("Unsupported protocol");
     }
-  } catch {
+  } catch (err) {
+    console.warn(`[env.public] Failed to parse URL for ${name}`);
     throw new Error(
       `Invalid public environment variable: ${name}. Expected an absolute http or https URL.`
     );

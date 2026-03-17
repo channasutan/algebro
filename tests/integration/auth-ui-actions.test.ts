@@ -30,7 +30,7 @@ import { signInAction } from "@/app/sign-in/actions";
 import { signOutAction } from "@/app/sign-out/actions";
 
 import { ensureModulesBootstrapped } from "@/modules/bootstrap";
-import { signUpUser, signInUser, signOutUser } from "@/modules/authentication";
+import { signUpUser, signInUser, signOutUser, handleAuthCallback } from "@/modules/authentication";
 
 describe("Auth UI Actions Transport Layer", () => {
   beforeEach(() => {
@@ -129,7 +129,6 @@ describe("Auth UI Actions Transport Layer", () => {
 
 import { GET as handleCallbackRoute } from "@/app/auth/callback/route";
 import { redirect } from "next/navigation";
-import { handleAuthCallback } from "@/modules/authentication";
 import { NextRequest } from "next/server";
 
 describe("Auth Callback Route Handler", () => {

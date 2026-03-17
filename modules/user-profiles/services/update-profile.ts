@@ -11,7 +11,8 @@ function getSupportedTimezones(): string[] | undefined {
 
   try {
     return Intl.supportedValuesOf("timeZone");
-  } catch {
+  } catch (err) {
+    console.warn("[user-profiles] Intl.supportedValuesOf not available, using regex validation");
     return undefined;
   }
 }
