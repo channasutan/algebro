@@ -32,6 +32,11 @@ export async function ensureProfileExists(
     timezone: "UTC",
   });
 
+  // Defensive: throw if profile is null (should not happen with correct repository)
+  if (!profile) {
+    throw new Error("[user-profiles] failed to create or load profile");
+  }
+
   // Emit event after profile is created
   const event = createUserProfileInitializedEvent({
     userId,
