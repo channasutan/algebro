@@ -24,7 +24,6 @@ describe("User Profiles Service Logic", () => {
 
     mockRepo = {
       findById: vi.fn(),
-      requireById: vi.fn(),
       insertProfile: vi.fn(),
       updateProfile: vi.fn(),
     } as unknown as Mocked<ProfileRepository>;
@@ -57,11 +56,13 @@ describe("User Profiles Service Logic", () => {
     });
 
     it("inserts profile and emits event if not found", async () => {
-      mockRepo.findById.mockResolvedValue(null);
+      // First call returns null (no existing profile), second returns new profile (after insert)
+      mockRepo.findById
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ userId: "user-1", email: "test@ex.com", displayName: null, avatarUrl: null, timezone: "UTC", updatedAt: "date" });
       mockRepo.insertProfile.mockResolvedValue(true);
-      
+
       const newProfile = { userId: "user-1", email: "test@ex.com", displayName: null, avatarUrl: null, timezone: "UTC", updatedAt: "date" };
-      mockRepo.requireById.mockResolvedValue(newProfile);
 
       const result = await ensureProfileExists(mockRepo, { userId: "user-1", email: "test@ex.com" });
 
@@ -70,7 +71,7 @@ describe("User Profiles Service Logic", () => {
         email: "test@ex.com",
         timezone: "UTC",
       });
-      expect(mockRepo.requireById).toHaveBeenCalledWith("user-1");
+      expect(mockRepo.findById).toHaveBeenCalledTimes(2);
       expect(eventBus.publish).toHaveBeenCalledWith(
         expect.objectContaining({
           event_type: USER_PROFILE_INITIALIZED,
@@ -83,9 +84,9 @@ describe("User Profiles Service Logic", () => {
     it("does not emit event if insert returns false (e.g. race condition DO NOTHING)", async () => {
       mockRepo.findById.mockResolvedValue(null);
       mockRepo.insertProfile.mockResolvedValue(false); // another process inserted
-      
+
       const newProfile = { userId: "user-1", email: "test@ex.com", displayName: null, avatarUrl: null, timezone: "UTC", updatedAt: "date" };
-      mockRepo.requireById.mockResolvedValue(newProfile);
+      mockRepo.findById.mockResolvedValueOnce(null).mockResolvedValueOnce(newProfile);
 
       const result = await ensureProfileExists(mockRepo, { userId: "user-1", email: "test@ex.com" });
 
@@ -94,10 +95,11 @@ describe("User Profiles Service Logic", () => {
     });
     
     it("never crashes the event bus if publish fails because it catches internally", async () => {
-      mockRepo.findById.mockResolvedValue(null);
+      mockRepo.findById
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce({ userId: "user-1", email: "test@ex.com", displayName: null, avatarUrl: null, timezone: "UTC", updatedAt: "date" });
       mockRepo.insertProfile.mockResolvedValue(true);
       const newProfile = { userId: "user-1", email: "test@ex.com", displayName: null, avatarUrl: null, timezone: "UTC", updatedAt: "date" };
-      mockRepo.requireById.mockResolvedValue(newProfile);
       
       (eventBus.publish as Mock).mockRejectedValue(new Error("Event bus failure"));
       
