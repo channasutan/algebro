@@ -31,6 +31,6 @@ export async function signUpAction(_prevState: ActionResult, formData: FormData)
   } catch {
     // DO NOT leak internal error content or use fragile string matching
     console.warn("[auth] unexpected error in signUpAction");
-    return { success: false, error: "Sign up failed. Please try again." };
+    return { success: false, error: "Sign up failed. Please try again" };
   }
 }
