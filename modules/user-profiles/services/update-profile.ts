@@ -2,6 +2,7 @@ import { eventBus } from "@/events/event-bus";
 import { createUserProfileUpdatedEvent } from "../events/profile-updated";
 import type { ProfileRepository } from "../repositories/supabase-profile-repository";
 import type { UpdateProfileInput, UpdateProfileResult, UpdateProfileChanges } from "../contracts/update-profile";
+import type { ProfileFieldMap } from "../domain/profile";
 
 function getSupportedTimezones(): string[] | undefined {
   if (typeof Intl === "undefined" || typeof Intl.supportedValuesOf !== "function") {
@@ -43,14 +44,18 @@ function validateTimezone(timezone: string | undefined): void {
   validateWithRegex(timezone);
 }
 
-function buildChangedFields(changes: UpdateProfileChanges): Record<string, string | null> {
-  const changedFields: Record<string, string | null> = {};
+function buildChangedFields(changes: UpdateProfileChanges): ProfileFieldMap {
+  const changedFields: ProfileFieldMap = {
+    displayName: null,
+    avatarUrl: null,
+    timezone: "" as string,
+  };
 
   if (changes.displayName !== undefined) {
-    changedFields.display_name = changes.displayName;
+    changedFields.displayName = changes.displayName;
   }
   if (changes.avatarUrl !== undefined) {
-    changedFields.avatar_url = changes.avatarUrl;
+    changedFields.avatarUrl = changes.avatarUrl;
   }
   if (changes.timezone !== undefined) {
     changedFields.timezone = changes.timezone;
@@ -61,16 +66,28 @@ function buildChangedFields(changes: UpdateProfileChanges): Record<string, strin
 
 function publishProfileUpdatedEvent(
   userId: string,
-  changedFields: Record<string, string | null>,
+  changedFields: ProfileFieldMap,
   updatedAt: string
 ): void {
-  if (Object.keys(changedFields).length === 0) {
+  // Convert to record for event payload
+  const payload: Record<string, string | null> = {};
+  if (changedFields.displayName !== null) {
+    payload.display_name = changedFields.displayName;
+  }
+  if (changedFields.avatarUrl !== null) {
+    payload.avatar_url = changedFields.avatarUrl;
+  }
+  if (changedFields.timezone) {
+    payload.timezone = changedFields.timezone;
+  }
+
+  if (Object.keys(payload).length === 0) {
     return;
   }
 
   const event = createUserProfileUpdatedEvent({
     userId,
-    changedFields,
+    changedFields: payload,
     updatedAt,
   });
 

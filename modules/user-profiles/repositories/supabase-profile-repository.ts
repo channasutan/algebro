@@ -67,7 +67,9 @@ function createRepositoryFromClientFactory(
 
   const insertProfile = async (input: InsertProfileInput): Promise<UserProfile | null> => {
     const client = await getClient();
-    const { data, error } = await client
+    
+    // Upsert without selecting - makes behavior deterministic
+    const { error: upsertError } = await client
       .from("users")
       .upsert(
         {
@@ -76,30 +78,14 @@ function createRepositoryFromClientFactory(
           timezone: input.timezone,
         },
         { onConflict: "id", ignoreDuplicates: true }
-      )
-      .select("*")
-      .single();
+      );
 
-    if (error) {
-      // If error is "duplicate key ignore" (PGRST116), fetch existing profile
-      if (error.code === "PGRST116") {
-        return findById(input.id);
-      }
-      throw new Error(error.message, { cause: error });
+    if (upsertError) {
+      throw new Error(upsertError.message, { cause: upsertError });
     }
 
-    if (!data) {
-      return null;
-    }
-
-    return {
-      userId: data.id,
-      email: data.email,
-      displayName: data.display_name,
-      avatarUrl: data.avatar_url,
-      timezone: data.timezone,
-      updatedAt: data.updated_at,
-    };
+    // Always fetch after upsert to get the profile
+    return findById(input.id);
   };
 
   const updateProfile = async (userId: string, changes: UpdateProfileInput): Promise<UserProfile> => {
