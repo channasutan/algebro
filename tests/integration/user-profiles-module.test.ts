@@ -4,7 +4,6 @@ import { createSupabaseProfileRepository } from "@/modules/user-profiles/reposit
 import { getCurrentProfile } from "@/modules/user-profiles/services/get-current-profile";
 import { updateProfile } from "@/modules/user-profiles/services/update-profile";
 import { eventBus } from "@/events/event-bus";
-import { USER_PROFILE_INITIALIZED } from "@/modules/user-profiles/events/profile-initialized";
 import { USER_PROFILE_UPDATED } from "@/modules/user-profiles/events/profile-updated";
 
 import * as ServerClientAuth from "@/lib/supabase/server-client";
@@ -55,39 +54,17 @@ describe("User Profiles Module Integration", () => {
 
   const getClient = async () => mockClient as unknown as import("@supabase/supabase-js").SupabaseClient;
 
-  it("lazy bootstrap fetches a non-existent profile and creates it", async () => {
+  it("throws error when profile not found and no email provided", async () => {
     vi.spyOn(ServerClientAuth, "getSupabaseServerClient").mockImplementation(getClient);
     const repo = createSupabaseProfileRepository();
 
-    // Call 1: findById (getCurrentProfile) -> returns null
+    // getCurrentProfile calls findById -> returns null
     (mockClient._mocks as Record<string, ReturnType<typeof vi.fn>>).maybeSingleMock.mockResolvedValueOnce({ data: null, error: null });
-    // Call 2: findById (ensureProfileExists) -> returns null
-    (mockClient._mocks as Record<string, ReturnType<typeof vi.fn>>).maybeSingleMock.mockResolvedValueOnce({ data: null, error: null });
-    // Call 3: insertProfile -> upserts
-    (mockClient._mocks as Record<string, ReturnType<typeof vi.fn>>).maybeSingleMock.mockResolvedValueOnce({ data: { id: "user-123" }, error: null });
-    // Call 4: requireById -> finds it
-    const insertedProfile = {
-      id: "user-123", email: "test@ex.com", display_name: null, avatar_url: null, timezone: "UTC", updated_at: "time"
-    };
-    (mockClient._mocks as Record<string, ReturnType<typeof vi.fn>>).maybeSingleMock.mockResolvedValueOnce({ data: insertedProfile, error: null });
 
-    const result = await getCurrentProfile(repo, { userId: "user-123" });
-
-    // Assert finding first
-    expect((mockClient._mocks as Record<string, ReturnType<typeof vi.fn>>).eqMock).toHaveBeenCalledWith("id", "user-123");
-    
-    // Assert upsert arguments for DO NOTHING equivalent
-    expect((mockClient._mocks as Record<string, ReturnType<typeof vi.fn>>).upsertMock).toHaveBeenCalledWith(
-      { id: "user-123", email: null, timezone: "UTC" },
-      { onConflict: "id", ignoreDuplicates: true }
-    );
-
-    // Ensure event is published
-    expect(eventBus.publish).toHaveBeenCalledWith(
-      expect.objectContaining({ event_type: USER_PROFILE_INITIALIZED })
-    );
-
-    expect(result.userId).toBe("user-123");
+    // Should throw because lazy bootstrap requires email
+    await expect(
+      getCurrentProfile(repo, { userId: "user-123" })
+    ).rejects.toThrow("Profile not found. Email is required to create a new profile.");
   });
 
   it("updates a profile and validates RLS indirectly by ensuring equality check", async () => {

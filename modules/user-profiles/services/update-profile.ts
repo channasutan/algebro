@@ -2,7 +2,6 @@ import { eventBus } from "@/events/event-bus";
 import { createUserProfileUpdatedEvent } from "../events/profile-updated";
 import type { ProfileRepository } from "../repositories/supabase-profile-repository";
 import type { UpdateProfileInput, UpdateProfileResult } from "../contracts/update-profile";
-import { ensureProfileExists } from "./ensure-profile-exists";
 
 function getSupportedTimezones(): string[] | undefined {
   if (typeof Intl === "undefined" || typeof Intl.supportedValuesOf !== "function") {
@@ -23,7 +22,7 @@ function validateWithIntl(timezone: string, supported: string[]): void {
 }
 
 function validateWithRegex(timezone: string): void {
-  const IANA_REGEX = /^[A-Za-z_]+(?:\/[A-Za-z0-9._+-]+)+$/;
+  const IANA_REGEX = /^(UTC|[A-Za-z_]+(?:\/[A-Za-z0-9._+-]+)+)$/;
   if (!IANA_REGEX.test(timezone)) {
     throw new Error(`Invalid timezone format: ${timezone}`);
   }
@@ -57,8 +56,11 @@ export async function updateProfile(
 
   validateTimezone(changes.timezone);
 
-  // Guarantee row exists before updating, to prevent silent failures
-  await ensureProfileExists(repo, { userId });
+  // Verify profile exists before updating
+  const existingProfile = await repo.findById(userId);
+  if (!existingProfile) {
+    throw new Error("[user-profiles] Profile not found. Cannot update non-existent profile.");
+  }
 
   const updatedProfile = await repo.updateProfile(userId, changes);
 

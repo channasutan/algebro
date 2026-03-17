@@ -5,7 +5,7 @@ import type { UserProfile } from "../domain/profile";
 
 export type EnsureProfileExistsInput = {
   userId: string;
-  email?: string | null;
+  email: string;
 };
 
 export async function ensureProfileExists(
@@ -14,6 +14,10 @@ export async function ensureProfileExists(
 ): Promise<UserProfile> {
   const { userId, email } = input;
 
+  if (!email || email.trim() === "") {
+    throw new Error("[user-profiles] Cannot create profile without email");
+  }
+
   const existing = await repo.findById(userId);
   if (existing) {
     return existing;
@@ -21,7 +25,7 @@ export async function ensureProfileExists(
 
   const inserted = await repo.insertProfile({
     id: userId,
-    email: email ?? null,
+    email,
     timezone: "UTC",
   });
 
@@ -30,7 +34,7 @@ export async function ensureProfileExists(
   if (inserted) {
     const event = createUserProfileInitializedEvent({
       userId,
-      email: email ?? "",
+      email,
       displayName: "",
       initializedAt: new Date().toISOString(),
       initializationSource: "lazy_bootstrap",

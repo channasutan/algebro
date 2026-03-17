@@ -2,11 +2,12 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServerClient } from "@/lib/supabase/server-client";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin-client";
 import type { UserProfile } from "../domain/profile";
 
 export type InsertProfileInput = {
   id: string;
-  email?: string | null;
+  email: string;
   timezone: string;
 };
 
@@ -30,6 +31,11 @@ export function buildProfileRepository(client: SupabaseClient): ProfileRepositor
 
 export function createSupabaseProfileRepository(): ProfileRepository {
   const getClient = async () => await getSupabaseServerClient();
+  return createRepositoryFromClientFactory(getClient);
+}
+
+export function createServiceRoleProfileRepository(): ProfileRepository {
+  const getClient = async () => await getSupabaseAdminClient();
   return createRepositoryFromClientFactory(getClient);
 }
 
@@ -86,7 +92,7 @@ function createRepositoryFromClientFactory(
         .upsert(
           {
             id: input.id,
-            email: input.email ?? null,
+            email: input.email,
             timezone: input.timezone,
           },
           { onConflict: "id", ignoreDuplicates: true }

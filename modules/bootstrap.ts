@@ -3,7 +3,7 @@ import "server-only";
 import { eventBus } from "@/events/event-bus";
 import { AUTH_USER_REGISTERED } from "@/modules/authentication/events/auth-user-registered";
 import { handleAuthUserRegistered } from "@/modules/user-profiles/events/on-auth-user-registered";
-import { createSupabaseProfileRepository } from "@/modules/user-profiles/repositories/supabase-profile-repository";
+import { createServiceRoleProfileRepository } from "@/modules/user-profiles/repositories/supabase-profile-repository";
 
 import {
   MATERIAL_PROCESSING_JOB,
@@ -23,7 +23,7 @@ function registerAuthenticationModule(): void {
 }
 
 function registerUserProfilesModule(): void {
-  const profileRepo = createSupabaseProfileRepository();
+  const profileRepo = createServiceRoleProfileRepository();
 
   eventBus.subscribe(
     AUTH_USER_REGISTERED,

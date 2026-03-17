@@ -1,6 +1,5 @@
 import type { ProfileRepository } from "../repositories/supabase-profile-repository";
 import type { UserProfile } from "../domain/profile";
-import { ensureProfileExists } from "./ensure-profile-exists";
 import type { GetProfileInput } from "../contracts/get-profile";
 
 export async function getCurrentProfile(
@@ -13,5 +12,7 @@ export async function getCurrentProfile(
     return profile;
   }
 
-  return ensureProfileExists(repo, { userId: input.userId });
+  // Lazy bootstrap is NOT allowed without email
+  // Caller must provide email when creating new profiles
+  throw new Error("[user-profiles] Profile not found. Email is required to create a new profile.");
 }
