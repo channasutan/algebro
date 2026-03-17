@@ -91,7 +91,9 @@ function createRepositoryFromClientFactory(
       
       // Delay before next attempt (5ms on first retry, 10ms on second; no delay on final attempt)
       if (attempt === 2) {
-        console.warn("[user-profiles] findById failed after retries", { userId: input.id });
+        if (process.env.NODE_ENV !== "production") {
+          console.warn("[user-profiles] findById failed after retries", { userId: input.id });
+        }
       } else {
         await new Promise(resolve => setTimeout(resolve, 5 * (attempt + 1)));
       }

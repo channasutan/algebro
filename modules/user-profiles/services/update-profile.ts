@@ -12,7 +12,9 @@ function getSupportedTimezones(): string[] | undefined {
   try {
     return Intl.supportedValuesOf("timeZone");
   } catch {
-    console.warn("[user-profiles] Intl.supportedValuesOf not available, using regex validation");
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[user-profiles] Intl.supportedValuesOf not available, using regex validation");
+    }
     return undefined;
   }
 }

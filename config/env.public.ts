@@ -41,7 +41,9 @@ function readRequiredPublicUrlEnv(value: string | undefined, name: string): stri
       throw new Error("Unsupported protocol");
     }
   } catch {
-    console.warn(`[env.public] Failed to parse URL for ${name}`);
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(`[env.public] Failed to parse URL for ${name}`);
+    }
     throw new Error(
       `Invalid public environment variable: ${name}. Expected an absolute http or https URL.`
     );

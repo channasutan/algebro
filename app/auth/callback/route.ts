@@ -8,14 +8,18 @@ import { handleAuthCallback } from "@/modules/authentication";
  * Returns true if the path:
  * - Starts with a single "/"
  * - Is not protocol-relative (not "//")
+ * - Does not contain backslashes
+ * - Does not contain control characters
  * - Is not an absolute URL
  */
 function isSafeRelativePath(path: string): boolean {
   const isRelative = path.startsWith("/");
   const isProtocolRelative = path.startsWith("//");
   const hasProtocol = /^[a-zA-Z]+:/.exec(path) !== null;
+  const hasBackslash = path.includes("\\");
+  const hasControlChars = /[\u0000-\u001F]/.exec(path) !== null;
 
-  return isRelative && !isProtocolRelative && !hasProtocol;
+  return isRelative && !isProtocolRelative && !hasProtocol && !hasBackslash && !hasControlChars;
 }
 
 function getSafeRedirectPath(nextParam: string | null): string {

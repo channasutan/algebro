@@ -30,7 +30,9 @@ export async function signInAction(_prevState: ActionResult, formData: FormData)
     return { success: true };
   } catch {
     // Return deterministic error for all authentication failures to prevent leaking info
-    console.warn("[auth] unexpected error in signInAction");
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[auth] unexpected error in signInAction");
+    }
     return { success: false, error: "Invalid email or password" };
   }
 }
