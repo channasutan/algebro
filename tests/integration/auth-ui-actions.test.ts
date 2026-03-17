@@ -37,15 +37,15 @@ describe("Auth UI Actions Transport Layer", () => {
     vi.resetAllMocks();
   });
 
-  it("1. sign up success calls ensureModulesBootstrapped BEFORE auth service", async () => {
-    const formData = new FormData();
-    formData.append("email", "test@example.com");
-    formData.append("password", "password123");
+    it("1. sign up success calls ensureModulesBootstrapped BEFORE auth service", async () => {
+        const formData = new FormData();
+        formData.append("email", "test@example.com");
+        formData.append("password", "test-password"); // TEST ONLY: DO NOT USE REAL CREDENTIALS
 
-    (signUpUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
-      userId: "123",
-      requiresEmailConfirmation: false,
-    });
+        (signUpUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+            userId: "123",
+            requiresEmailConfirmation: false,
+        });
 
     const result = await signUpAction({ success: false, error: "" }, formData);
 
@@ -77,11 +77,11 @@ describe("Auth UI Actions Transport Layer", () => {
     expect(ensureModulesBootstrapped).toHaveBeenCalledTimes(1);
   });
 
-  it("3. sign in success triggers bootstrap and services nicely", async () => {
-    const formData = new FormData();
-    // Prove email normalization is applied
-    formData.append("email", " TEST@example.com ");
-    formData.append("password", "password123");
+    it("3. sign in success triggers bootstrap and services nicely", async () => {
+        const formData = new FormData();
+        // Prove email normalization is applied
+        formData.append("email", " TEST@example.com ");
+        formData.append("password", "test-password"); // TEST ONLY: DO NOT USE REAL CREDENTIALS
 
     (signInUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
@@ -92,17 +92,17 @@ describe("Auth UI Actions Transport Layer", () => {
     expect(result).toEqual({ success: true });
     expect(ensureModulesBootstrapped).toHaveBeenCalledTimes(1);
     
-    // Verify email was trimmed and lowercase mapped
-    expect(signInUser).toHaveBeenCalledWith({
-      email: "test@example.com",
-      password: "password123",
-    });
+     // Verify email was trimmed and lowercase mapped
+     expect(signInUser).toHaveBeenCalledWith({
+       email: "test@example.com",
+       password: "test-password", // TEST ONLY: DO NOT USE REAL CREDENTIALS
+     });
   });
 
-  it("4. sign in failure prevents leakage of verbose trace data by wrapping raw errors safely", async () => {
-    const formData = new FormData();
-    formData.append("email", "test@example.com");
-    formData.append("password", "badpass");
+    it("4. sign in failure prevents leakage of verbose trace data by wrapping raw errors safely", async () => {
+        const formData = new FormData();
+        formData.append("email", "test@example.com");
+        formData.append("password", "test-password"); // TEST ONLY: DO NOT USE REAL CREDENTIALS
 
     // Mock a verbose unsafe database error 
     (signInUser as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
