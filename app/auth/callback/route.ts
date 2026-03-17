@@ -17,9 +17,13 @@ export async function GET(request: NextRequest) {
   let redirectUrl = "/";
   try {
     await handleAuthCallback(code);
-    // Validate next is a relative path to avoid open redirect vulnerabilities
-    redirectUrl = next.startsWith("/") ? next : "/";
-  } catch (error) {
+    // Validate next is a safe relative path to avoid open redirect vulnerabilities
+    const decodedNext = decodeURIComponent(next);
+    // Must start with single "/" and not be "//" or absolute URL
+    if (decodedNext.startsWith("/") && !decodedNext.startsWith("//") && !decodedNext.match(/^[a-zA-Z]+:/)) {
+      redirectUrl = decodedNext;
+    }
+  } catch {
     redirectUrl = "/sign-in?error=auth_failed";
   }
 

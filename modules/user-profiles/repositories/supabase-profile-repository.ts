@@ -19,7 +19,7 @@ export type UpdateProfileInput = {
 
 export interface ProfileRepository {
   findById(userId: string): Promise<UserProfile | null>;
-  insertProfile(input: InsertProfileInput): Promise<UserProfile | null>;
+  insertProfile(input: InsertProfileInput): Promise<UserProfile>;
   updateProfile(userId: string, changes: UpdateProfileInput): Promise<UserProfile>;
 }
 
