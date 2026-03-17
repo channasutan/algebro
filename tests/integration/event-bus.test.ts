@@ -4,10 +4,10 @@ import { createEventBus, type EventBus } from "@/events/event-bus";
 import { createDomainEvent, type DomainEvent } from "@/events/event-types";
 
 /**
- * Helper to create a test event and publish it to subscribers.
- * Returns both the event and the subscriber mock for assertions.
+ * Helper to create a test event and subscribe a handler.
+ * Publishing is done explicitly in tests.
  */
-function subscribeAndPublish<T extends { userId: string }>(
+function subscribeAndCreateEvent<T extends { userId: string }>(
   bus: EventBus,
   eventType: string,
   payload: T,
@@ -158,7 +158,7 @@ describe("event bus", () => {
         source: "email"
       };
 
-      const event = subscribeAndPublish(bus, "auth_user_registered", payload, subscriber);
+      const event = subscribeAndCreateEvent(bus, "auth_user_registered", payload, subscriber);
 
       await bus.publish(event);
 
@@ -170,7 +170,7 @@ describe("event bus", () => {
       const subscriber = vi.fn();
       const payload = { userId: "user-123" };
 
-      const event = subscribeAndPublish(bus, "user_profile_initialized", payload, subscriber);
+      const event = subscribeAndCreateEvent(bus, "user_profile_initialized", payload, subscriber);
 
       await bus.publish(event);
 
@@ -188,7 +188,7 @@ describe("event bus", () => {
         updatedAt: "2024-01-01T00:00:00Z"
       };
 
-      const event = subscribeAndPublish(bus, "user_profile_updated", payload, subscriber);
+      const event = subscribeAndCreateEvent(bus, "user_profile_updated", payload, subscriber);
 
       await bus.publish(event);
 

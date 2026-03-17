@@ -6,6 +6,7 @@ import type { UserProfile } from "../domain/profile";
 export type EnsureProfileExistsInput = {
   userId: string;
   email: string;
+  initializationSource?: string;
 };
 
 export async function ensureProfileExists(
@@ -37,7 +38,7 @@ export async function ensureProfileExists(
       email,
       displayName: null,
       initializedAt: new Date().toISOString(),
-      initializationSource: "lazy_bootstrap",
+      initializationSource: input.initializationSource ?? "lazy_bootstrap",
     });
     void eventBus.publish(event).catch((err) => {
       console.error("[user-profiles] failed to publish event", err);
