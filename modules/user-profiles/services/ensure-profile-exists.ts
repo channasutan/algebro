@@ -32,10 +32,12 @@ export async function ensureProfileExists(
     timezone: "UTC",
   });
 
-  // Defensive: throw if profile is null (should not happen with correct repository)
+  // Guard: throw if profile is null (defensive, though insertProfile contract says it throws on failure)
   if (!profile) {
     throw new Error("[user-profiles] failed to create or load profile");
   }
+
+  const userProfile: UserProfile = profile;
 
   // Emit event after profile is created
   const event = createUserProfileInitializedEvent({
@@ -49,5 +51,5 @@ export async function ensureProfileExists(
     console.error("[user-profiles] failed to publish event", err);
   });
 
-  return profile;
+  return userProfile;
 }
