@@ -85,17 +85,20 @@ function createRepositoryFromClientFactory(
     }
 
     // Bounded retry to eliminate read-after-write race conditions
-    for (let attempt = 0; attempt < 3; attempt++) {
+    const MAX_RETRIES = 3;
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       const profile = await findById(input.id);
       if (profile) return profile;
-      
-      // Delay before next attempt (5ms on first retry, 10ms on second; no delay on final attempt)
-      if (attempt === 2) {
+
+      const isLastAttempt = attempt === MAX_RETRIES - 1;
+
+      if (isLastAttempt) {
         if (process.env.NODE_ENV !== "production") {
           console.warn("[user-profiles] findById failed after retries", { userId: input.id });
         }
       } else {
-        await new Promise(resolve => setTimeout(resolve, 5 * (attempt + 1)));
+        const delayMs = 5 * (attempt + 1);
+        await new Promise(resolve => setTimeout(resolve, delayMs));
       }
     }
 
