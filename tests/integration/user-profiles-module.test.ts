@@ -64,17 +64,16 @@ describe("User Profiles Module Integration", () => {
 
   const getClient = async () => mockClient as unknown as import("@supabase/supabase-js").SupabaseClient;
 
-  it("throws error when profile not found and no email provided", async () => {
+  it("throws error when profile not found", async () => {
     vi.spyOn(ServerClientAuth, "getSupabaseServerClient").mockImplementation(getClient);
     const repo = createSupabaseProfileRepository();
 
     // getCurrentProfile calls findById -> returns null
     (mockClient._mocks as Record<string, ReturnType<typeof vi.fn>>).maybeSingleMock.mockResolvedValueOnce({ data: null, error: null });
 
-    // Should throw because lazy bootstrap requires email
     await expect(
       getCurrentProfile(repo, { userId: "user-123" })
-    ).rejects.toThrow("Profile not found. Email is required to create a new profile.");
+    ).rejects.toThrow(/\[user-profiles\] Profile not found/);
   });
 
   it("updates a profile and validates RLS indirectly by ensuring equality check", async () => {

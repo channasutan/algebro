@@ -12,7 +12,5 @@ export async function getCurrentProfile(
     return profile;
   }
 
-  // Lazy bootstrap is NOT allowed without email
-  // Caller must provide email when creating new profiles
-  throw new Error("[user-profiles] Profile not found. Email is required to create a new profile.");
+  throw new Error("[user-profiles] Profile not found.");
 }
