@@ -190,8 +190,6 @@ describe("User Profiles Module Integration", () => {
     // Assert select was called 3 times (initial + 2 retries, meaning a total of 3 reads)
     const callCount = maybeSingleMock.mock.calls.length;
     expect(callCount).toBe(3);
-    // Exact count reflects current implementation; upper bound protects against future refactors.
-    expect(callCount).toBeLessThanOrEqual(3);
 
     // Assert warning was logged exactly once
     expect(warnSpy).toHaveBeenCalledTimes(1);
