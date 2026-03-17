@@ -7,7 +7,7 @@ type ActionResult =
   | { success: true }
   | { success: false; error: string };
 
-export async function signUpAction(prevState: ActionResult, formData: FormData): Promise<ActionResult> {
+export async function signUpAction(_prevState: ActionResult, formData: FormData): Promise<ActionResult> {
   await ensureModulesBootstrapped();
 
   const emailRaw = formData.get("email");

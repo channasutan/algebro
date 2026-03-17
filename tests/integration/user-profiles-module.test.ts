@@ -57,8 +57,7 @@ describe("User Profiles Module Integration", () => {
   type MockSupabaseClient = ReturnType<typeof createMockSupabaseClient>;
   let mockClient: MockSupabaseClient;
 
-  // Use direct mock reference instead of internal _mocks
-  // to avoid coupling to client implementation details
+  // Cache references to internal mock functions for cleaner assertions
   let maybeSingleMock: ReturnType<typeof vi.fn>;
   let updateMock: ReturnType<typeof vi.fn>;
   let upsertMock: ReturnType<typeof vi.fn>;
