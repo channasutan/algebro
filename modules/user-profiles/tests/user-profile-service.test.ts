@@ -166,7 +166,7 @@ describe("User Profiles Service Logic", () => {
 
     it("verifies timezone via regex if Intl is not available (mocked out)", async () => {
       mockRepo.findById.mockResolvedValue({} as unknown as UserProfile);
-      mockRepo.updateProfile.mockResolvedValue({ timezone: "Invalid" } as unknown as UserProfile);
+      mockRepo.updateProfile.mockResolvedValue({ timezone: "Invalid", updatedAt: "2024-01-01T00:00:00Z" } as unknown as UserProfile);
       // Test invalid timezone format for regex
       await expect(
         updateProfile(mockRepo, { userId: "user-1", changes: { timezone: "invalid-tz" } })
@@ -176,13 +176,12 @@ describe("User Profiles Service Logic", () => {
     it("rejects invalid timezone formats when Intl.supportedValuesOf is unavailable", async () => {
       // Stub Intl.supportedValuesOf to simulate unavailable API
       vi.stubGlobal("Intl", {
-        ...globalThis.Intl,
         supportedValuesOf: undefined,
-      });
+      } as unknown as typeof Intl);
 
       try {
         mockRepo.findById.mockResolvedValue({} as unknown as UserProfile);
-        mockRepo.updateProfile.mockResolvedValue({ timezone: "America/Argentina/Buenos_Aires" } as unknown as UserProfile);
+        mockRepo.updateProfile.mockResolvedValue({ timezone: "America/Argentina/Buenos_Aires", updatedAt: "2024-01-01T00:00:00Z" } as unknown as UserProfile);
 
         // Test invalid format - should fail with regex fallback
         await expect(
@@ -203,13 +202,12 @@ describe("User Profiles Service Logic", () => {
     it("accepts UTC timezone in regex fallback path", async () => {
       // Stub Intl.supportedValuesOf to simulate unavailable API
       vi.stubGlobal("Intl", {
-        ...globalThis.Intl,
         supportedValuesOf: undefined,
-      });
+      } as unknown as typeof Intl);
 
       try {
         mockRepo.findById.mockResolvedValue({} as unknown as UserProfile);
-        mockRepo.updateProfile.mockResolvedValue({ timezone: "UTC" } as unknown as UserProfile);
+        mockRepo.updateProfile.mockResolvedValue({ timezone: "UTC", updatedAt: "2024-01-01T00:00:00Z" } as unknown as UserProfile);
 
         const result = await updateProfile(mockRepo, {
           userId: "user-1",
