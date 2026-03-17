@@ -16,12 +16,12 @@ import type { AuthRepository } from "../repositories/supabase-auth-repository";
  * but does not affect the sign-up result. This ensures user registration
  * succeeds even if event subscribers are temporarily unavailable.
  *
- * @param input - Email and password for the new account
  * @param repository - Auth repository (injectable for testing)
+ * @param input - Email and password for the new account
  */
 export async function signUpUser(
-  input: SignUpInput,
-  repository: AuthRepository
+  repository: AuthRepository,
+  input: SignUpInput
 ): Promise<SignUpResult> {
   const result = await repository.signUp(input);
 

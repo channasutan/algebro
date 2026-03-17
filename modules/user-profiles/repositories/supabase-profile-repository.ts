@@ -48,7 +48,7 @@ function createRepositoryFromClientFactory(
       .maybeSingle();
 
     if (error) {
-      throw new Error(error.message, { cause: error });
+      throw new Error(`[user-profiles] ${error.message}`, { cause: error });
     }
 
     if (!data) {
@@ -81,11 +81,23 @@ function createRepositoryFromClientFactory(
       );
 
     if (upsertError) {
-      throw new Error(upsertError.message, { cause: upsertError });
+      throw new Error(`[user-profiles] ${upsertError.message}`, { cause: upsertError });
     }
 
-    // Always fetch after upsert to get the profile
-    return findById(input.id);
+    // Bounded retry to eliminate read-after-write race conditions
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const profile = await findById(input.id);
+      if (profile) return profile;
+      
+      // Delay before next attempt (5ms, 10ms, 15ms)
+      if (attempt === 2) {
+        console.warn("[user-profiles] requireById failed after retries", { userId: input.id });
+      } else {
+        await new Promise(resolve => setTimeout(resolve, 5 * (attempt + 1)));
+      }
+    }
+
+    throw new Error("[user-profiles] failed to create or load profile");
   };
 
   const updateProfile = async (userId: string, changes: UpdateProfileInput): Promise<UserProfile> => {
@@ -110,7 +122,7 @@ function createRepositoryFromClientFactory(
       .maybeSingle();
 
     if (error) {
-      throw new Error(error.message, { cause: error });
+      throw new Error(`[user-profiles] ${error.message}`, { cause: error });
     }
 
     if (!data) {

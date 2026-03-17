@@ -12,5 +12,5 @@ export async function getCurrentProfile(
     return profile;
   }
 
-  throw new Error("[user-profiles] Profile not found.");
+  throw new Error("[user-profiles] Profile not found. Create profile via ensureProfileExists.");
 }

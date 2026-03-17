@@ -7,12 +7,12 @@ import type { AuthRepository } from "../repositories/supabase-auth-repository";
  * code for a session. This is called from the `app/auth/callback/route.ts`
  * route handler after Supabase redirects back to the application.
  *
- * @param code - The one-time auth code received from Supabase
  * @param repository - Auth repository (injectable for testing)
+ * @param code - The one-time auth code received from Supabase
  */
 export async function handleAuthCallback(
-  code: string,
-  repository: AuthRepository
+  repository: AuthRepository,
+  code: string
 ): Promise<void> {
   if (!code || code.trim().length === 0) {
     throw new Error("Auth callback code must be a non-empty string");

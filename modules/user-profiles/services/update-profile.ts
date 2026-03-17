@@ -23,6 +23,10 @@ function validateWithIntl(timezone: string, supported: string[]): void {
 }
 
 function validateWithRegex(timezone: string): void {
+  // NOTE:
+  // This regex ensures format correctness but does not validate
+  // against actual IANA timezone database. Use Intl.supportedValuesOf
+  // where available for stricter validation.
   const IANA_REGEX = /^(UTC|[A-Za-z_]+(?:\/[A-Za-z0-9._+-]+)+)$/;
   if (!IANA_REGEX.test(timezone)) {
     throw new Error(`[user-profiles] Invalid timezone format: ${timezone}`);

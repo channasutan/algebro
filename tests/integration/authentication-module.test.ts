@@ -3,10 +3,8 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { eventBus } from "@/events/event-bus";
 import { TEST_PASSWORD } from "@/tests/test-constants";
 import { AUTH_USER_REGISTERED } from "@/modules/authentication/events/auth-user-registered";
-import {
-  signUpUser,
-  buildAuthRepository,
-} from "@/modules/authentication";
+import { signUpUser } from "@/modules/authentication/services/sign-up-user";
+import { buildAuthRepository } from "@/modules/authentication/repositories/supabase-auth-repository";
 import { buildSupabaseServerClient } from "@/lib/supabase/server-client";
 import type { SupabaseClient } from "@/lib/supabase/server-client";
 
@@ -81,8 +79,8 @@ describe("Authentication Module Integration", () => {
 
     // 3. Act - call the top-level service
     const result = await signUpUser(
-      { email: "integration@example.com", password: TEST_PASSWORD },
-      repo
+      repo,
+      { email: "integration@example.com", password: TEST_PASSWORD }
     );
 
     // 4. Assert client was called correctly

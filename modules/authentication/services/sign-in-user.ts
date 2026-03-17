@@ -9,12 +9,12 @@ import type { AuthRepository } from "../repositories/supabase-auth-repository";
  * Delegates entirely to the repository. No domain event is emitted for
  * sign-in because no domain consumers currently require it.
  *
- * @param input - Email and password credentials
  * @param repository - Auth repository (injectable for testing)
+ * @param input - Email and password credentials
  */
 export async function signInUser(
-  input: SignInInput,
-  repository: AuthRepository
+  repository: AuthRepository,
+  input: SignInInput
 ): Promise<SignInResult> {
   return repository.signIn(input);
 }

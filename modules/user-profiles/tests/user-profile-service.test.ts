@@ -157,12 +157,21 @@ describe("User Profiles Service Logic", () => {
     });
 
     it("verifies timezone via regex if Intl is not available (mocked out)", async () => {
-      mockRepo.findById.mockResolvedValue({} as unknown as UserProfile);
-      mockRepo.updateProfile.mockResolvedValue({ timezone: "Invalid", updatedAt: "2024-01-01T00:00:00Z" } as unknown as UserProfile);
-      // Test invalid timezone format for regex
-      await expect(
-        updateProfile(mockRepo, { userId: "user-1", changes: { timezone: "invalid-tz" } })
-      ).rejects.toThrow(/Invalid timezone/);
+      // Stub Intl.supportedValuesOf to simulate unavailable API
+      vi.stubGlobal("Intl", {
+        supportedValuesOf: undefined,
+      } as unknown as typeof Intl);
+
+      try {
+        mockRepo.findById.mockResolvedValue({} as unknown as UserProfile);
+        mockRepo.updateProfile.mockResolvedValue({ timezone: "Invalid", updatedAt: "2024-01-01T00:00:00Z" } as unknown as UserProfile);
+        // Test invalid timezone format for regex
+        await expect(
+          updateProfile(mockRepo, { userId: "user-1", changes: { timezone: "invalid-tz" } })
+        ).rejects.toThrow(/Invalid timezone/);
+      } finally {
+        vi.unstubAllGlobals();
+      }
     });
 
     it("rejects invalid timezone formats when Intl.supportedValuesOf is unavailable", async () => {
