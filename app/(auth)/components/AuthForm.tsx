@@ -6,13 +6,13 @@ type ActionResult =
   | { success: true }
   | { success: false; error: string };
 
-type AuthFormProps = {
+type AuthFormProps = Readonly<{
   title: string;
   submitLabel: string;
   pendingLabel: string;
   action: (prevState: ActionResult, formData: FormData) => Promise<ActionResult>;
   successMessage: string;
-};
+}>;
 
 const initialState: ActionResult = { success: false, error: "" };
 
