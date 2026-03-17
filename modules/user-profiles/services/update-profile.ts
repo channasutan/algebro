@@ -17,14 +17,14 @@ function getSupportedTimezones(): string[] | undefined {
 
 function validateWithIntl(timezone: string, supported: string[]): void {
   if (!supported.includes(timezone)) {
-    throw new Error(`Invalid timezone: ${timezone}`);
+    throw new Error(`[user-profiles] Invalid timezone: ${timezone}`);
   }
 }
 
 function validateWithRegex(timezone: string): void {
   const IANA_REGEX = /^(UTC|[A-Za-z_]+(?:\/[A-Za-z0-9._+-]+)+)$/;
   if (!IANA_REGEX.test(timezone)) {
-    throw new Error(`Invalid timezone format: ${timezone}`);
+    throw new Error(`[user-profiles] Invalid timezone format: ${timezone}`);
   }
 }
 
