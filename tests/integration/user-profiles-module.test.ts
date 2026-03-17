@@ -144,13 +144,11 @@ describe("User Profiles Module Integration", () => {
       .mockResolvedValueOnce({ data: null, error: null })
       .mockResolvedValueOnce({ data: createdProfile, error: null });
 
-    const startTime = Date.now();
     const result = await repo.insertProfile({
       id: "retry-123",
       email: "retry@ex.com",
       timezone: "UTC"
     });
-    const endTime = Date.now();
 
     expect(result).not.toBeNull();
     expect(result?.userId).toBe("retry-123");
@@ -178,7 +176,6 @@ describe("User Profiles Module Integration", () => {
     // maybeSingle always returns null
     maybeSingleMock.mockResolvedValue({ data: null, error: null });
 
-    const startTime = Date.now();
     await expect(
       repo.insertProfile({
         id: "fail-123",
@@ -186,7 +183,6 @@ describe("User Profiles Module Integration", () => {
         timezone: "UTC"
       })
     ).rejects.toThrow(/\[user-profiles\] failed to create or load profile/);
-    const endTime = Date.now();
 
     // Assert exactly one upsert
     expect(upsertMock).toHaveBeenCalledTimes(1);
