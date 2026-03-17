@@ -23,11 +23,8 @@ describe("Auth-to-Profile Cross-Module Flow", () => {
   it("handles the registered event to lazily bootstrap a profile", async () => {
     // We mock ensureProfileExists using the mocked repository
     const mockRepo = {
-      findById: vi.fn()
-        .mockResolvedValueOnce(null)  // First call - no existing profile
-        .mockResolvedValueOnce({ id: "user-999", email: "test@ex.com" }),  // Second call - after insert
-      insertProfile: vi.fn().mockResolvedValue(true),
-      requireById: vi.fn(),
+      findById: vi.fn().mockResolvedValue(null),  // First call - no existing profile
+      insertProfile: vi.fn().mockResolvedValue({ id: "user-999", email: "test@ex.com" }),
       updateProfile: vi.fn(),
     };
 
@@ -52,8 +49,7 @@ describe("Auth-to-Profile Cross-Module Flow", () => {
       timezone: "UTC",
     });
 
-    // After insert, findById is called again to get the profile
-    expect(mockRepo.findById).toHaveBeenCalledTimes(2);
+    // insertProfile returns profile directly, no second findById needed
     expect(eventBus.publish).toHaveBeenCalled();
   });
 });

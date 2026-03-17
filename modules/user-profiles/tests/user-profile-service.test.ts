@@ -56,13 +56,10 @@ describe("User Profiles Service Logic", () => {
     });
 
     it("inserts profile and emits event if not found", async () => {
-      // First call returns null (no existing profile), second returns new profile (after insert)
-      mockRepo.findById
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce({ userId: "user-1", email: "test@ex.com", displayName: null, avatarUrl: null, timezone: "UTC", updatedAt: "date" });
-      mockRepo.insertProfile.mockResolvedValue(true);
-
+      mockRepo.findById.mockResolvedValue(null);
+      
       const newProfile = { userId: "user-1", email: "test@ex.com", displayName: null, avatarUrl: null, timezone: "UTC", updatedAt: "date" };
+      mockRepo.insertProfile.mockResolvedValue(newProfile);
 
       const result = await ensureProfileExists(mockRepo, { userId: "user-1", email: "test@ex.com" });
 
@@ -71,7 +68,6 @@ describe("User Profiles Service Logic", () => {
         email: "test@ex.com",
         timezone: "UTC",
       });
-      expect(mockRepo.findById).toHaveBeenCalledTimes(2);
       expect(eventBus.publish).toHaveBeenCalledWith(
         expect.objectContaining({
           event_type: USER_PROFILE_INITIALIZED,
@@ -81,25 +77,20 @@ describe("User Profiles Service Logic", () => {
       expect(result).toEqual(newProfile);
     });
 
-    it("does not emit event if insert returns false (e.g. race condition DO NOTHING)", async () => {
+    it("does not emit event if insert returns null (e.g. race condition DO NOTHING)", async () => {
       mockRepo.findById.mockResolvedValue(null);
-      mockRepo.insertProfile.mockResolvedValue(false); // another process inserted
-
-      const newProfile = { userId: "user-1", email: "test@ex.com", displayName: null, avatarUrl: null, timezone: "UTC", updatedAt: "date" };
-      mockRepo.findById.mockResolvedValueOnce(null).mockResolvedValueOnce(newProfile);
+      mockRepo.insertProfile.mockResolvedValue(null); // another process inserted
 
       const result = await ensureProfileExists(mockRepo, { userId: "user-1", email: "test@ex.com" });
 
       expect(eventBus.publish).not.toHaveBeenCalled();
-      expect(result).toEqual(newProfile);
+      expect(result).toBeNull();
     });
     
     it("never crashes the event bus if publish fails because it catches internally", async () => {
-      mockRepo.findById
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce({ userId: "user-1", email: "test@ex.com", displayName: null, avatarUrl: null, timezone: "UTC", updatedAt: "date" });
-      mockRepo.insertProfile.mockResolvedValue(true);
+      mockRepo.findById.mockResolvedValue(null);
       const newProfile = { userId: "user-1", email: "test@ex.com", displayName: null, avatarUrl: null, timezone: "UTC", updatedAt: "date" };
+      mockRepo.insertProfile.mockResolvedValue(newProfile);
       
       (eventBus.publish as Mock).mockRejectedValue(new Error("Event bus failure"));
       

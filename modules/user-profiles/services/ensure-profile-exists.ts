@@ -24,19 +24,13 @@ export async function ensureProfileExists(
     return existing;
   }
 
-  const inserted = await repo.insertProfile({
+  const profile = await repo.insertProfile({
     id: userId,
     email,
     timezone: "UTC",
   });
 
-  // After insert, fetch the profile
-  const profile = await repo.findById(userId);
-  if (!profile) {
-    throw new Error("[user-profiles] failed to create or load profile");
-  }
-
-  if (inserted) {
+  if (profile) {
     const event = createUserProfileInitializedEvent({
       userId,
       email,

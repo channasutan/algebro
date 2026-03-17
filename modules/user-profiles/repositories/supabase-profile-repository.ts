@@ -19,8 +19,7 @@ export type UpdateProfileInput = {
 
 export interface ProfileRepository {
   findById(userId: string): Promise<UserProfile | null>;
-  requireById(userId: string): Promise<UserProfile>;
-  insertProfile(input: InsertProfileInput): Promise<boolean>;
+  insertProfile(input: InsertProfileInput): Promise<UserProfile | null>;
   updateProfile(userId: string, changes: UpdateProfileInput): Promise<UserProfile>;
 }
 
@@ -66,17 +65,7 @@ function createRepositoryFromClientFactory(
     };
   };
 
-  const requireById = async (userId: string): Promise<UserProfile> => {
-    const profile = await findById(userId);
-
-    if (profile) {
-      return profile;
-    }
-
-    throw new Error("[user-profiles] failed to create or load profile");
-  };
-
-  const insertProfile = async (input: InsertProfileInput): Promise<boolean> => {
+  const insertProfile = async (input: InsertProfileInput): Promise<UserProfile | null> => {
     const client = await getClient();
     const { data, error } = await client
       .from("users")
@@ -88,18 +77,29 @@ function createRepositoryFromClientFactory(
         },
         { onConflict: "id", ignoreDuplicates: true }
       )
-      .select("id")
+      .select("*")
       .single();
 
     if (error) {
-      // If error is "duplicate key ignore" (PGRST116), treat as success
+      // If error is "duplicate key ignore" (PGRST116), fetch existing profile
       if (error.code === "PGRST116") {
-        return true;
+        return findById(input.id);
       }
       throw new Error(error.message, { cause: error });
     }
 
-    return data !== null;
+    if (!data) {
+      return null;
+    }
+
+    return {
+      userId: data.id,
+      email: data.email,
+      displayName: data.display_name,
+      avatarUrl: data.avatar_url,
+      timezone: data.timezone,
+      updatedAt: data.updated_at,
+    };
   };
 
   const updateProfile = async (userId: string, changes: UpdateProfileInput): Promise<UserProfile> => {
@@ -143,7 +143,6 @@ function createRepositoryFromClientFactory(
 
   return {
     findById,
-    requireById,
     insertProfile,
     updateProfile,
   };
