@@ -25,21 +25,14 @@ export async function ensureProfileExists(
     return existing;
   }
 
-  // Attempt to insert profile - throws if insert didn't create a row
+  // insertProfile returns a UserProfile or throws on failure
   const profile = await repo.insertProfile({
     id: userId,
     email,
     timezone: "UTC",
   });
 
-  // Guard: throw if profile is null (defensive, though insertProfile contract says it throws on failure)
-  if (!profile) {
-    throw new Error("[user-profiles] failed to create or load profile");
-  }
-
-  const userProfile: UserProfile = profile;
-
-  // Emit event after profile is created
+  // Emit event after profile is ensured (may be new or existing)
   const event = createUserProfileInitializedEvent({
     userId,
     email,
@@ -51,5 +44,5 @@ export async function ensureProfileExists(
     console.error("[user-profiles] failed to publish event", err);
   });
 
-  return userProfile;
+  return profile;
 }

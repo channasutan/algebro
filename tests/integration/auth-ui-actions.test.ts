@@ -1,4 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { GET as handleCallbackRoute } from "@/app/auth/callback/route";
+import { redirect } from "next/navigation";
+import { NextRequest } from "next/server";
 
 // Mock the dependencies: Mock ONLY authentication module and bootstrap.
 vi.mock("@/modules/bootstrap", () => ({
@@ -126,10 +129,6 @@ describe("Auth UI Actions Transport Layer", () => {
     expect(signOutUser).toHaveBeenCalledTimes(1);
   });
 });
-
-import { GET as handleCallbackRoute } from "@/app/auth/callback/route";
-import { redirect } from "next/navigation";
-import { NextRequest } from "next/server";
 
 describe("Auth Callback Route Handler", () => {
   beforeEach(() => {
