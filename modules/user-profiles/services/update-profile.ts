@@ -1,7 +1,7 @@
 import { eventBus } from "@/events/event-bus";
 import { createUserProfileUpdatedEvent } from "../events/profile-updated";
 import type { ProfileRepository } from "../repositories/supabase-profile-repository";
-import type { UpdateProfileInput, UpdateProfileResult } from "../contracts/update-profile";
+import type { UpdateProfileInput, UpdateProfileResult, UpdateProfileChanges } from "../contracts/update-profile";
 
 function getSupportedTimezones(): string[] | undefined {
   if (typeof Intl === "undefined" || typeof Intl.supportedValuesOf !== "function") {
@@ -43,6 +43,42 @@ function validateTimezone(timezone: string | undefined): void {
   validateWithRegex(timezone);
 }
 
+function buildChangedFields(changes: UpdateProfileChanges): Record<string, string | null> {
+  const changedFields: Record<string, string | null> = {};
+
+  if (changes.displayName !== undefined) {
+    changedFields.display_name = changes.displayName;
+  }
+  if (changes.avatarUrl !== undefined) {
+    changedFields.avatar_url = changes.avatarUrl;
+  }
+  if (changes.timezone !== undefined) {
+    changedFields.timezone = changes.timezone;
+  }
+
+  return changedFields;
+}
+
+function publishProfileUpdatedEvent(
+  userId: string,
+  changedFields: Record<string, string | null>,
+  updatedAt: string
+): void {
+  if (Object.keys(changedFields).length === 0) {
+    return;
+  }
+
+  const event = createUserProfileUpdatedEvent({
+    userId,
+    changedFields,
+    updatedAt,
+  });
+
+  void eventBus.publish(event).catch((err) => {
+    console.error("[user-profiles] failed to publish event", err);
+  });
+}
+
 export async function updateProfile(
   repo: ProfileRepository,
   input: UpdateProfileInput
@@ -64,28 +100,8 @@ export async function updateProfile(
 
   const updatedProfile = await repo.updateProfile(userId, changes);
 
-  const changedFields: Record<string, string | null> = {};
-  if (changes.displayName !== undefined) {
-    changedFields.display_name = changes.displayName;
-  }
-  if (changes.avatarUrl !== undefined) {
-    changedFields.avatar_url = changes.avatarUrl;
-  }
-  if (changes.timezone !== undefined) {
-    changedFields.timezone = changes.timezone;
-  }
-
-  if (Object.keys(changedFields).length > 0) {
-    const event = createUserProfileUpdatedEvent({
-      userId,
-      changedFields,
-      updatedAt: updatedProfile.updatedAt,
-    });
-
-    void eventBus.publish(event).catch((err) => {
-      console.error("[user-profiles] failed to publish event", err);
-    });
-  }
+  const changedFields = buildChangedFields(changes);
+  publishProfileUpdatedEvent(userId, changedFields, updatedProfile.updatedAt);
 
   return { profile: updatedProfile };
 }
