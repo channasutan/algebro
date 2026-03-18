@@ -50,13 +50,13 @@ export async function GET(request: NextRequest) {
     redirect("/sign-in?error=invalid_callback");
   }
 
-  // Validate and sanitize redirect path first (before auth handling)
+  // ALWAYS compute safe redirect path FIRST
   const safeNext = getSafeRedirectPath(next);
 
-  // Default redirect to safe path
+  // Initialize redirect URL to safeNext (will be "/" for unsafe next values)
   let redirectUrl = safeNext;
 
-  // Handle auth callback separately
+  // Handle auth callback - unsafe next still processes auth but redirects to safe path
   try {
     await handleAuthCallback(code);
   } catch {

@@ -1,5 +1,6 @@
 import { eventBus } from "@/events/event-bus";
 import { createUserProfileUpdatedEvent } from "../events/profile-updated";
+import { getPublicEnv } from "@/config/env.server-entry";
 import type { ProfileRepository } from "../repositories/supabase-profile-repository";
 import type { UpdateProfileInput, UpdateProfileResult, UpdateProfileChanges } from "../contracts/update-profile";
 import type { ProfileFieldMap } from "../domain/profile";
@@ -12,7 +13,8 @@ function getSupportedTimezones(): string[] | undefined {
   try {
     return Intl.supportedValuesOf("timeZone");
   } catch {
-    if (process.env.NODE_ENV !== "production") {
+    const env = getPublicEnv();
+    if (env.nodeEnv !== "production") {
       console.warn("[user-profiles] Intl.supportedValuesOf not available, using regex validation");
     }
     return undefined;

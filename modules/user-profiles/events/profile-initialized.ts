@@ -8,10 +8,7 @@
  */
 import { createDomainEvent, type CoreDomainEventType, type DomainEvent } from "@/events/event-types";
 
-export const USER_PROFILE_ENSURED = "user_profile_ensured" as const satisfies CoreDomainEventType;
-
-/** @deprecated Use USER_PROFILE_ENSURED */
-export const USER_PROFILE_INITIALIZED = USER_PROFILE_ENSURED;
+export const USER_PROFILE_INITIALIZED = "user_profile_initialized" as const satisfies CoreDomainEventType;
 
 export type UserProfileInitializedPayload = {
   userId: string;
@@ -27,7 +24,7 @@ export function createUserProfileInitializedEvent(
   payload: UserProfileInitializedPayload
 ): UserProfileInitializedEvent {
   return createDomainEvent({
-    eventType: USER_PROFILE_ENSURED,
+    eventType: USER_PROFILE_INITIALIZED,
     payload
   });
 }

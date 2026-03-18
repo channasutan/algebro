@@ -3,6 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin-client";
+import { getPublicEnv } from "@/config/env.server-entry";
 import type { UserProfile } from "../domain/profile";
 
 export type InsertProfileInput = {
@@ -93,7 +94,8 @@ function createRepositoryFromClientFactory(
       const isLastAttempt = attempt === MAX_RETRIES - 1;
 
       if (isLastAttempt) {
-        if (process.env.NODE_ENV !== "production") {
+        const env = getPublicEnv();
+        if (env.nodeEnv !== "production") {
           console.warn("[user-profiles] findById failed after retries", { userId: input.id });
         }
       } else {

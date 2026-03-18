@@ -2,6 +2,7 @@
 
 import { ensureModulesBootstrapped } from "@/modules/bootstrap";
 import { signUpUser } from "@/modules/authentication";
+import { getPublicEnv } from "@/config/env.server-entry";
 
 type ActionResult =
   | { success: true }
@@ -30,7 +31,8 @@ export async function signUpAction(_prevState: ActionResult, formData: FormData)
     return { success: true };
   } catch {
     // DO NOT leak internal error content or use fragile string matching
-    if (process.env.NODE_ENV !== "production") {
+    const env = getPublicEnv();
+    if (env.nodeEnv !== "production") {
       console.warn("[auth] unexpected error in signUpAction");
     }
     return { success: false, error: "Sign up failed. Please try again" };

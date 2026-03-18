@@ -2,6 +2,7 @@
 
 import { ensureModulesBootstrapped } from "@/modules/bootstrap";
 import { signInUser } from "@/modules/authentication";
+import { getPublicEnv } from "@/config/env.server-entry";
 
 type ActionResult =
   | { success: true }
@@ -30,7 +31,8 @@ export async function signInAction(_prevState: ActionResult, formData: FormData)
     return { success: true };
   } catch {
     // Return deterministic error for all authentication failures to prevent leaking info
-    if (process.env.NODE_ENV !== "production") {
+    const env = getPublicEnv();
+    if (env.nodeEnv !== "production") {
       console.warn("[auth] unexpected error in signInAction");
     }
     return { success: false, error: "Invalid email or password" };

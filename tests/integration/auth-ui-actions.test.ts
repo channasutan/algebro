@@ -13,7 +13,7 @@ vi.mock("@/modules/authentication", () => ({
   signInUser: vi.fn(),
   signOutUser: vi.fn(),
   getCurrentSession: vi.fn(),
-  handleAuthCallback: vi.fn(),
+  handleAuthCallback: vi.fn().mockResolvedValue(undefined),
 }));
 
 // We strictly control next/headers cookies to return an empty object avoiding Server Context bugs
@@ -170,6 +170,9 @@ describe("Auth Callback Route Handler", () => {
   });
 
   it("4. redirects to root if the next parameter is an open redirect path", async () => {
+    // Reset mock to ensure it resolves (not rejects from previous test)
+    (handleAuthCallback as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+    
     const req = new NextRequest("http://localhost/auth/callback?code=EXCHANGE_CODE&next=http://malicious.com");
 
     await expect(handleCallbackRoute(req)).rejects.toThrow();

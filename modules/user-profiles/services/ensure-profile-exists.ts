@@ -32,6 +32,11 @@ export async function ensureProfileExists(
     timezone: "UTC",
   });
 
+  // Explicit null check - throw if insert returned null (e.g., race condition)
+  if (!profile) {
+    throw new Error("[user-profiles] failed to create or load profile");
+  }
+
   // Emit event after profile is ensured (may be new or existing)
   const event = createUserProfileInitializedEvent({
     userId,
