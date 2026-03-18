@@ -17,7 +17,7 @@ function isSafeRelativePath(path: string): boolean {
   const isProtocolRelative = path.startsWith("//");
   const hasProtocol = /^[a-zA-Z]+:/.exec(path) !== null;
   const hasBackslash = path.includes("\\");
-  const hasControlChars = /[\u0000-\u001F]/.exec(path) !== null;
+  const hasControlChars = [...path].some((char) => char.charCodeAt(0) <= 31);
 
   return isRelative && !isProtocolRelative && !hasProtocol && !hasBackslash && !hasControlChars;
 }
