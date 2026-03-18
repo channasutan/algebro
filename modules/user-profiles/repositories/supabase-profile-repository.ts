@@ -93,14 +93,15 @@ function createRepositoryFromClientFactory(
 
       const isLastAttempt = attempt === MAX_RETRIES - 1;
 
-      if (isLastAttempt) {
-        const env = getPublicEnv();
-        if (env.nodeEnv !== "production") {
-          console.warn("[user-profiles] findById failed after retries", { userId: input.id });
-        }
-      } else {
+      if (!isLastAttempt) {
         const delayMs = 5 * (attempt + 1);
         await new Promise(resolve => setTimeout(resolve, delayMs));
+        continue;
+      }
+
+      const env = getPublicEnv();
+      if (env.nodeEnv !== "production") {
+        console.warn("[user-profiles] findById failed after retries", { userId: input.id });
       }
     }
 
