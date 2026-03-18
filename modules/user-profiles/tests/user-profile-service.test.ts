@@ -78,7 +78,8 @@ describe("User Profiles Service Logic", () => {
 
     it("throws if insert returns null (e.g. race condition prevents creation)", async () => {
       mockRepo.findById.mockResolvedValue(null);
-      mockRepo.insertProfile.mockResolvedValue(null); // insert failed to create or fetch profile
+      // Cast to allow null return - simulates repository returning null on race condition
+      mockRepo.insertProfile.mockResolvedValue(null as unknown as UserProfile);
 
       await expect(
         ensureProfileExists(mockRepo, { userId: "user-1", email: "test@ex.com" })
