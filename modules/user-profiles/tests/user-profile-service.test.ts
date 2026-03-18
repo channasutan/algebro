@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, type Mock, type Mocked } from "vitest";
 import { ensureProfileExists } from "../services/ensure-profile-exists";
 import { getCurrentProfile } from "../services/get-current-profile";
 import { updateProfile } from "../services/update-profile";
@@ -7,7 +7,6 @@ import { eventBus } from "@/events/event-bus";
 import { USER_PROFILE_INITIALIZED } from "../events/profile-initialized";
 import { USER_PROFILE_UPDATED } from "../events/profile-updated";
 import type { UserProfile } from "../domain/profile";
-import type { Mock, Mocked } from "vitest";
 
 vi.mock("@/events/event-bus", () => ({
   eventBus: {
@@ -19,7 +18,7 @@ describe("User Profiles Service Logic", () => {
   let mockRepo: Mocked<ProfileRepository>;
 
   beforeEach(() => {
-    vi.resetAllMocks();
+    vi.clearAllMocks();
     (eventBus.publish as Mock).mockResolvedValue(true);
 
     mockRepo = {
@@ -79,7 +78,8 @@ describe("User Profiles Service Logic", () => {
 
     it("throws if insert returns null (e.g. race condition prevents creation)", async () => {
       mockRepo.findById.mockResolvedValue(null);
-      mockRepo.insertProfile.mockResolvedValue(null); // insert failed to create or fetch profile
+      // Cast to allow null return - simulates repository returning null on race condition
+      mockRepo.insertProfile.mockResolvedValue(null as unknown as UserProfile);
 
       await expect(
         ensureProfileExists(mockRepo, { userId: "user-1", email: "test@ex.com" })
@@ -157,12 +157,21 @@ describe("User Profiles Service Logic", () => {
     });
 
     it("verifies timezone via regex if Intl is not available (mocked out)", async () => {
-      mockRepo.findById.mockResolvedValue({} as unknown as UserProfile);
-      mockRepo.updateProfile.mockResolvedValue({ timezone: "Invalid", updatedAt: "2024-01-01T00:00:00Z" } as unknown as UserProfile);
-      // Test invalid timezone format for regex
-      await expect(
-        updateProfile(mockRepo, { userId: "user-1", changes: { timezone: "invalid-tz" } })
-      ).rejects.toThrow(/Invalid timezone/);
+      // Stub Intl.supportedValuesOf to simulate unavailable API
+      vi.stubGlobal("Intl", {
+        supportedValuesOf: undefined,
+      } as unknown as typeof Intl);
+
+      try {
+        mockRepo.findById.mockResolvedValue({} as unknown as UserProfile);
+        mockRepo.updateProfile.mockResolvedValue({ timezone: "Invalid", updatedAt: "2024-01-01T00:00:00Z" } as unknown as UserProfile);
+        // Test invalid timezone format for regex
+        await expect(
+          updateProfile(mockRepo, { userId: "user-1", changes: { timezone: "invalid-tz" } })
+        ).rejects.toThrow(/Invalid timezone/);
+      } finally {
+        vi.unstubAllGlobals();
+      }
     });
 
     it("rejects invalid timezone formats when Intl.supportedValuesOf is unavailable", async () => {

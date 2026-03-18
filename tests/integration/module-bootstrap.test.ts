@@ -58,7 +58,6 @@ describe("module bootstrap", () => {
 
     expect(Object.keys(authenticationModule).sort()).toEqual([
       "authenticationModule",
-      "buildAuthRepository",
       "getCurrentSession",
       "handleAuthCallback",
       "signInUser",

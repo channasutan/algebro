@@ -3,8 +3,7 @@
  * registration via Supabase Auth. Consumed by user-profiles to bootstrap
  * the profile row.
  */
-import type { CoreDomainEventType, DomainEvent } from "@/events/event-types";
-import { createDomainEvent } from "@/events/event-types";
+import { createDomainEvent, type CoreDomainEventType, type DomainEvent } from "@/events/event-types";
 
 export const AUTH_USER_REGISTERED = "auth_user_registered" as const satisfies CoreDomainEventType;
 

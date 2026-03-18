@@ -3,6 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin-client";
+import { getPublicEnv } from "@/config/env.server-entry";
 import type { UserProfile } from "../domain/profile";
 
 export type InsertProfileInput = {
@@ -19,7 +20,7 @@ export type UpdateProfileInput = {
 
 export interface ProfileRepository {
   findById(userId: string): Promise<UserProfile | null>;
-  insertProfile(input: InsertProfileInput): Promise<UserProfile | null>;
+  insertProfile(input: InsertProfileInput): Promise<UserProfile>;
   updateProfile(userId: string, changes: UpdateProfileInput): Promise<UserProfile>;
 }
 
@@ -48,7 +49,7 @@ function createRepositoryFromClientFactory(
       .maybeSingle();
 
     if (error) {
-      throw new Error(error.message, { cause: error });
+      throw new Error(`[user-profiles] ${error.message}`, { cause: error });
     }
 
     if (!data) {
@@ -65,7 +66,7 @@ function createRepositoryFromClientFactory(
     };
   };
 
-  const insertProfile = async (input: InsertProfileInput): Promise<UserProfile | null> => {
+  const insertProfile = async (input: InsertProfileInput): Promise<UserProfile> => {
     const client = await getClient();
     
     // Upsert without selecting - makes behavior deterministic
@@ -81,11 +82,30 @@ function createRepositoryFromClientFactory(
       );
 
     if (upsertError) {
-      throw new Error(upsertError.message, { cause: upsertError });
+      throw new Error(`[user-profiles] ${upsertError.message}`, { cause: upsertError });
     }
 
-    // Always fetch after upsert to get the profile
-    return findById(input.id);
+    // Bounded retry to eliminate read-after-write race conditions
+    const MAX_RETRIES = 3;
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      const profile = await findById(input.id);
+      if (profile) return profile;
+
+      const isLastAttempt = attempt === MAX_RETRIES - 1;
+
+      if (!isLastAttempt) {
+        const delayMs = 5 * (attempt + 1);
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        continue;
+      }
+
+      const env = getPublicEnv();
+      if (env.nodeEnv !== "production") {
+        console.warn("[user-profiles] findById failed after retries", { userId: input.id });
+      }
+    }
+
+    throw new Error("[user-profiles] failed to create or load profile");
   };
 
   const updateProfile = async (userId: string, changes: UpdateProfileInput): Promise<UserProfile> => {
@@ -110,7 +130,7 @@ function createRepositoryFromClientFactory(
       .maybeSingle();
 
     if (error) {
-      throw new Error(error.message, { cause: error });
+      throw new Error(`[user-profiles] ${error.message}`, { cause: error });
     }
 
     if (!data) {

@@ -10,6 +10,8 @@ import type { AuthRepository } from "../repositories/supabase-auth-repository";
  *
  * @param repository - Auth repository (injectable for testing)
  */
-export async function signOutUser(repository: AuthRepository): Promise<void> {
+export async function signOutUser(
+  repository: AuthRepository
+): Promise<void> {
   await repository.signOut();
 }

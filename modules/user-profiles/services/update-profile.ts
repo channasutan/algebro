@@ -1,5 +1,6 @@
 import { eventBus } from "@/events/event-bus";
 import { createUserProfileUpdatedEvent } from "../events/profile-updated";
+import { getPublicEnv } from "@/config/env.server-entry";
 import type { ProfileRepository } from "../repositories/supabase-profile-repository";
 import type { UpdateProfileInput, UpdateProfileResult, UpdateProfileChanges } from "../contracts/update-profile";
 import type { ProfileFieldMap } from "../domain/profile";
@@ -12,6 +13,10 @@ function getSupportedTimezones(): string[] | undefined {
   try {
     return Intl.supportedValuesOf("timeZone");
   } catch {
+    const env = getPublicEnv();
+    if (env.nodeEnv !== "production") {
+      console.warn("[user-profiles] Intl.supportedValuesOf not available, using regex validation");
+    }
     return undefined;
   }
 }
@@ -23,6 +28,10 @@ function validateWithIntl(timezone: string, supported: string[]): void {
 }
 
 function validateWithRegex(timezone: string): void {
+  // NOTE:
+  // This regex ensures format correctness but does not validate
+  // against actual IANA timezone database. Use Intl.supportedValuesOf
+  // where available for stricter validation.
   const IANA_REGEX = /^(UTC|[A-Za-z_]+(?:\/[A-Za-z0-9._+-]+)+)$/;
   if (!IANA_REGEX.test(timezone)) {
     throw new Error(`[user-profiles] Invalid timezone format: ${timezone}`);

@@ -28,6 +28,9 @@ function isConfigured(): boolean {
   try {
     return Boolean(getAiProviderApiKey()?.trim());
   } catch {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[gemini-client] Failed to get API key, returning false");
+    }
     return false;
   }
 }
