@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 import { PracticeSession, Attempt, SolutionStep } from "../domain/practice";
 import { PracticeRepository } from "./practice-repository";
-import { SessionNotFoundError, AttemptNotFoundError, StepAdditionError } from "../errors";
+import { AttemptNotFoundError, StepAdditionError } from "../errors";
 
 export function buildSupabasePracticeRepository(client: SupabaseClient): PracticeRepository {
   const getClient = () => Promise.resolve(client);
@@ -33,7 +33,7 @@ function createRepositoryFromClientFactory(
       throw new Error(`[practice] ${error.message}`, { cause: error });
     }
 
-    return mapSession(data);
+    return mapSession(data as Record<string, unknown>);
   };
 
   const getSession = async (sessionId: string): Promise<PracticeSession | null> => {
@@ -48,7 +48,7 @@ function createRepositoryFromClientFactory(
       throw new Error(`[practice] ${error.message}`, { cause: error });
     }
 
-    return data ? mapSession(data) : null;
+    return data ? mapSession(data as Record<string, unknown>) : null;
   };
 
   const createAttempt = async (sessionId: string, problemId: string, userId: string): Promise<Attempt> => {
@@ -67,7 +67,7 @@ function createRepositoryFromClientFactory(
       throw new Error(`[practice] ${error.message}`, { cause: error });
     }
 
-    return mapAttempt(data);
+    return mapAttempt(data as Record<string, unknown>);
   };
 
   const getAttempt = async (attemptId: string): Promise<Attempt | null> => {
@@ -82,13 +82,13 @@ function createRepositoryFromClientFactory(
       throw new Error(`[practice] ${error.message}`, { cause: error });
     }
 
-    return data ? mapAttempt(data) : null;
+    return data ? mapAttempt(data as Record<string, unknown>) : null;
   };
 
   const updateAttempt = async (attemptId: string, updates: Partial<Attempt>): Promise<Attempt> => {
     const client = await getClient();
     
-    const dbUpdates: any = {};
+    const dbUpdates: Record<string, unknown> = {};
     if (updates.isCorrect !== undefined) dbUpdates.is_correct = updates.isCorrect;
     if (updates.completedAt !== undefined) dbUpdates.completed_at = updates.completedAt;
 
@@ -103,7 +103,7 @@ function createRepositoryFromClientFactory(
       throw new AttemptNotFoundError(attemptId);
     }
 
-    return mapAttempt(data);
+    return mapAttempt(data as Record<string, unknown>);
   };
 
   const addStep = async (attemptId: string, stepIndex: number, stepLatex: string): Promise<SolutionStep> => {
@@ -122,7 +122,7 @@ function createRepositoryFromClientFactory(
       throw new StepAdditionError(attemptId, error.message);
     }
 
-    return mapStep(data);
+    return mapStep(data as Record<string, unknown>);
   };
 
   const getSteps = async (attemptId: string): Promise<SolutionStep[]> => {
@@ -137,13 +137,13 @@ function createRepositoryFromClientFactory(
       throw new Error(`[practice] ${error.message}`, { cause: error });
     }
 
-    return (data || []).map(mapStep);
+    return (data || []).map(d => mapStep(d as Record<string, unknown>));
   };
 
   const updateStep = async (stepId: string, updates: Partial<SolutionStep>): Promise<SolutionStep> => {
     const client = await getClient();
     
-    const dbUpdates: any = {};
+    const dbUpdates: Record<string, unknown> = {};
     if (updates.isValid !== undefined) dbUpdates.is_valid = updates.isValid;
     if (updates.errorType !== undefined) dbUpdates.error_type = updates.errorType;
 
@@ -158,7 +158,7 @@ function createRepositoryFromClientFactory(
       throw new Error(`[practice] ${error.message}`, { cause: error });
     }
 
-    return mapStep(data);
+    return mapStep(data as Record<string, unknown>);
   };
 
   return {
@@ -173,38 +173,38 @@ function createRepositoryFromClientFactory(
   };
 }
 
-function mapSession(data: any): PracticeSession {
+function mapSession(data: Record<string, unknown>): PracticeSession {
   return {
-    id: data.id,
-    userId: data.user_id,
-    topicId: data.topic_id,
-    startedAt: data.started_at,
-    completedAt: data.completed_at,
-    createdAt: data.created_at,
+    id: data.id as string,
+    userId: data.user_id as string,
+    topicId: data.topic_id as string | null,
+    startedAt: data.started_at as string,
+    completedAt: data.completed_at as string | null,
+    createdAt: data.created_at as string,
   };
 }
 
-function mapAttempt(data: any): Attempt {
+function mapAttempt(data: Record<string, unknown>): Attempt {
   return {
-    id: data.id,
-    sessionId: data.session_id,
-    problemId: data.problem_id,
-    userId: data.user_id,
-    startedAt: data.started_at,
-    completedAt: data.completed_at,
-    isCorrect: data.is_correct,
-    createdAt: data.created_at,
+    id: data.id as string,
+    sessionId: data.session_id as string,
+    problemId: data.problem_id as string,
+    userId: data.user_id as string,
+    startedAt: data.started_at as string,
+    completedAt: data.completed_at as string | null,
+    isCorrect: data.is_correct as boolean | null,
+    createdAt: data.created_at as string,
   };
 }
 
-function mapStep(data: any): SolutionStep {
+function mapStep(data: Record<string, unknown>): SolutionStep {
   return {
-    id: data.id,
-    attemptId: data.attempt_id,
-    stepIndex: data.step_index,
-    stepLatex: data.step_latex,
-    isValid: data.is_valid,
-    errorType: data.error_type,
-    createdAt: data.created_at,
+    id: data.id as string,
+    attemptId: data.attempt_id as string,
+    stepIndex: data.step_index as number,
+    stepLatex: data.step_latex as string,
+    isValid: data.is_valid as boolean | null,
+    errorType: data.error_type as string | null,
+    createdAt: data.created_at as string,
   };
 }

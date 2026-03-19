@@ -9,10 +9,9 @@ import { getCurrentProfile } from "./get-current-profile";
 import { ensureProfileExists } from "./ensure-profile-exists";
 import { 
   ProfileNotFoundError, 
-  ProfileCreationError, 
-  ProfileInvariantError 
+  ProfileCreationError
 } from "../errors";
-import { logger, metrics, createServiceLogger, type ServiceContext } from "@/lib/observability";
+import { metrics, createServiceLogger, type ServiceContext } from "@/lib/observability";
 
 export type GetOrCreateUserProfileInput = {
   userId: string;
@@ -42,11 +41,14 @@ export async function getOrCreateUserProfile(
     }
 
     // Lazy bootstrap flow
-    log.info("user-profiles.bootstrap", { 
-      type: "domain", 
-      userId, 
-      phase: "insert", 
-      source 
+    log.info({ 
+      event: "user-profiles.bootstrap",
+      meta: { 
+        type: "domain", 
+        userId, 
+        phase: "insert", 
+        source 
+      }
     });
 
     try {
@@ -56,13 +58,16 @@ export async function getOrCreateUserProfile(
       // Using taxonomy: read_after_insert
       const profile = await readWithRetry(userRepo, userId);
       
-      log.info("user-profiles.bootstrap", { 
-        type: "domain", 
-        userId, 
-        phase: "read_after_insert", 
-        outcome: "success",
-        durationMs: Date.now() - startTime,
-        source 
+      log.info({ 
+        event: "user-profiles.bootstrap",
+        meta: { 
+          type: "domain", 
+          userId, 
+          phase: "read_after_insert", 
+          outcome: "success",
+          durationMs: Date.now() - startTime,
+          source 
+        }
       });
       return profile;
     } catch (bootstrapErr) {
@@ -73,13 +78,16 @@ export async function getOrCreateUserProfile(
           cause: "replication_lag_limit",
           phase: "retry"
         });
-        log.error("user-profiles.bootstrap", { 
-          type: "domain", 
-          userId, 
-          phase: "insert", 
-          outcome: "failure",
-          durationMs: Date.now() - startTime,
-          source 
+        log.error({ 
+          event: "user-profiles.bootstrap",
+          meta: { 
+            type: "domain", 
+            userId, 
+            phase: "insert", 
+            outcome: "failure",
+            durationMs: Date.now() - startTime,
+            source 
+          }
         });
         
         // Normalize ONLY creation failures to external domain error

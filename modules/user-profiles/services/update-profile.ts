@@ -6,7 +6,7 @@ import type { UpdateProfileInput, UpdateProfileResult, UpdateProfileChanges } fr
 import type { ProfileFieldMap } from "../domain/profile";
 import { ProfileNotFoundError, InvalidTimezoneError, NoProfileFieldsError } from "../errors";
 import { createSupabaseProfileRepository } from "../repositories/supabase-profile-repository";
-import { logger, createServiceLogger, type ServiceContext } from "@/lib/observability";
+import { createServiceLogger, type ServiceContext } from "@/lib/observability";
 
 function getSupportedTimezones(): string[] | undefined {
   if (typeof Intl === "undefined" || typeof Intl.supportedValuesOf !== "function") {
@@ -123,23 +123,41 @@ export async function updateUserProfile(
   const { requestId } = context;
   const log = createServiceLogger(requestId);
 
-  log.info("profile.update.start", { userId, changes: Object.keys(changes) });
+  log.info({ 
+    event: "user-profiles.update", 
+    meta: { type: "domain", phase: "start", userId, changes: Object.keys(changes) } 
+  });
 
   try {
     const repo = createSupabaseProfileRepository();
     const result = await updateUserProfileWithRepository(repo, input);
 
-    log.info("profile.update.success", { userId });
+    log.info({ 
+      event: "user-profiles.update", 
+      meta: { type: "domain", phase: "complete", userId, outcome: "success" } 
+    });
     return result;
   } catch (err) {
     if (err instanceof NoProfileFieldsError) {
-      log.warn("profile.update.empty", { userId });
+      log.warn({ 
+        event: "user-profiles.update", 
+        meta: { type: "domain", phase: "validation", userId, outcome: "failure", reason: "empty_update" } 
+      });
     } else if (err instanceof ProfileNotFoundError) {
-      log.error("profile.update.notFound", { userId });
+      log.error({ 
+        event: "user-profiles.update", 
+        meta: { type: "domain", phase: "infra", userId, outcome: "failure", reason: "not_found" } 
+      });
     } else {
-      log.error("profile.update.error", { 
-        userId, 
-        error: err instanceof Error ? err.message : String(err) 
+      log.error({ 
+        event: "user-profiles.update", 
+        meta: { 
+          type: "domain", 
+          phase: "infra",
+          userId, 
+          outcome: "failure",
+          error: err instanceof Error ? err.message : String(err) 
+        }
       });
     }
     throw err;

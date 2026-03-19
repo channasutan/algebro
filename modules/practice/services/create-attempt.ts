@@ -1,7 +1,7 @@
 import { createSupabasePracticeRepository } from "../repositories/supabase-practice-repository";
 import { PracticeRepository } from "../repositories/practice-repository";
 import { Attempt } from "../domain/practice";
-import { logger, createServiceLogger, type ServiceContext } from "@/lib/observability";
+import { createServiceLogger, type ServiceContext } from "@/lib/observability";
 
 export type CreateAttemptInput = {
   sessionId: string;
@@ -29,22 +29,31 @@ export async function createAttemptWithRepository(
   const { requestId } = context;
   const log = createServiceLogger(requestId);
 
-  log.info("practice.attempt.create", { type: "domain", userId, phase: "insert", sessionId, problemId });
+  log.info({ 
+    event: "practice.attempt", 
+    meta: { type: "domain", userId, phase: "start", sessionId, problemId } 
+  });
 
   try {
     const attempt = await repo.createAttempt(sessionId, problemId, userId);
 
-    log.info("practice.attempt.success", { type: "domain", userId, phase: "insert", attemptId: attempt.id, outcome: "success" });
+    log.info({ 
+      event: "practice.attempt", 
+      meta: { type: "domain", userId, phase: "complete", attemptId: attempt.id, outcome: "success" } 
+    });
     return attempt;
   } catch (err) {
-    log.error("practice.attempt.error", { 
-      type: "domain",
-      userId,
-      phase: "insert",
-      outcome: "failure",
-      sessionId, 
-      problemId,
-      error: err instanceof Error ? err.message : String(err) 
+    log.error({ 
+      event: "practice.attempt", 
+      meta: { 
+        type: "domain",
+        userId,
+        phase: "infra",
+        outcome: "failure",
+        sessionId, 
+        problemId,
+        error: err instanceof Error ? err.message : String(err) 
+      }
     });
     throw err;
   }

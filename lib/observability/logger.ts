@@ -1,4 +1,5 @@
-import { LogEvent, EventName, BaseMeta, DomainMeta } from "./types";
+import { LogEvent, BaseMeta } from "./types";
+import { getPublicEnv, getLoggerStrict } from "@/config/env.server-entry";
 
 /**
  * Hardened production-grade synchronous logger.
@@ -28,7 +29,7 @@ class ProductionLogger {
     try {
       this.validate(validatedLog);
     } catch (err) {
-      if (process.env.NODE_ENV !== "production" && process.env.LOGGER_STRICT === "true") {
+      if (getPublicEnv().nodeEnv !== "production" && getLoggerStrict()) {
         throw err;
       }
       // Production fallback
@@ -46,7 +47,7 @@ class ProductionLogger {
         _missingRequestId: true
       };
       
-      if (process.env.NODE_ENV === "development") {
+      if (getPublicEnv().nodeEnv === "development") {
         console.warn("[observability] missing requestId", validatedLog.event);
       }
     }
@@ -76,7 +77,7 @@ class ProductionLogger {
         throw new Error(`[observability] System logs must include phase: ${log.event}`);
       }
     } else {
-      throw new Error(`[observability] Invalid meta type: ${(log.meta as any).type}`);
+      throw new Error(`[observability] Invalid meta type: ${(log.meta as { type: string }).type}`);
     }
   }
 
@@ -116,18 +117,17 @@ export const logger = new ProductionLogger();
  * Lightweight, direct call to base logger, zero overhead.
  */
 export function createServiceLogger(requestId?: string) {
-  if (!requestId && process.env.NODE_ENV === "development") {
+  if (!requestId && getPublicEnv().nodeEnv === "development") {
     console.warn("[observability] createServiceLogger without requestId");
   }
 
+  const logWithRequestId = (level: "info" | "warn" | "error", log: Omit<LogEvent, "requestId">) => {
+    logger[level]({ ...log, requestId });
+  };
+
   return {
-    info: (event: EventName, meta: BaseMeta | DomainMeta) =>
-      logger.info({ event, requestId, meta }),
-
-    warn: (event: EventName, meta: BaseMeta | DomainMeta) =>
-      logger.warn({ event, requestId, meta }),
-
-    error: (event: EventName, meta: BaseMeta | DomainMeta) =>
-      logger.error({ event, requestId, meta }),
+    info: (log: Omit<LogEvent, "requestId">) => logWithRequestId("info", log),
+    warn: (log: Omit<LogEvent, "requestId">) => logWithRequestId("warn", log),
+    error: (log: Omit<LogEvent, "requestId">) => logWithRequestId("error", log),
   };
 }

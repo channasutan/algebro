@@ -99,7 +99,7 @@ describe("Auth UI Actions Transport Layer", () => {
      expect(signInUser).toHaveBeenCalledWith({
        email: "test@example.com",
        password: "test-password", // TEST ONLY: DO NOT USE REAL CREDENTIALS
-     });
+     }, { requestId: "system" });
   });
 
     it("4. sign in failure prevents leakage of verbose trace data by wrapping raw errors safely", async () => {
@@ -150,7 +150,7 @@ describe("Auth Callback Route Handler", () => {
 
     await expect(handleCallbackRoute(req)).rejects.toThrow();
 
-    expect(handleAuthCallback).toHaveBeenCalledWith("EXCHANGE_CODE");
+    expect(handleAuthCallback).toHaveBeenCalledWith("EXCHANGE_CODE", { requestId: "system" });
     
     // Validate bounds order: bootstrap MUST run before endpoint logic
     const bootstrapOrder = (ensureModulesBootstrapped as unknown as ReturnType<typeof vi.fn>).mock.invocationCallOrder[0];
@@ -177,7 +177,7 @@ describe("Auth Callback Route Handler", () => {
 
     await expect(handleCallbackRoute(req)).rejects.toThrow();
 
-    expect(handleAuthCallback).toHaveBeenCalledWith("EXCHANGE_CODE");
+    expect(handleAuthCallback).toHaveBeenCalledWith("EXCHANGE_CODE", { requestId: "system" });
     // Should fall back to root "/"
     expect(redirect).toHaveBeenCalledWith("/");
   });

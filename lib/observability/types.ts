@@ -6,7 +6,7 @@ export type ServiceContext = {
   requestId: string;
 };
 
-export type Phase = "insert" | "retry" | "read_after_insert" | "infra";
+export type Phase = "insert" | "retry" | "read_after_insert" | "infra" | "start" | "complete" | "validation";
 
 export type LogDomain = "user-profiles" | "system" | "practice";
 

@@ -28,6 +28,8 @@ describe("Authentication Services", () => {
     exchangeCodeForSession: vi.fn()
   });
 
+  const context = { requestId: "test-req" };
+
   describe("signUpUser", () => {
     it("delegates to repository and emits auth_user_registered on success", async () => {
       const repo = mockRepository();
@@ -39,7 +41,8 @@ describe("Authentication Services", () => {
 
       const result = await signUpUser(
         repo,
-        { email: "test@example.com", password: TEST_PASSWORD }
+        { email: "test@example.com", password: TEST_PASSWORD },
+        context
       );
 
       expect(repo.signUp).toHaveBeenCalledWith({ email: "test@example.com", password: TEST_PASSWORD });
@@ -65,7 +68,8 @@ describe("Authentication Services", () => {
 
       const result = await signUpUser(
         repo,
-        { email: "existing@example.com", password: TEST_PASSWORD }
+        { email: "existing@example.com", password: TEST_PASSWORD },
+        context
       );
 
       expect(repo.signUp).toHaveBeenCalled();
@@ -79,7 +83,7 @@ describe("Authentication Services", () => {
       vi.mocked(eventBus.publish).mockClear();
 
       await expect(
-        signUpUser(repo, { email: "test@example.com", password: TEST_PASSWORD })
+        signUpUser(repo, { email: "test@example.com", password: TEST_PASSWORD }, context)
       ).rejects.toThrow("Database error");
 
       expect(eventBus.publish).not.toHaveBeenCalled();
@@ -99,7 +103,8 @@ describe("Authentication Services", () => {
       // Should not throw - event publishing is best-effort
       const result = await signUpUser(
         repo,
-        { email: "test@example.com", password: TEST_PASSWORD }
+        { email: "test@example.com", password: TEST_PASSWORD },
+        context
       );
 
       expect(result.userId).toBe("user-456");
@@ -114,7 +119,8 @@ describe("Authentication Services", () => {
 
       const result = await signInUser(
         repo,
-        { email: "test@example.com", password: TEST_PASSWORD }
+        { email: "test@example.com", password: TEST_PASSWORD },
+        context
       );
 
       expect(repo.signIn).toHaveBeenCalledWith({ email: "test@example.com", password: TEST_PASSWORD });
@@ -128,7 +134,7 @@ describe("Authentication Services", () => {
       const repo = mockRepository();
       vi.mocked(repo.signOut).mockResolvedValue();
 
-      await signOutUser(repo);
+      await signOutUser(repo, context);
 
       expect(repo.signOut).toHaveBeenCalled();
     });
@@ -166,7 +172,7 @@ describe("Authentication Services", () => {
       const repo = mockRepository();
       vi.mocked(repo.exchangeCodeForSession).mockResolvedValue();
 
-      await handleAuthCallback(repo, "valid-code-123");
+      await handleAuthCallback(repo, "valid-code-123", context);
 
       expect(repo.exchangeCodeForSession).toHaveBeenCalledWith("valid-code-123");
     });
@@ -174,8 +180,8 @@ describe("Authentication Services", () => {
     it("throws error for empty code without calling repository", async () => {
       const repo = mockRepository();
 
-      await expect(handleAuthCallback(repo, "")).rejects.toThrow("Auth callback code must be a non-empty string");
-      await expect(handleAuthCallback(repo, "   ")).rejects.toThrow("Auth callback code must be a non-empty string");
+      await expect(handleAuthCallback(repo, "", context)).rejects.toThrow("Auth callback code must be a non-empty string");
+      await expect(handleAuthCallback(repo, "   ", context)).rejects.toThrow("Auth callback code must be a non-empty string");
       
       expect(repo.exchangeCodeForSession).not.toHaveBeenCalled();
     });

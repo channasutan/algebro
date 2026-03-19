@@ -1,7 +1,7 @@
 import { createSupabasePracticeRepository } from "../repositories/supabase-practice-repository";
 import { PracticeRepository } from "../repositories/practice-repository";
 import { SolutionStep } from "../domain/practice";
-import { logger, createServiceLogger, type ServiceContext } from "@/lib/observability";
+import { createServiceLogger, type ServiceContext } from "@/lib/observability";
 
 export type SubmitStepInput = {
   attemptId: string;
@@ -30,16 +30,22 @@ export async function submitStepWithRepository(
   const { requestId } = context;
   const log = createServiceLogger(requestId);
 
-  log.info("practice.step.submit", { 
-    type: "domain", 
-    userId, 
-    phase: "insert", 
-    attemptId, 
-    stepLatex: stepLatex.length > 20 ? stepLatex.slice(0, 20) + "..." : stepLatex 
+  log.info({ 
+    event: "practice.step", 
+    meta: { 
+      type: "domain", 
+      userId, 
+      phase: "start", 
+      attemptId, 
+      stepLatex: stepLatex.length > 20 ? stepLatex.slice(0, 20) + "..." : stepLatex 
+    }
   });
 
   if (!stepLatex || stepLatex.trim() === "") {
-    log.warn("practice.step.empty", { type: "domain", userId, phase: "insert", attemptId });
+    log.warn({ 
+      event: "practice.step", 
+      meta: { type: "domain", userId, phase: "validation", attemptId, outcome: "failure", reason: "empty" } 
+    });
     throw new Error("[practice] Step cannot be empty");
   }
 
@@ -52,16 +58,22 @@ export async function submitStepWithRepository(
     const step = await repo.addStep(attemptId, nextIndex, stepLatex);
     const updatedStep = await repo.updateStep(step.id, { isValid: true });
 
-    log.info("practice.step.success", { type: "domain", userId, phase: "insert", attemptId, stepId: updatedStep.id, outcome: "success" });
+    log.info({ 
+      event: "practice.step", 
+      meta: { type: "domain", userId, phase: "complete", attemptId, stepId: updatedStep.id, outcome: "success" } 
+    });
     return updatedStep;
   } catch (err) {
-    log.error("practice.step.error", { 
-      type: "domain",
-      userId,
-      phase: "insert",
-      outcome: "failure",
-      attemptId, 
-      error: err instanceof Error ? err.message : String(err) 
+    log.error({ 
+      event: "practice.step", 
+      meta: { 
+        type: "domain",
+        userId,
+        phase: "infra",
+        outcome: "failure",
+        attemptId, 
+        error: err instanceof Error ? err.message : String(err) 
+      }
     });
     throw err;
   }

@@ -1,7 +1,7 @@
 import { createSupabasePracticeRepository } from "../repositories/supabase-practice-repository";
 import { PracticeRepository } from "../repositories/practice-repository";
 import { PracticeSession } from "../domain/practice";
-import { logger, createServiceLogger, type ServiceContext } from "@/lib/observability";
+import { createServiceLogger, type ServiceContext } from "@/lib/observability";
 
 export type StartSessionInput = {
   userId: string;
@@ -28,20 +28,29 @@ export async function startSessionWithRepository(
   const { requestId } = context;
   const log = createServiceLogger(requestId);
 
-  log.info("practice.session.start", { type: "domain", userId, phase: "insert", topicId });
+  log.info({ 
+    event: "practice.session", 
+    meta: { type: "domain", userId, phase: "start", topicId } 
+  });
 
   try {
     const session = await repo.createSession(userId, topicId);
 
-    log.info("practice.session.success", { type: "domain", userId, phase: "insert", sessionId: session.id, outcome: "success" });
+    log.info({ 
+      event: "practice.session", 
+      meta: { type: "domain", userId, phase: "complete", sessionId: session.id, outcome: "success" } 
+    });
     return session;
   } catch (err) {
-    log.error("practice.session.error", { 
-      type: "domain",
-      userId, 
-      phase: "insert",
-      outcome: "failure",
-      error: err instanceof Error ? err.message : String(err) 
+    log.error({ 
+      event: "practice.session", 
+      meta: { 
+        type: "domain",
+        userId, 
+        phase: "infra",
+        outcome: "failure",
+        error: err instanceof Error ? err.message : String(err) 
+      }
     });
     throw err;
   }

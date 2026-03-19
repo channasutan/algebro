@@ -24,7 +24,7 @@ function createCookieAdapter(cookieStore: Awaited<ReturnType<typeof cookies>>) {
           cookieStore.set(name, value, options);
         });
       } catch {
-        if (process.env.NODE_ENV !== "production") {
+        if (getPublicEnv().nodeEnv !== "production") {
           console.warn("[supabase-server-client] Cannot set cookies in Server Component context");
         }
       }

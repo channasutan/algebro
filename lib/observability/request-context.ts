@@ -19,7 +19,8 @@ export async function getRequestId(): Promise<string> {
     }
 
     return requestId;
-  } catch (error) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_error) {
     // Fallback for non-HTTP contexts (e.g. build time, edge cases)
     return "system";
   }

@@ -9,7 +9,7 @@ import {
   NoProfileFieldsError,
 } from "@/modules/user-profiles";
 import type { UpdateProfileChanges } from "@/modules/user-profiles";
-import { logger, getRequestId } from "@/lib/observability";
+import { createServiceLogger, getRequestId } from "@/lib/observability";
 
 export type ActionResult = { success: true } | { success: false; error: string };
 
@@ -54,6 +54,7 @@ export async function updateProfileAction(
 
   // ROOT boundary for request correlation resolution
   const requestId = await getRequestId();
+  const log = createServiceLogger(requestId);
   const changes = normalizeFormInput(formData);
   
   if (Object.keys(changes).length === 0) {
@@ -78,11 +79,13 @@ export async function updateProfileAction(
     }
     
     // Hardened error reporting with strict schema and requestId correlation
-    logger.warn({
-      event: "profile.action.updateProfile.error",
-      requestId,
+    log.warn({
+      event: "user-profiles.update",
       meta: {
+        type: "domain",
+        phase: "infra",
         userId: session.userId,
+        outcome: "failure",
         error: error instanceof Error ? error.message : String(error)
       }
     });

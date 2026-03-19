@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock implementation first (hoisted)
 vi.mock("@/modules/user-profiles", async (importOriginal) => {
@@ -26,7 +26,7 @@ vi.mock("@/modules/user-profiles/repositories/supabase-profile-repository", () =
 vi.mock("next/navigation", () => ({
   redirect: vi.fn((url: string) => {
     const err = new Error(`NEXT_REDIRECT: ${url}`);
-    (err as any).digest = `NEXT_REDIRECT: ${url}`;
+    (err as { digest?: string }).digest = `NEXT_REDIRECT: ${url}`;
     throw err;
   }),
 }));
@@ -54,8 +54,6 @@ import { getCurrentSession } from "@/modules/authentication";
 import {
   updateUserProfile,
   ensureProfileExists,
-  getOrCreateUserProfile,
-  InitializationSource,
   ProfileNotFoundError,
   InvalidTimezoneError,
   NoProfileFieldsError,

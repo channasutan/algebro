@@ -87,7 +87,8 @@ describe("Authentication Module Integration", () => {
     // 3. Act - call the top-level service
     const result = await signUpUser(
       repo,
-      { email: "integration@example.com", password: TEST_PASSWORD }
+      { email: "integration@example.com", password: TEST_PASSWORD },
+      { requestId: "test-req" }
     );
 
     // 4. Assert client was called correctly
