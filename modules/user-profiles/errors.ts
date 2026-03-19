@@ -31,7 +31,8 @@ export class NoProfileFieldsError extends Error {
 
 export class ProfileCreationError extends Error {
   constructor(public readonly userId: string, public readonly reason?: string) {
-    super(`Profile creation failed for user: ${userId}${reason ? ` - ${reason}` : ""}`);
+    const reasonSuffix = reason ? ` - ${reason}` : "";
+    super(`Profile creation failed for user: ${userId}${reasonSuffix}`);
     this.name = "ProfileCreationError";
     Object.setPrototypeOf(this, new.target.prototype);
   }

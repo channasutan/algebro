@@ -5,12 +5,12 @@ import { getPublicEnv, getLoggerStrict } from "@/config/env.server-entry";
  * Ensures the event exists and is a string.
  */
 function assertEventType(event: unknown): string {
-  if (!event) {
-    throw new Error(`[observability] Invalid event format: "${event}". Event must not be empty.`);
+  if (typeof event !== "string") {
+    throw new TypeError(`[observability] Invalid event format: "${String(event)}". Event must be a string.`);
   }
 
-  if (typeof event !== "string") {
-    throw new TypeError(`[observability] Invalid event format: "${event}". Event must be a string.`);
+  if (!event) {
+    throw new Error(`[observability] Invalid event format: "${String(event)}". Event must not be empty.`);
   }
 
   return event;
@@ -20,12 +20,14 @@ function assertEventType(event: unknown): string {
  * Ensures the event does not start or end with dots.
  */
 function assertEventFormat(event: string): void {
+  const eStr = String(event);
+
   if (event.startsWith(".")) {
-    throw new Error(`[observability] Invalid event format: "${event}". Event must not start/end with dots.`);
+    throw new Error(`[observability] Invalid event format: "${eStr}". Event must not start/end with dots.`);
   }
 
   if (event.endsWith(".")) {
-    throw new Error(`[observability] Invalid event format: "${event}". Event must not start/end with dots.`);
+    throw new Error(`[observability] Invalid event format: "${eStr}". Event must not start/end with dots.`);
   }
 }
 
@@ -33,15 +35,16 @@ function assertEventFormat(event: string): void {
  * Ensures the event has sufficient segments and no empty segments.
  */
 function assertEventSegments(event: string): void {
+  const eStr = String(event);
   const segments = event.split(".");
   
   if (segments.length < 2) {
-    throw new Error(`[observability] Invalid event format: "${event}". Expected at least 2 segments (Domain.Action)`);
+    throw new Error(`[observability] Invalid event format: "${eStr}". Expected at least 2 segments (Domain.Action)`);
   }
 
   for (const segment of segments) {
     if (!segment) {
-      throw new Error(`[observability] Invalid event format: "${event}". Event segments cannot be empty`);
+      throw new Error(`[observability] Invalid event format: "${eStr}". Event segments cannot be empty`);
     }
   }
 }
@@ -80,7 +83,7 @@ function assertMetaShape(meta: unknown): Record<string, unknown> {
  */
 function assertMetaPhase(meta: Record<string, unknown>, event: string): void {
   if (!meta.phase) {
-    throw new Error(`[observability] Logs must include phase: ${event}`);
+    throw new Error(`[observability] Logs must include phase: ${String(event)}`);
   }
 }
 
@@ -107,7 +110,7 @@ function assertDomainMeta(meta: Record<string, unknown>, event: string): void {
 
   const userId = typeof meta.userId === "string" ? meta.userId.trim() : "";
   if (!userId) {
-    throw new Error(`[observability] Domain logs must include non-empty userId: ${event}`);
+    throw new Error(`[observability] Domain logs must include non-empty userId: ${String(event)}`);
   }
 }
 
