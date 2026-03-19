@@ -2,10 +2,9 @@ import { LogEvent, BaseMeta, DomainMeta, EventName } from "./types";
 import { getPublicEnv, getLoggerStrict } from "@/config/env.server-entry";
 
 /**
- * Validates the event name against governance rules.
- * Throws error in development/strict mode if validation fails.
+ * Ensures the event exists and is a string.
  */
-function validateEvent(event: string): void {
+function assertEventType(event: unknown): string {
   if (!event) {
     throw new Error(`[observability] Invalid event format: "${event}". Event must not be empty.`);
   }
@@ -14,11 +13,28 @@ function validateEvent(event: string): void {
     throw new TypeError(`[observability] Invalid event format: "${event}". Event must be a string.`);
   }
 
-  if (event.startsWith(".") || event.endsWith(".")) {
+  return event;
+}
+
+/**
+ * Ensures the event does not start or end with dots.
+ */
+function assertEventFormat(event: string): void {
+  if (event.startsWith(".")) {
     throw new Error(`[observability] Invalid event format: "${event}". Event must not start/end with dots.`);
   }
-  
+
+  if (event.endsWith(".")) {
+    throw new Error(`[observability] Invalid event format: "${event}". Event must not start/end with dots.`);
+  }
+}
+
+/**
+ * Ensures the event has sufficient segments and no empty segments.
+ */
+function assertEventSegments(event: string): void {
   const segments = event.split(".");
+  
   if (segments.length < 2) {
     throw new Error(`[observability] Invalid event format: "${event}". Expected at least 2 segments (Domain.Action)`);
   }
@@ -31,9 +47,19 @@ function validateEvent(event: string): void {
 }
 
 /**
- * Validates metadata structure and required fields based on type.
+ * Validates the event name against governance rules.
+ * Throws error in development/strict mode if validation fails.
  */
-function validateMeta(meta: unknown, event: string): void {
+function validateEvent(event: string): void {
+  const e = assertEventType(event);
+  assertEventFormat(e);
+  assertEventSegments(e);
+}
+
+/**
+ * Ensures metadata is a non-null object and not an array.
+ */
+function assertMetaShape(meta: unknown): Record<string, unknown> {
   if (!meta) {
     throw new Error("[observability] Missing or invalid metadata object");
   }
@@ -46,23 +72,53 @@ function validateMeta(meta: unknown, event: string): void {
     throw new TypeError("[observability] Missing or invalid metadata object");
   }
 
-  const m = meta as Record<string, unknown>;
+  return meta as Record<string, unknown>;
+}
 
-  if (!m.phase) {
+/**
+ * Ensures metadata includes a phase.
+ */
+function assertMetaPhase(meta: Record<string, unknown>, event: string): void {
+  if (!meta.phase) {
     throw new Error(`[observability] Logs must include phase: ${event}`);
   }
+}
 
-  if (m.type === "domain") {
-    const userId = typeof m.userId === "string" ? m.userId.trim() : "";
-    if (!userId) {
-      throw new Error(`[observability] Domain logs must include non-empty userId: ${event}`);
-    }
+/**
+ * Ensures metadata type is either domain or system.
+ */
+function assertMetaType(meta: Record<string, unknown>): void {
+  if (meta.type === "domain") {
     return;
   }
 
-  if (m.type !== "system") {
-    throw new Error(`[observability] Invalid meta type: ${m.type}`);
+  if (meta.type !== "system") {
+    throw new Error(`[observability] Invalid meta type: ${meta.type}`);
   }
+}
+
+/**
+ * Ensures domain metadata includes a non-empty userId.
+ */
+function assertDomainMeta(meta: Record<string, unknown>, event: string): void {
+  if (meta.type !== "domain") {
+    return;
+  }
+
+  const userId = typeof meta.userId === "string" ? meta.userId.trim() : "";
+  if (!userId) {
+    throw new Error(`[observability] Domain logs must include non-empty userId: ${event}`);
+  }
+}
+
+/**
+ * Validates metadata structure and required fields based on type.
+ */
+function validateMeta(meta: unknown, event: string): void {
+  const m = assertMetaShape(meta);
+  assertMetaPhase(m, event);
+  assertMetaType(m);
+  assertDomainMeta(m, event);
 }
 
 /**
