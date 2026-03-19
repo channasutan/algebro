@@ -6,7 +6,15 @@ import { getPublicEnv, getLoggerStrict } from "@/config/env.server-entry";
  * Throws error in development/strict mode if validation fails.
  */
 function validateEvent(event: string): void {
-  if (!event || typeof event !== "string" || event.startsWith(".") || event.endsWith(".")) {
+  if (!event) {
+    throw new Error(`[observability] Invalid event format: "${event}". Event must not be empty.`);
+  }
+
+  if (typeof event !== "string") {
+    throw new Error(`[observability] Invalid event format: "${event}". Event must be a string.`);
+  }
+
+  if (event.startsWith(".") || event.endsWith(".")) {
     throw new Error(`[observability] Invalid event format: "${event}". Event must not start/end with dots.`);
   }
   
@@ -15,8 +23,10 @@ function validateEvent(event: string): void {
     throw new Error(`[observability] Invalid event format: "${event}". Expected at least 2 segments (Domain.Action)`);
   }
 
-  if (segments.some(s => !s)) {
-    throw new Error(`[observability] Invalid event format: "${event}". Event segments cannot be empty`);
+  for (const segment of segments) {
+    if (!segment) {
+      throw new Error(`[observability] Invalid event format: "${event}". Event segments cannot be empty`);
+    }
   }
 }
 
@@ -24,10 +34,19 @@ function validateEvent(event: string): void {
  * Validates metadata structure and required fields based on type.
  */
 function validateMeta(meta: unknown, event: string): void {
-  const m = meta as Record<string, unknown>;
-  if (!m || typeof m !== "object" || Array.isArray(m)) {
+  if (!meta) {
     throw new Error("[observability] Missing or invalid metadata object");
   }
+
+  if (typeof meta !== "object") {
+    throw new Error("[observability] Missing or invalid metadata object");
+  }
+
+  if (Array.isArray(meta)) {
+    throw new Error("[observability] Missing or invalid metadata object");
+  }
+
+  const m = meta as Record<string, unknown>;
 
   if (!m.phase) {
     throw new Error(`[observability] Logs must include phase: ${event}`);
@@ -38,7 +57,10 @@ function validateMeta(meta: unknown, event: string): void {
     if (!userId) {
       throw new Error(`[observability] Domain logs must include non-empty userId: ${event}`);
     }
-  } else if (m.type !== "system") {
+    return;
+  }
+
+  if (m.type !== "system") {
     throw new Error(`[observability] Invalid meta type: ${m.type}`);
   }
 }
