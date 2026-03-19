@@ -21,12 +21,12 @@ jobs:
             git fetch --tags
 
       - run:
-          name: Install pnpm
-          command: npm install -g pnpm@9
+          name: Setup pnpm
+          command: corepack enable
 
       - run:
           name: Install dependencies
-          command: pnpm install --frozen-lockfile
+          command: pnpm install
 
       - run:
           name: Run tests
