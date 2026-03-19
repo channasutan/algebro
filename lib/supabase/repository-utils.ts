@@ -107,3 +107,35 @@ export async function dbUpdate<T>(params: {
   
   return data as T;
 }
+
+/**
+ * Generic helper for Supabase upsert operations.
+ */
+export async function dbUpsert<T>(
+  client: SupabaseClient,
+  table: string,
+  values: Record<string, unknown>,
+  options: {
+    onConflict?: string;
+    ignoreDuplicates?: boolean;
+    columns?: string;
+    context: string;
+    errorFactory?: (error: PostgrestError) => Error;
+  }
+): Promise<T | null> {
+  const { data, error } = await client
+    .from(table)
+    .upsert(values, {
+      onConflict: options.onConflict,
+      ignoreDuplicates: options.ignoreDuplicates,
+    })
+    .select(options.columns || "*")
+    .maybeSingle();
+
+  if (error) {
+    if (options.errorFactory) throw options.errorFactory(error);
+    handleDbError(error, options.context);
+  }
+  
+  return data as T | null;
+}

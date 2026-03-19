@@ -33,14 +33,16 @@ vi.mock("@/events/event-bus", () => ({
 describe("User Profiles Module Integration", () => {
   const createMockSupabaseClient = () => {
     const maybeSingleMock = vi.fn();
+    const singleMock = vi.fn();
     
     const chainable = {
       select: vi.fn().mockReturnThis(),
       update: vi.fn().mockReturnThis(),
       insert: vi.fn().mockReturnThis(),
-      upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
+      upsert: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       maybeSingle: maybeSingleMock,
+      single: singleMock,
     };
 
     const fromMock = vi.fn().mockReturnValue(chainable);
@@ -54,6 +56,7 @@ describe("User Profiles Module Integration", () => {
         upsertMock: chainable.upsert,
         eqMock: chainable.eq,
         maybeSingleMock,
+        singleMock,
       }
     };
   };
@@ -64,14 +67,16 @@ describe("User Profiles Module Integration", () => {
 
   // Cache references to internal mock functions for cleaner assertions
   let maybeSingleMock: ReturnType<typeof vi.fn>;
+  let singleMock: ReturnType<typeof vi.fn>;
   let updateMock: ReturnType<typeof vi.fn>;
   let upsertMock: ReturnType<typeof vi.fn>;
   let eqMock: ReturnType<typeof vi.fn>;
-
+ 
   beforeEach(() => {
     vi.clearAllMocks();
     mockClient = createMockSupabaseClient();
     maybeSingleMock = mockClient._mocks.maybeSingleMock as ReturnType<typeof vi.fn>;
+    singleMock = mockClient._mocks.singleMock as ReturnType<typeof vi.fn>;
     updateMock = mockClient._mocks.updateMock as ReturnType<typeof vi.fn>;
     upsertMock = mockClient._mocks.upsertMock as ReturnType<typeof vi.fn>;
     eqMock = mockClient._mocks.eqMock as ReturnType<typeof vi.fn>;
@@ -100,7 +105,7 @@ describe("User Profiles Module Integration", () => {
     };
     maybeSingleMock.mockResolvedValueOnce({ data: existingProfile, error: null });
     
-    maybeSingleMock.mockResolvedValueOnce({
+    singleMock.mockResolvedValueOnce({
       data: { ...existingProfile, display_name: "New Name", timezone: "America/New_York", updated_at: "new-time" },
       error: null
     });
@@ -133,8 +138,9 @@ describe("User Profiles Module Integration", () => {
     };
     
     maybeSingleMock
-      .mockResolvedValueOnce({ data: null, error: null })
-      .mockResolvedValueOnce({ data: createdProfile, error: null });
+      .mockResolvedValueOnce({ data: createdProfile, error: null }) // upsert result
+      .mockResolvedValueOnce({ data: null, error: null }) // retry check 1
+      .mockResolvedValueOnce({ data: createdProfile, error: null }); // retry check 2
 
     const startTime = Date.now();
     const result = await repo.insertProfile({
@@ -148,7 +154,7 @@ describe("User Profiles Module Integration", () => {
     expect(result?.userId).toBe("retry-123");
     
     expect(upsertMock).toHaveBeenCalledTimes(1);
-    expect(maybeSingleMock).toHaveBeenCalledTimes(2);
+    expect(maybeSingleMock).toHaveBeenCalledTimes(3);
 
     expect(endTime - startTime).toBeGreaterThanOrEqual(5);
   });
@@ -171,7 +177,7 @@ describe("User Profiles Module Integration", () => {
     expect(upsertMock).toHaveBeenCalledTimes(1);
     
     const callCount = maybeSingleMock.mock.calls.length;
-    expect(callCount).toBe(3);
+    expect(callCount).toBe(4); // 1 for upsert + 3 retries
 
     expect(endTime - startTime).toBeGreaterThanOrEqual(15);
   });

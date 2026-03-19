@@ -5,6 +5,7 @@ import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin-client";
 import { getPublicEnv } from "@/config/env.server-entry";
 import type { UserProfile } from "../domain/profile";
+import { dbSelect, dbUpdate, dbUpsert } from "@/lib/supabase/repository-utils";
 
 export type InsertProfileInput = {
   id: string;
@@ -41,49 +42,36 @@ function createRepositoryFromClientFactory(
   getClient: () => SupabaseClient | Promise<SupabaseClient>
 ): ProfileRepository {
   const findById = async (userId: string): Promise<UserProfile | null> => {
-    const client = await getClient();
-    const { data, error } = await client
-      .from("users")
-      .select("*")
-      .eq("id", userId)
-      .maybeSingle();
-
-    if (error) {
-      throw new Error(`[user-profiles] ${error.message}`, { cause: error });
-    }
+    const data = await dbSelect<Record<string, unknown> | null>(await getClient(), "users", {
+      filters: { id: userId },
+      maybeSingle: true,
+      context: "user-profiles"
+    });
 
     if (!data) {
       return null;
     }
 
     return {
-      userId: data.id,
-      email: data.email,
-      displayName: data.display_name,
-      avatarUrl: data.avatar_url,
-      timezone: data.timezone,
-      updatedAt: data.updated_at,
+      userId: data.id as string,
+      email: data.email as string,
+      displayName: data.display_name as string | null,
+      avatarUrl: data.avatar_url as string | null,
+      timezone: data.timezone as string,
+      updatedAt: data.updated_at as string,
     };
   };
 
   const insertProfile = async (input: InsertProfileInput): Promise<UserProfile | null> => {
-    const client = await getClient();
-    
-    // Upsert without selecting - makes behavior deterministic
-    const { error: upsertError } = await client
-      .from("users")
-      .upsert(
-        {
-          id: input.id,
-          email: input.email,
-          timezone: input.timezone,
-        },
-        { onConflict: "id", ignoreDuplicates: true }
-      );
-
-    if (upsertError) {
-      throw new Error(`[user-profiles] ${upsertError.message}`, { cause: upsertError });
-    }
+    await dbUpsert(await getClient(), "users", {
+      id: input.id,
+      email: input.email,
+      timezone: input.timezone,
+    }, {
+      onConflict: "id",
+      ignoreDuplicates: true,
+      context: "user-profiles"
+    });
 
     // Bounded retry to eliminate read-after-write race conditions
     const MAX_RETRIES = 3;
@@ -109,7 +97,7 @@ function createRepositoryFromClientFactory(
   };
 
   const updateProfile = async (userId: string, changes: UpdateProfileInput): Promise<UserProfile> => {
-    const dbChanges: Record<string, string | null> = {};
+    const dbChanges: Record<string, unknown> = {};
 
     if (changes.displayName !== undefined) {
       dbChanges.display_name = changes.displayName;
@@ -121,29 +109,24 @@ function createRepositoryFromClientFactory(
       dbChanges.timezone = changes.timezone;
     }
 
-    const client = await getClient();
-    const { data, error } = await client
-      .from("users")
-      .update(dbChanges)
-      .eq("id", userId)
-      .select("*")
-      .maybeSingle();
-
-    if (error) {
-      throw new Error(`[user-profiles] ${error.message}`, { cause: error });
-    }
-
-    if (!data) {
-      throw new Error("[user-profiles] failed to update profile: not found");
-    }
+    const data = await dbUpdate<Record<string, unknown>>({
+      client: await getClient(),
+      table: "users",
+      id: userId,
+      values: dbChanges,
+      options: {
+        context: "user-profiles",
+        errorFactory: () => new Error("[user-profiles] failed to update profile: not found")
+      }
+    });
 
     return {
-      userId: data.id,
-      email: data.email,
-      displayName: data.display_name,
-      avatarUrl: data.avatar_url,
-      timezone: data.timezone,
-      updatedAt: data.updated_at,
+      userId: data.id as string,
+      email: data.email as string,
+      displayName: data.display_name as string | null,
+      avatarUrl: data.avatar_url as string | null,
+      timezone: data.timezone as string,
+      updatedAt: data.updated_at as string,
     };
   };
 
