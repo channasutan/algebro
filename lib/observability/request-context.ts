@@ -19,9 +19,11 @@ export async function getRequestId(): Promise<string> {
     }
 
     return requestId;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (_error) {
-    // Fallback for non-HTTP contexts (e.g. build time, edge cases)
+  } catch (error) {
+    // Intentional fallback for non-HTTP contexts (e.g. build time, static generation).
+    // We log to stderr to avoid silent failures in edge cases.
+    const message = error instanceof Error ? error.message : String(error);
+    process.stderr.write(`[observability-info] getRequestId fallback to "system" (Context: ${message})\n`);
     return "system";
   }
 }

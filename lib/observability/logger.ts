@@ -11,7 +11,7 @@ function validateEvent(event: string): void {
   }
 
   if (typeof event !== "string") {
-    throw new Error(`[observability] Invalid event format: "${event}". Event must be a string.`);
+    throw new TypeError(`[observability] Invalid event format: "${event}". Event must be a string.`);
   }
 
   if (event.startsWith(".") || event.endsWith(".")) {
@@ -39,11 +39,11 @@ function validateMeta(meta: unknown, event: string): void {
   }
 
   if (typeof meta !== "object") {
-    throw new Error("[observability] Missing or invalid metadata object");
+    throw new TypeError("[observability] Missing or invalid metadata object");
   }
 
   if (Array.isArray(meta)) {
-    throw new Error("[observability] Missing or invalid metadata object");
+    throw new TypeError("[observability] Missing or invalid metadata object");
   }
 
   const m = meta as Record<string, unknown>;

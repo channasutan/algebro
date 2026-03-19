@@ -1,7 +1,4 @@
-import { 
-  type UpdateProfileInput, 
-  type UpdateProfileResult 
-} from "./contracts/update-profile";
+export { type UpdateProfileInput, type UpdateProfileResult, type UpdateProfileChanges } from "./contracts/update-profile";
 export { type UserProfile } from "./domain/profile";
 export { InitializationSource } from "./domain/initialization-source";
 
@@ -17,6 +14,3 @@ export { ensureProfileExists, type EnsureProfileExistsInput } from "./services/e
 export const userProfilesModule = {
   name: "user-profiles",
 };
-
-export type { UpdateProfileInput, UpdateProfileResult };
-export type { UpdateProfileChanges } from "./contracts/update-profile";
