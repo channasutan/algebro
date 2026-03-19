@@ -1,5 +1,90 @@
-import { LogEvent, BaseMeta } from "./types";
+import { LogEvent, BaseMeta, DomainMeta, EventName } from "./types";
 import { getPublicEnv, getLoggerStrict } from "@/config/env.server-entry";
+
+/**
+ * Validates the event name against governance rules.
+ * Throws error in development/strict mode if validation fails.
+ */
+function validateEvent(event: string): void {
+  if (!event || typeof event !== "string" || event.startsWith(".") || event.endsWith(".")) {
+    throw new Error(`[observability] Invalid event format: "${event}". Event must not start/end with dots.`);
+  }
+  
+  const segments = event.split(".");
+  if (segments.length < 2) {
+    throw new Error(`[observability] Invalid event format: "${event}". Expected at least 2 segments (Domain.Action)`);
+  }
+
+  if (segments.some(s => !s)) {
+    throw new Error(`[observability] Invalid event format: "${event}". Event segments cannot be empty`);
+  }
+}
+
+/**
+ * Validates metadata structure and required fields based on type.
+ */
+function validateMeta(meta: unknown, event: string): void {
+  const m = meta as Record<string, unknown>;
+  if (!m || typeof m !== "object" || Array.isArray(m)) {
+    throw new Error("[observability] Missing or invalid metadata object");
+  }
+
+  if (!m.phase) {
+    throw new Error(`[observability] Logs must include phase: ${event}`);
+  }
+
+  if (m.type === "domain") {
+    const userId = typeof m.userId === "string" ? m.userId.trim() : "";
+    if (!userId) {
+      throw new Error(`[observability] Domain logs must include non-empty userId: ${event}`);
+    }
+  } else if (m.type !== "system") {
+    throw new Error(`[observability] Invalid meta type: ${m.type}`);
+  }
+}
+
+/**
+ * Normalizes event name, falling back to unknown_event if invalid.
+ */
+function normalizeEvent(event: string): string {
+  try {
+    validateEvent(event);
+    return event;
+  } catch (err) {
+    if (getPublicEnv().nodeEnv !== "production" && getLoggerStrict()) {
+      throw err;
+    }
+    return "unknown_event";
+  }
+}
+
+/**
+ * Normalizes metadata, injecting requestId and marking invalid events.
+ */
+function normalizeMeta(meta: unknown, event: string, requestId?: string): BaseMeta | DomainMeta {
+  const m = meta as Record<string, unknown>;
+  const normalized = { ...m };
+  
+  // Trimming for Domain Events
+  if (normalized.type === "domain" && typeof normalized.userId === "string") {
+    normalized.userId = normalized.userId.trim();
+  }
+
+  // Mark as invalid if event was changed
+  if (event === "unknown_event" && m.type !== "unknown_event") {
+    normalized.invalidEvent = true;
+  }
+
+  // Handle missing requestId
+  if (!requestId) {
+    normalized._missingRequestId = true;
+    if (getPublicEnv().nodeEnv === "development") {
+      console.warn("[observability] missing requestId", event);
+    }
+  }
+
+  return normalized as unknown as BaseMeta | DomainMeta;
+}
 
 /**
  * Hardened production-grade synchronous logger.
@@ -19,70 +104,27 @@ class ProductionLogger {
   }
 
   private normalize(log: LogEvent): LogEvent {
-    // Non-mutating shallow clone
-    const validatedLog: LogEvent = { 
-      ...log, 
-      meta: log.meta ? { ...log.meta } : { type: "system", phase: "infra" } as BaseMeta 
-    };
-
-    // Validation & Fallback
+    const event = normalizeEvent(log.event);
+    
+    // Validate meta if in strict/dev mode
     try {
-      this.validate(validatedLog);
+      validateMeta(log.meta, event);
     } catch (err) {
       if (getPublicEnv().nodeEnv !== "production" && getLoggerStrict()) {
         throw err;
       }
-      // Production fallback
-      validatedLog.event = "unknown_event";
-      validatedLog.meta = {
-        ...validatedLog.meta,
-        invalidEvent: true
-      };
-    }
-    
-    // Correlation guard
-    if (!validatedLog.requestId) {
-      validatedLog.meta = {
-        ...validatedLog.meta,
-        _missingRequestId: true
-      };
-      
-      if (getPublicEnv().nodeEnv === "development") {
-        console.warn("[observability] missing requestId", validatedLog.event);
-      }
     }
 
-    return validatedLog;
-  }
+    const meta = normalizeMeta(log.meta, event, log.requestId);
 
-  private validate(log: LogEvent): void {
-    if (!log.event || typeof log.event !== "string" || !log.event.includes(".")) {
-      throw new Error(`[observability] Invalid event format: "${log.event}". Expected Domain.Action`);
-    }
-
-    if (!log.meta || typeof log.meta !== "object" || Array.isArray(log.meta)) {
-      throw new Error("[observability] Missing or invalid metadata object");
-    }
-
-    if (log.meta.type === "domain") {
-      const userId = typeof log.meta.userId === "string" ? log.meta.userId.trim() : "";
-      if (!userId) {
-        throw new Error(`[observability] Domain logs must include non-empty userId: ${log.event}`);
-      }
-      if (!log.meta.phase) {
-        throw new Error(`[observability] Domain logs must include phase: ${log.event}`);
-      }
-    } else if (log.meta.type === "system") {
-      if (!log.meta.phase) {
-        throw new Error(`[observability] System logs must include phase: ${log.event}`);
-      }
-    } else {
-      throw new Error(`[observability] Invalid meta type: ${(log.meta as { type: string }).type}`);
-    }
+    return {
+      ...log,
+      event: event as EventName, // Cast to handle the string template literal type safely
+      meta
+    };
   }
 
   private safeWrite(level: string, log: LogEvent): void {
-    const event = log.event;
     const requestId = log.requestId || "unknown";
 
     try {
@@ -90,7 +132,6 @@ class ProductionLogger {
         level,
         timestamp: new Date().toISOString(),
         ...log,
-        event,
         requestId,
       });
 
@@ -101,7 +142,7 @@ class ProductionLogger {
         event: "system.observability_failure",
         requestId,
         meta: { 
-          originalEvent: event,
+          originalEvent: log.event,
           error: err instanceof Error ? err.message : String(err)
         }
       });

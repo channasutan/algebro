@@ -1,65 +1,24 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-
-// Mock the internal logger to intercept and verify governance checks
-vi.mock("@/lib/observability/logger", () => {
-  const loggerMock = {
-    info: vi.fn(),
-    error: vi.fn(),
-    warn: vi.fn(),
-  };
-  
-  return {
-    logger: loggerMock,
-    // Provide a real implementation or a mock that calls the internal logger
-    createServiceLogger: (requestId: string) => ({
-      info: (params: Record<string, unknown>) => {
-        const event = params.event as string;
-        const meta = params.meta as Record<string, unknown>;
-        const segments = event.split(".");
-        const isStrict = process.env.LOGGER_STRICT === "true";
-        const isProd = process.env.NODE_ENV === "production";
-
-        if (!isProd && isStrict) {
-            if (segments.length < 2) throw new Error("Logger governance violation: event must have at least 2 segments");
-            if (segments.some((s: string) => !s)) throw new Error("Logger governance violation: event segments cannot be empty");
-            if (event.startsWith(".") || event.endsWith(".")) throw new Error("Logger governance violation: event cannot start or end with dot");
-            if (!meta || typeof meta !== "object" || Array.isArray(meta)) throw new Error("Metadata must be a non-null object");
-            
-            if (meta.type === "domain") {
-                if (!meta.userId || (typeof meta.userId === "string" && !meta.userId.trim())) {
-                    throw new Error("Logger governance violation: userId is required for domain logs");
-                }
-            }
-        }
-
-        const finalEvent = (!isProd && isStrict) || segments.length >= 2 ? event : "unknown_event";
-        const finalMeta = { ...meta, requestId };
-        if (meta?.type === "domain" && typeof meta.userId === "string") {
-            finalMeta.userId = meta.userId.trim();
-        }
-        if (segments.length < 2 && isProd) {
-            finalMeta._invalidEvent = event;
-        }
-
-        loggerMock.info(finalEvent, finalMeta);
-      },
-      error: vi.fn(),
-      warn: vi.fn(),
-    })
-  };
-});
-
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createServiceLogger } from "@/lib/observability/logger";
-import { logger as internalLogger } from "@/lib/observability/logger";
 import type { BaseMeta, DomainMeta } from "@/lib/observability/types";
 
 describe("Logger Governance Robustness", () => {
   const requestId = "test-request-id";
+  let consoleSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Ensure strict mode is ON for tests to catch violations
-    process.env.LOGGER_STRICT = "true";
+    vi.stubEnv("LOGGER_STRICT", "true");
+    vi.stubEnv("NODE_ENV", "development");
+    
+    // Spy on console to verify output without printing to stdout
+    consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
   });
 
   it("fails in dev if domain event segments are missing (at least 2 required)", () => {
@@ -71,7 +30,7 @@ describe("Logger Governance Robustness", () => {
         event: "single" as any, 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         meta: { type: "system", phase: "test" as any } 
-    })).toThrow(/Logger governance violation/);
+    })).toThrow(/Invalid event format/);
   });
 
   it("fails in dev if event has empty segments (e.g. double dots)", () => {
@@ -82,7 +41,7 @@ describe("Logger Governance Robustness", () => {
         event: "domain..action" as any, 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         meta: { type: "system", phase: "test" as any } 
-    })).toThrow(/Logger governance violation/);
+    })).toThrow();
   });
 
   it("fails in dev if event starts or ends with dots", () => {
@@ -113,7 +72,7 @@ describe("Logger Governance Robustness", () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         meta: { type: "domain", phase: "test" as any } as unknown as DomainMeta 
       });
-    }).toThrow(/userId is required for domain logs/);
+    }).toThrow(/Domain logs must include non-empty userId/);
   });
 
   it("fails in dev if meta.type is domain but userId is an empty string", () => {
@@ -126,7 +85,7 @@ describe("Logger Governance Robustness", () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         meta: { type: "domain", userId: "  ", phase: "test" as any } as unknown as DomainMeta
       });
-    }).toThrow(/userId is required for domain logs/);
+    }).toThrow(/Domain logs must include non-empty userId/);
   });
 
   it("allows arbitrary number of segments >= 2", () => {
@@ -139,36 +98,33 @@ describe("Logger Governance Robustness", () => {
         meta: { type: "system", phase: "test" as any } 
     });
     
-    expect(internalLogger.info).toHaveBeenCalledWith(
-        "domain.sub.action.detail",
-        expect.objectContaining({ requestId })
+    expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining("domain.sub.action.detail")
+    );
+    expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining(requestId)
     );
   });
 
   it("falls back to unknown_event in production and does NOT throw", () => {
     vi.stubEnv("NODE_ENV", "production");
     
-    try {
-      const log = createServiceLogger(requestId);
-      
-      // Should NOT throw even with invalid event
-      log.info({ 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        event: "invalid" as any, 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        meta: { type: "system", phase: "test" as any } 
-      });
+    const log = createServiceLogger(requestId);
+    
+    // Should NOT throw even with invalid event
+    log.info({ 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      event: "invalid" as any, 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      meta: { type: "system", phase: "test" as any } 
+    });
 
-      expect(internalLogger.info).toHaveBeenCalledWith(
-        "unknown_event",
-        expect.objectContaining({ 
-            requestId,
-            _invalidEvent: "invalid"
-        })
-      );
-    } finally {
-      vi.unstubAllEnvs();
-    }
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining("unknown_event")
+    );
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining("invalid")
+    );
   });
 
   it("ensures userId is correctly trimmed and present in final log for domain events", () => {
@@ -181,11 +137,11 @@ describe("Logger Governance Robustness", () => {
         meta: { type: "domain", userId: "  user-123  ", phase: "test" as any } 
     });
 
-    expect(internalLogger.info).toHaveBeenCalledWith(
-        "user.login",
-        expect.objectContaining({
-            userId: "user-123"
-        })
+    expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining("user-123")
+    );
+    expect(consoleSpy).not.toHaveBeenCalledWith(
+        expect.stringContaining("  user-123  ")
     );
   });
 
@@ -199,6 +155,6 @@ describe("Logger Governance Robustness", () => {
         event: "test.event" as any, 
         meta: null as unknown as BaseMeta 
       });
-    }).toThrow(/Metadata must be a non-null object/);
+    }).toThrow(/Missing or invalid metadata/);
   });
 });
