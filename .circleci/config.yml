@@ -22,7 +22,9 @@ jobs:
 
       - run:
           name: Setup pnpm
-          command: sudo corepack enable
+          command: |
+            sudo corepack enable
+            corepack prepare pnpm@9.15.9 --activate
 
       - run:
           name: Install dependencies
