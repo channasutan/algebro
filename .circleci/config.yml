@@ -22,7 +22,7 @@ jobs:
 
       - run:
           name: Setup pnpm
-          command: corepack enable
+          command: sudo npm install -g pnpm@9.15.9
 
       - run:
           name: Install dependencies
