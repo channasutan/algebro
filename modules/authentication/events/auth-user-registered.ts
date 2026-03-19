@@ -6,7 +6,7 @@
 import { createDomainEvent } from "@/events/event-types";
 import { type AuthUserRegisteredEvent, type AuthUserRegisteredPayload, AUTH_USER_REGISTERED } from "@/events/auth-events";
 
-export { type AuthUserRegisteredEvent, type AuthUserRegisteredPayload, AUTH_USER_REGISTERED };
+export { type AuthUserRegisteredEvent, type AuthUserRegisteredPayload, AUTH_USER_REGISTERED } from "@/events/auth-events";
 
 export function createAuthUserRegisteredEvent(
   payload: AuthUserRegisteredPayload

@@ -1,5 +1,26 @@
-export * from "./services/start-session";
-export * from "./services/create-attempt";
-export * from "./services/submit-step";
-export * from "./domain/practice";
-export * from "./errors";
+export { 
+  startSession, 
+  startSessionWithRepository, 
+  type StartSessionInput 
+} from "./services/start-session";
+export { 
+  createAttempt, 
+  createAttemptWithRepository, 
+  type CreateAttemptInput 
+} from "./services/create-attempt";
+export { 
+  submitStep, 
+  submitStepWithRepository, 
+  type SubmitStepInput 
+} from "./services/submit-step";
+export { 
+  type PracticeSession, 
+  type Attempt, 
+  type SolutionStep 
+} from "./domain/practice";
+export { 
+  PracticeError, 
+  SessionNotFoundError, 
+  AttemptNotFoundError, 
+  StepAdditionError 
+} from "./errors";
