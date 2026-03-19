@@ -63,9 +63,15 @@ function createRepositoryFromClientFactory(
     if (updates.isCorrect !== undefined) dbUpdates.is_correct = updates.isCorrect;
     if (updates.completedAt !== undefined) dbUpdates.completed_at = updates.completedAt;
 
-    const data = await dbUpdate<Record<string, unknown>>(await getClient(), "attempts", attemptId, dbUpdates, {
-      context: "practice",
-      errorFactory: () => new AttemptNotFoundError(attemptId)
+    const data = await dbUpdate<Record<string, unknown>>({
+      client: await getClient(),
+      table: "attempts",
+      id: attemptId,
+      values: dbUpdates,
+      options: {
+        context: "practice",
+        errorFactory: () => new AttemptNotFoundError(attemptId)
+      }
     });
 
     return mapAttempt(data);
@@ -99,8 +105,14 @@ function createRepositoryFromClientFactory(
     if (updates.isValid !== undefined) dbUpdates.is_valid = updates.isValid;
     if (updates.errorType !== undefined) dbUpdates.error_type = updates.errorType;
 
-    const data = await dbUpdate<Record<string, unknown>>(await getClient(), "solution_steps", stepId, dbUpdates, {
-      context: "practice"
+    const data = await dbUpdate<Record<string, unknown>>({
+      client: await getClient(),
+      table: "solution_steps",
+      id: stepId,
+      values: dbUpdates,
+      options: {
+        context: "practice"
+      }
     });
 
     return mapStep(data);

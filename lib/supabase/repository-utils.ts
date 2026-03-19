@@ -81,17 +81,18 @@ export async function dbInsert<T>(
 /**
  * Generic helper for Supabase update operations.
  */
-export async function dbUpdate<T>(
-  client: SupabaseClient,
-  table: string,
-  id: string | number,
-  values: Record<string, unknown>,
+export async function dbUpdate<T>(params: {
+  client: SupabaseClient;
+  table: string;
+  id: string | number;
+  values: Record<string, unknown>;
   options: {
     columns?: string;
     context: string;
     errorFactory?: (error: PostgrestError) => Error;
-  }
-): Promise<T> {
+  };
+}): Promise<T> {
+  const { client, table, id, values, options } = params;
   const { data, error } = await client
     .from(table)
     .update(values)

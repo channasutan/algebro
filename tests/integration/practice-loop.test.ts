@@ -4,6 +4,7 @@ import { createAttemptWithRepository } from "@/modules/practice/services/create-
 import { submitStepWithRepository } from "@/modules/practice/services/submit-step";
 import type { PracticeRepository } from "@/modules/practice/repositories/practice-repository";
 import type { Mocked } from "vitest";
+import { TEST_USER_ID } from "../test-constants";
 
 // Mock observability
 vi.mock("@/lib/observability", () => ({
@@ -21,7 +22,7 @@ vi.mock("@/lib/observability", () => ({
 
 describe("Practice Loop Service Integration", () => {
   let mockRepo: Mocked<PracticeRepository>;
-  const testUserId = "user-123";
+  const testUserId = TEST_USER_ID;
   const context = { requestId: "req-123" };
 
   beforeEach(() => {
