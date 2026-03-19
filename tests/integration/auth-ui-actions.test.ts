@@ -1,4 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
+import { GET as handleCallbackRoute } from "@/app/auth/callback/route";
+import { redirect } from "next/navigation";
+import { NextRequest } from "next/server";
 
 // Mock the dependencies: Mock ONLY authentication module and bootstrap.
 vi.mock("@/modules/bootstrap", () => ({
@@ -10,7 +13,7 @@ vi.mock("@/modules/authentication", () => ({
   signInUser: vi.fn(),
   signOutUser: vi.fn(),
   getCurrentSession: vi.fn(),
-  handleAuthCallback: vi.fn(),
+  handleAuthCallback: vi.fn().mockResolvedValue(undefined),
 }));
 
 // We strictly control next/headers cookies to return an empty object avoiding Server Context bugs
@@ -30,22 +33,22 @@ import { signInAction } from "@/app/sign-in/actions";
 import { signOutAction } from "@/app/sign-out/actions";
 
 import { ensureModulesBootstrapped } from "@/modules/bootstrap";
-import { signUpUser, signInUser, signOutUser } from "@/modules/authentication";
+import { signUpUser, signInUser, signOutUser, handleAuthCallback } from "@/modules/authentication";
 
 describe("Auth UI Actions Transport Layer", () => {
   beforeEach(() => {
-    vi.resetAllMocks();
+    vi.clearAllMocks();
   });
 
-  it("1. sign up success calls ensureModulesBootstrapped BEFORE auth service", async () => {
-    const formData = new FormData();
-    formData.append("email", "test@example.com");
-    formData.append("password", "password123");
+    it("1. sign up success calls ensureModulesBootstrapped BEFORE auth service", async () => {
+        const formData = new FormData();
+        formData.append("email", "test@example.com");
+        formData.append("password", "test-password"); // TEST ONLY: DO NOT USE REAL CREDENTIALS
 
-    (signUpUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
-      userId: "123",
-      requiresEmailConfirmation: false,
-    });
+        (signUpUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+            userId: "123",
+            requiresEmailConfirmation: false,
+        });
 
     const result = await signUpAction({ success: false, error: "" }, formData);
 
@@ -77,11 +80,11 @@ describe("Auth UI Actions Transport Layer", () => {
     expect(ensureModulesBootstrapped).toHaveBeenCalledTimes(1);
   });
 
-  it("3. sign in success triggers bootstrap and services nicely", async () => {
-    const formData = new FormData();
-    // Prove email normalization is applied
-    formData.append("email", " TEST@example.com ");
-    formData.append("password", "password123");
+    it("3. sign in success triggers bootstrap and services nicely", async () => {
+        const formData = new FormData();
+        // Prove email normalization is applied
+        formData.append("email", " TEST@example.com ");
+        formData.append("password", "test-password"); // TEST ONLY: DO NOT USE REAL CREDENTIALS
 
     (signInUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
@@ -92,17 +95,17 @@ describe("Auth UI Actions Transport Layer", () => {
     expect(result).toEqual({ success: true });
     expect(ensureModulesBootstrapped).toHaveBeenCalledTimes(1);
     
-    // Verify email was trimmed and lowercase mapped
-    expect(signInUser).toHaveBeenCalledWith({
-      email: "test@example.com",
-      password: "password123",
-    });
+     // Verify email was trimmed and lowercase mapped
+     expect(signInUser).toHaveBeenCalledWith({
+       email: "test@example.com",
+       password: "test-password", // TEST ONLY: DO NOT USE REAL CREDENTIALS
+     });
   });
 
-  it("4. sign in failure prevents leakage of verbose trace data by wrapping raw errors safely", async () => {
-    const formData = new FormData();
-    formData.append("email", "test@example.com");
-    formData.append("password", "badpass");
+    it("4. sign in failure prevents leakage of verbose trace data by wrapping raw errors safely", async () => {
+        const formData = new FormData();
+        formData.append("email", "test@example.com");
+        formData.append("password", "test-password"); // TEST ONLY: DO NOT USE REAL CREDENTIALS
 
     // Mock a verbose unsafe database error 
     (signInUser as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
@@ -127,14 +130,9 @@ describe("Auth UI Actions Transport Layer", () => {
   });
 });
 
-import { GET as handleCallbackRoute } from "@/app/auth/callback/route";
-import { redirect } from "next/navigation";
-import { handleAuthCallback } from "@/modules/authentication";
-import { NextRequest } from "next/server";
-
 describe("Auth Callback Route Handler", () => {
   beforeEach(() => {
-    vi.resetAllMocks();
+    vi.clearAllMocks();
   });
 
   it("1. rejects request with missing query param code by triggering redirect", async () => {
@@ -172,6 +170,9 @@ describe("Auth Callback Route Handler", () => {
   });
 
   it("4. redirects to root if the next parameter is an open redirect path", async () => {
+    // Reset mock to ensure it resolves (not rejects from previous test)
+    (handleAuthCallback as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+    
     const req = new NextRequest("http://localhost/auth/callback?code=EXCHANGE_CODE&next=http://malicious.com");
 
     await expect(handleCallbackRoute(req)).rejects.toThrow();

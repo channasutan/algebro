@@ -4,8 +4,7 @@
  * values, giving consumers enough context to react without re-fetching the
  * full profile.
  */
-import type { CoreDomainEventType, DomainEvent } from "@/events/event-types";
-import { createDomainEvent } from "@/events/event-types";
+import { createDomainEvent, type CoreDomainEventType, type DomainEvent } from "@/events/event-types";
 
 export const USER_PROFILE_UPDATED = "user_profile_updated" as const satisfies CoreDomainEventType;
 

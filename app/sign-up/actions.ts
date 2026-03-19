@@ -2,12 +2,13 @@
 
 import { ensureModulesBootstrapped } from "@/modules/bootstrap";
 import { signUpUser } from "@/modules/authentication";
+import { getPublicEnv } from "@/config/env.server-entry";
 
 type ActionResult =
   | { success: true }
   | { success: false; error: string };
 
-export async function signUpAction(prevState: ActionResult, formData: FormData): Promise<ActionResult> {
+export async function signUpAction(_prevState: ActionResult, formData: FormData): Promise<ActionResult> {
   await ensureModulesBootstrapped();
 
   const emailRaw = formData.get("email");
@@ -30,7 +31,10 @@ export async function signUpAction(prevState: ActionResult, formData: FormData):
     return { success: true };
   } catch {
     // DO NOT leak internal error content or use fragile string matching
-    console.warn("[auth] unexpected error in signUpAction");
-    return { success: false, error: "Sign up failed. Please try again." };
+    const env = getPublicEnv();
+    if (env.nodeEnv !== "production") {
+      console.warn("[auth] unexpected error in signUpAction");
+    }
+    return { success: false, error: "Sign up failed. Please try again" };
   }
 }

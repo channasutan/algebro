@@ -2,6 +2,7 @@
 
 import { ensureModulesBootstrapped } from "@/modules/bootstrap";
 import { signOutUser } from "@/modules/authentication";
+import { getPublicEnv } from "@/config/env.server-entry";
 
 type ActionResult =
   | { success: true }
@@ -15,7 +16,10 @@ export async function signOutAction(): Promise<ActionResult> {
 
     return { success: true };
   } catch {
-    console.warn("[auth] unexpected error in signOutAction");
-    return { success: false, error: "Failed to sign out" };
+    const env = getPublicEnv();
+    if (env.nodeEnv !== "production") {
+      console.warn("[auth] unexpected error in signOutAction");
+    }
+    return { success: false, error: "Sign out failed. Please try again" };
   }
 }

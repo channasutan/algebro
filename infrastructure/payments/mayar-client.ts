@@ -45,6 +45,9 @@ function isConfigured(): boolean {
     const webhookSecret = getMayarWebhookSecret();
     return Boolean(apiKey && webhookSecret);
   } catch {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("[mayar-client] Failed to verify configuration, returning false");
+    }
     return false;
   }
 }

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, type Mock, type Mocked } from "vitest";
 
 vi.mock("@/lib/observability", () => ({
   logger: {
@@ -25,7 +25,6 @@ import { eventBus } from "@/events/event-bus";
 import { USER_PROFILE_INITIALIZED } from "../events/profile-initialized";
 import { USER_PROFILE_UPDATED } from "../events/profile-updated";
 import type { UserProfile } from "../domain/profile";
-import type { Mock, Mocked } from "vitest";
 import { logger } from "@/lib/observability";
 
 vi.mock("@/events/event-bus", () => ({
@@ -38,7 +37,7 @@ describe("User Profiles Service Logic", () => {
   let mockRepo: Mocked<ProfileRepository>;
 
   beforeEach(() => {
-    vi.resetAllMocks();
+    vi.clearAllMocks();
     (eventBus.publish as Mock).mockResolvedValue(true);
 
     mockRepo = {
@@ -98,7 +97,8 @@ describe("User Profiles Service Logic", () => {
 
     it("throws ProfileCreationError if insert returns null and logs error", async () => {
       mockRepo.findById.mockResolvedValue(null);
-      mockRepo.insertProfile.mockResolvedValue(null); // insert failed to create or fetch profile
+      // Cast to allow null return - simulates repository returning null on race condition
+      mockRepo.insertProfile.mockResolvedValue(null as unknown as UserProfile);
 
       const promise = ensureProfileExists(mockRepo, { userId: "user-1", email: "test@ex.com" });
       

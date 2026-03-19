@@ -34,6 +34,7 @@ export async function ensureProfileExists(
     }
 
     // 2. Attempt to insert profile
+    // insertProfile returns a UserProfile or may return null after retries
     const profile = await repo.insertProfile({
       id: userId,
       email,
@@ -81,7 +82,12 @@ export async function ensureProfileExists(
     });
     
     // Fire and forget - caught internally to avoid blocking the request
-    void eventBus.publish(event).catch(() => {});
+    void eventBus.publish(event).catch((err) => {
+      logger.error({
+        event: "user-profiles.event_failure",
+        meta: { type: "system", phase: "infra", error: err instanceof Error ? err.message : String(err) }
+      });
+    });
 
     return profile;
   } catch (error) {

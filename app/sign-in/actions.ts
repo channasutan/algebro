@@ -2,12 +2,13 @@
 
 import { ensureModulesBootstrapped } from "@/modules/bootstrap";
 import { signInUser } from "@/modules/authentication";
+import { getPublicEnv } from "@/config/env.server-entry";
 
 type ActionResult =
   | { success: true }
   | { success: false; error: string };
 
-export async function signInAction(prevState: ActionResult, formData: FormData): Promise<ActionResult> {
+export async function signInAction(_prevState: ActionResult, formData: FormData): Promise<ActionResult> {
   await ensureModulesBootstrapped();
 
   const emailRaw = formData.get("email");
@@ -30,7 +31,10 @@ export async function signInAction(prevState: ActionResult, formData: FormData):
     return { success: true };
   } catch {
     // Return deterministic error for all authentication failures to prevent leaking info
-    console.warn("[auth] unexpected error in signInAction");
+    const env = getPublicEnv();
+    if (env.nodeEnv !== "production") {
+      console.warn("[auth] unexpected error in signInAction");
+    }
     return { success: false, error: "Invalid email or password" };
   }
 }

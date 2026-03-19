@@ -3,6 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin-client";
+import { getPublicEnv } from "@/config/env.server-entry";
 import type { UserProfile } from "../domain/profile";
 
 export type InsertProfileInput = {
@@ -85,13 +86,22 @@ function createRepositoryFromClientFactory(
     }
 
     // Bounded retry to eliminate read-after-write race conditions
-    for (let attempt = 0; attempt < 3; attempt++) {
+    const MAX_RETRIES = 3;
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       const profile = await findById(input.id);
       if (profile) return profile;
-      
-      // Delay before next attempt (5ms, 10ms, 15ms)
-      if (attempt < 2) {
-        await new Promise(resolve => setTimeout(resolve, 5 * (attempt + 1)));
+
+      const isLastAttempt = attempt === MAX_RETRIES - 1;
+
+      if (!isLastAttempt) {
+        const delayMs = 5 * (attempt + 1);
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        continue;
+      }
+
+      const env = getPublicEnv();
+      if (env.nodeEnv !== "production") {
+        console.warn("[user-profiles] findById failed after retries", { userId: input.id });
       }
     }
 
