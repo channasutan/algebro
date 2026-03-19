@@ -28,7 +28,7 @@ export async function signInAction(prevState: ActionResult, formData: FormData):
     await signInUser({ email, password });
 
     return { success: true };
-  } catch (error) {
+  } catch {
     // Return deterministic error for all authentication failures to prevent leaking info
     console.warn("[auth] unexpected error in signInAction");
     return { success: false, error: "Invalid email or password" };

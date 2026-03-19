@@ -21,20 +21,24 @@ jobs:
             git fetch --tags
 
       - run:
+          name: Install pnpm
+          command: npm install -g pnpm@9
+
+      - run:
           name: Install dependencies
-          command: npm ci
+          command: pnpm install --frozen-lockfile
 
       - run:
           name: Run tests
-          command: npm run test
+          command: pnpm test
 
       - run:
           name: Run lint
-          command: npm run lint
+          command: pnpm run lint
 
       - run:
           name: Build project
-          command: npm run build
+          command: pnpm run build
 
       - sonarcloud/scan
 

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { type SupabaseClient } from "@supabase/supabase-js";
+export type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 

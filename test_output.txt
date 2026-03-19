@@ -1,0 +1,290 @@
+
+ RUN  v3.2.4 /Users/macbookpro/Documents/algebro-tanstack
+
+ ✓ tests/integration/module-boundaries.test.ts > module boundaries > limits lib/supabase imports to repository files only 25ms
+ × tests/integration/module-boundaries.test.ts > module boundaries > does not read raw process.env in app routes, server actions, or module code 34ms
+   → expected [ Array(1) ] to deeply equal []
+ ✓ tests/integration/module-boundaries.test.ts > module boundaries > documents the repository-only Supabase rule in architecture.yml 9ms
+ ✓ tests/integration/env-smoke.test.ts > environment smoke tests > getPublicEnv > returns public environment when all required variables are valid 72ms
+ ✓ tests/integration/env-smoke.test.ts > environment smoke tests > getPublicEnv > reports whether the public Supabase configuration is present 9ms
+ ✓ tests/integration/env-smoke.test.ts > environment smoke tests > getPublicEnv > throws when required public Supabase variables are missing 3ms
+ ✓ tests/integration/env-smoke.test.ts > environment smoke tests > getPublicAuthEnv > returns auth URLs when the required variables are valid 3ms
+ ✓ tests/integration/env-smoke.test.ts > environment smoke tests > getPublicAuthEnv > throws when NEXT_PUBLIC_SITE_URL is not an absolute http or https URL 3ms
+ ✓ tests/integration/env-smoke.test.ts > environment smoke tests > getPublicAuthEnv > throws when NEXT_PUBLIC_AUTH_CALLBACK_URL is not an absolute http or https URL 3ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > event type validation > accepts valid event types 5ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > event type validation > trims whitespace in eventType 0ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > event type validation > rejects empty event type 1ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > event type validation > rejects whitespace-only event type 1ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > timestamp normalization > accepts valid ISO-8601 timestamp with Z suffix 0ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > timestamp normalization > accepts valid ISO-8601 timestamp with timezone offset 0ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > timestamp normalization > accepts ISO-8601 timestamp without milliseconds 0ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > timestamp normalization > normalizes timestamps to toISOString() format 0ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > timestamp normalization > rejects invalid timestamp string 1ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > timestamp normalization > rejects ambiguous timestamp format without T separator 0ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > timestamp normalization > rejects date-only format 0ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > timestamp normalization > accepts Date input 0ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > timestamp normalization > rejects invalid Date object 0ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > timestamp normalization > defaults timestamp when undefined 0ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > timestamp normalization > defaults timestamp when null 0ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > timestamp normalization > rejects empty string timestamp 0ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > timestamp normalization > rejects whitespace-only timestamp 0ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > payload immutability > returns a frozen payload object 0ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > payload immutability > prevents mutation of nested properties 1ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > payload immutability > prevents mutation of nested objects 0ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > payload immutability > prevents mutation of arrays in payload 0ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > payload immutability > mutating original payload does not affect stored event 0ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > payload immutability > handles cyclic object structures safely 0ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > event structure > generates a random event_id when not provided 0ms
+ ✓ tests/integration/event-types.test.ts > createDomainEvent > event structure > uses provided event_id when given 0ms
+ ✓ tests/integration/env-smoke.test.ts > environment smoke tests > getPublicAuthEnv > throws when the auth callback URL is missing 8ms
+ ✓ tests/integration/env-smoke.test.ts > environment smoke tests > getAuthEnv > returns the merged public and auth environment for auth infrastructure 76ms
+ ✓ tests/integration/env-smoke.test.ts > environment smoke tests > getInfrastructureServerEnv > returns infrastructure environment when all required variables are valid 8ms
+ ✓ tests/integration/env-smoke.test.ts > environment smoke tests > getInfrastructureServerEnv > throws when SUPABASE_SERVICE_ROLE_KEY is missing 5ms
+ ✓ tests/integration/env-smoke.test.ts > environment smoke tests > getInfrastructureServerEnv > throws when AI_PROVIDER_API_KEY is missing 8ms
+ ✓ tests/integration/env-smoke.test.ts > environment smoke tests > getInfrastructureServerEnv > throws when MAYAR_API_KEY is missing 5ms
+ ✓ tests/integration/env-smoke.test.ts > environment smoke tests > getInfrastructureServerEnv > throws when MAYAR_WEBHOOK_SECRET is missing 6ms
+ ✓ tests/integration/env-smoke.test.ts > environment smoke tests > getServerEnv > throws when required public variables are invalid 6ms
+ ✓ tests/integration/mayar-client.test.ts > mayar client > isConfigured > returns true when required environment variables are present 3ms
+ ✓ tests/integration/mayar-client.test.ts > mayar client > isConfigured > returns false when MAYAR_API_KEY is missing 9ms
+ ✓ tests/integration/mayar-client.test.ts > mayar client > isConfigured > returns false when MAYAR_WEBHOOK_SECRET is missing 9ms
+ ✓ tests/integration/mayar-client.test.ts > mayar client > createCheckoutSession > constructs the correct API request 31ms
+ ✓ tests/integration/mayar-client.test.ts > mayar client > createCheckoutSession > forwards AbortSignal to fetch 1ms
+ ✓ tests/integration/mayar-client.test.ts > mayar client > createCheckoutSession > throws an error when response.ok is false 2ms
+ ✓ tests/integration/mayar-client.test.ts > mayar client > createCheckoutSession > propagates network errors 1ms
+ ✓ tests/integration/mayar-client.test.ts > mayar client > getPayment > constructs the correct API request 1ms
+ ✓ tests/integration/mayar-client.test.ts > mayar client > getPayment > encodes the payment id in the URL 1ms
+ ✓ tests/integration/mayar-client.test.ts > mayar client > getPayment > throws an error when response.ok is false 1ms
+ ✓ tests/integration/mayar-client.test.ts > mayar client > getWebhookSecret > returns the webhook secret from the server environment 0ms
+ ✓ tests/integration/supabase-client.test.ts > supabase client boundary > browser client > returns a valid Supabase client instance 66ms
+ ✓ tests/integration/supabase-client.test.ts > supabase client boundary > browser client > returns the same singleton instance on multiple calls 1ms
+ ✓ tests/integration/supabase-client.test.ts > supabase client boundary > browser client > uses session persistence for browser authentication 0ms
+ ✓ tests/integration/supabase-client.test.ts > supabase client boundary > server client > returns a valid Supabase client instance 20ms
+ ✓ tests/integration/supabase-client.test.ts > supabase client boundary > server client > creates a new instance for each request (no singleton) 4ms
+ ✓ tests/integration/supabase-client.test.ts > supabase client boundary > server client > has auth methods available for server-side operations 2ms
+ ✓ tests/integration/supabase-client.test.ts > supabase client boundary > server client > buildSupabaseServerClient > creates a client with the provided cookie store 7ms
+ ✓ tests/integration/supabase-client.test.ts > supabase client boundary > server client > buildSupabaseServerClient > provides request isolation with separate cookie stores 18ms
+ ✓ tests/integration/supabase-client.test.ts > supabase client boundary > server client > buildSupabaseServerClient > maintains cookie state per cookie store 19ms
+ ✓ tests/integration/supabase-client.test.ts > supabase client boundary > admin client > returns a valid Supabase client instance 14ms
+ ✓ tests/integration/supabase-client.test.ts > supabase client boundary > admin client > returns the same singleton instance on multiple calls 0ms
+ ✓ tests/integration/supabase-client.test.ts > supabase client boundary > admin client > has admin-level database access methods 0ms
+ ✓ tests/integration/supabase-client.test.ts > supabase client boundary > client isolation > browser, server, and admin clients are separate instances 2ms
+ ✓ tests/integration/supabase-client.test.ts > supabase client boundary > boundary safety > browser client module is protected by client-only 2ms
+ ✓ tests/integration/supabase-client.test.ts > supabase client boundary > boundary safety > server client module is protected by server-only 3ms
+ ✓ tests/integration/supabase-client.test.ts > supabase client boundary > boundary safety > admin client module is protected by server-only 1ms
+ ✓ tests/integration/supabase-client.test.ts > supabase client boundary > configuration validation > browser client initializes when NEXT_PUBLIC_SUPABASE_ANON_KEY is configured 4ms
+ ✓ tests/integration/supabase-client.test.ts > supabase client boundary > configuration validation > server client initializes when NEXT_PUBLIC_SUPABASE_URL is configured 2ms
+ ✓ tests/integration/supabase-client.test.ts > supabase client boundary > configuration validation > server client initializes when NEXT_PUBLIC_SUPABASE_ANON_KEY is configured 1ms
+ ✓ tests/integration/supabase-client.test.ts > supabase client boundary > configuration validation > admin client initializes when NEXT_PUBLIC_SUPABASE_URL is configured 0ms
+ ✓ tests/integration/supabase-client.test.ts > supabase client boundary > configuration validation > admin client initializes when SUPABASE_SERVICE_ROLE_KEY is configured 0ms
+ ✓ tests/integration/module-bootstrap.test.ts > module bootstrap > is safe to call multiple times without re-registering shared handlers 526ms
+ ✓ tests/integration/module-bootstrap.test.ts > module bootstrap > exposes only the authentication module public API through index.ts 81ms
+ ✓ tests/integration/module-bootstrap.test.ts > module bootstrap > exposes only the user-profiles module public API through index.ts 52ms
+ ✓ modules/user-profiles/tests/user-profile-service.test.ts > User Profiles Service Logic > ensureProfileExists > returns existing profile immediately 15ms
+ ✓ modules/user-profiles/tests/user-profile-service.test.ts > User Profiles Service Logic > ensureProfileExists > throws error when email is not provided 4ms
+ ✓ modules/user-profiles/tests/user-profile-service.test.ts > User Profiles Service Logic > ensureProfileExists > inserts profile and emits event if not found 12ms
+ ✓ modules/user-profiles/tests/user-profile-service.test.ts > User Profiles Service Logic > ensureProfileExists > throws ProfileCreationError if insert returns null and logs error 5ms
+ ✓ modules/user-profiles/tests/user-profile-service.test.ts > User Profiles Service Logic > ensureProfileExists > enforces data invariant (userId mismatch) and throws ProfileInvariantError 1ms
+ ✓ modules/user-profiles/tests/user-profile-service.test.ts > User Profiles Service Logic > ensureProfileExists > verifies repository retry is bounded (service only calls insertProfile once) 65ms
+ ✓ modules/user-profiles/tests/user-profile-service.test.ts > User Profiles Service Logic > ensureProfileExists > preserves infrastructure errors from repository and logs them without wrapping 1ms
+ ✓ modules/user-profiles/tests/user-profile-service.test.ts > User Profiles Service Logic > ensureProfileExists > does not log anything when findById returns null (expected state) 1ms
+ ✓ modules/user-profiles/tests/user-profile-service.test.ts > User Profiles Service Logic > ensureProfileExists > never crashes the event bus if publish fails because it catches internally 1ms
+ ✓ modules/user-profiles/tests/user-profile-service.test.ts > User Profiles Service Logic > getCurrentProfile > returns profile if it exists 2ms
+ ✓ modules/user-profiles/tests/user-profile-service.test.ts > User Profiles Service Logic > getCurrentProfile > throws error if profile not found (lazy bootstrap disabled) 3ms
+ ✓ modules/user-profiles/tests/user-profile-service.test.ts > User Profiles Service Logic > updateProfile > updates profile, publishes event, and returns new profile 34ms
+ ✓ modules/user-profiles/tests/user-profile-service.test.ts > User Profiles Service Logic > updateProfile > verifies timezone via regex if Intl is not available (mocked out) 1ms
+ ✓ modules/user-profiles/tests/user-profile-service.test.ts > User Profiles Service Logic > updateProfile > rejects invalid timezone formats when Intl.supportedValuesOf is unavailable 2ms
+ ✓ modules/user-profiles/tests/user-profile-service.test.ts > User Profiles Service Logic > updateProfile > accepts UTC timezone in regex fallback path 1ms
+ ✓ tests/integration/job-runner.test.ts > job runner > runs a registered handler and marks the job completed 4ms
+ ✓ tests/integration/job-runner.test.ts > job runner > returns a retryable failure before the max attempt is reached 1ms
+ ✓ tests/integration/job-runner.test.ts > job runner > returns a terminal failure when the max attempt is reached 0ms
+ ✓ tests/integration/job-runner.test.ts > job runner > returns a terminal failure immediately for NonRetryableJobError 1ms
+ ✓ tests/integration/job-runner.test.ts > job runner > throws an Error directly if no handler is registered 2ms
+ ✓ tests/integration/event-contracts.test.ts > auth_user_registered event contract > event type exists in the registry 3ms
+ ✓ tests/integration/event-contracts.test.ts > auth_user_registered event contract > payload is serializable 3ms
+ ✓ tests/integration/event-contracts.test.ts > auth_user_registered event contract > factory produces a valid event object 59ms
+ ✓ tests/integration/event-contracts.test.ts > user_profile_initialized event contract > event type exists in the registry 0ms
+ ✓ tests/integration/event-contracts.test.ts > user_profile_initialized event contract > payload is serializable 0ms
+ ✓ tests/integration/event-contracts.test.ts > user_profile_initialized event contract > factory produces a valid event object 1ms
+ ✓ tests/integration/event-contracts.test.ts > user_profile_updated event contract > event type exists in the registry 0ms
+ ✓ tests/integration/event-contracts.test.ts > user_profile_updated event contract > payload is serializable 0ms
+ ✓ tests/integration/event-contracts.test.ts > user_profile_updated event contract > factory produces a valid event object 1ms
+stdout | tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Page (Server Component) > 2. calls ensureProfileExists (lazy bootstrap) ONLY when ProfileNotFoundError is thrown
+{"level":"INFO","timestamp":"2026-03-19T19:09:18.689Z","event":"user-profiles.bootstrap","requestId":"test-request-id","meta":{"type":"domain","userId":"user-1","phase":"insert","source":"lazy_page_load"}}
+
+ ✓ tests/integration/authentication-module.test.ts > Authentication Module Integration > completes the full loop: service -> repository -> database client -> event bus 174ms
+stdout | tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Page (Server Component) > 2. calls ensureProfileExists (lazy bootstrap) ONLY when ProfileNotFoundError is thrown
+{"level":"INFO","timestamp":"2026-03-19T19:09:18.736Z","event":"user-profiles.bootstrap","requestId":"test-request-id","meta":{"type":"domain","userId":"user-1","phase":"read_after_insert","outcome":"success","durationMs":47,"source":"lazy_page_load"}}
+
+stdout | tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Page (Server Component) > 3. handles Read-After-Write replication lag resiliently via bounded retry
+{"level":"INFO","timestamp":"2026-03-19T19:09:18.737Z","event":"user-profiles.bootstrap","requestId":"test-request-id","meta":{"type":"domain","userId":"user-1","phase":"insert","source":"lazy_page_load"}}
+
+stdout | tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Page (Server Component) > 3. handles Read-After-Write replication lag resiliently via bounded retry
+{"level":"INFO","timestamp":"2026-03-19T19:09:18.750Z","event":"user-profiles.bootstrap","requestId":"test-request-id","meta":{"type":"domain","userId":"user-1","phase":"read_after_insert","outcome":"success","durationMs":13,"source":"lazy_page_load"}}
+
+stdout | tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Page (Server Component) > 11. handles definitive replication lag failure by throwing after max retries (Boundedness Guarantee)
+{"level":"INFO","timestamp":"2026-03-19T19:09:18.754Z","event":"user-profiles.bootstrap","requestId":"test-request-id","meta":{"type":"domain","userId":"user-1","phase":"insert","source":"lazy_page_load"}}
+
+stdout | tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Page (Server Component) > 14. propagates bootstrap failure (Insert Error)
+{"level":"INFO","timestamp":"2026-03-19T19:09:18.774Z","event":"user-profiles.bootstrap","requestId":"test-request-id","meta":{"type":"domain","userId":"user-1","phase":"insert","source":"lazy_page_load"}}
+
+stdout | tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Page (Server Component) > 14. propagates bootstrap failure (Insert Error)
+{"level":"ERROR","timestamp":"2026-03-19T19:09:18.774Z","event":"user-profiles.ensure","meta":{"type":"domain","userId":"user-1","phase":"infra","outcome":"failure","durationMs":0,"error":"Storage quota exceeded","_missingRequestId":true},"requestId":"unknown"}
+
+stdout | tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Page (Server Component) > 15. does NOT retry on infra error AFTER bootstrap
+{"level":"INFO","timestamp":"2026-03-19T19:09:18.775Z","event":"user-profiles.bootstrap","requestId":"test-request-id","meta":{"type":"domain","userId":"user-1","phase":"insert","source":"lazy_page_load"}}
+
+stdout | tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Actions (Server Action) > 9. maps unexpected errors to generic fallback message
+{"level":"WARN","timestamp":"2026-03-19T19:09:18.842Z","event":"unknown_event","requestId":"test-request-id","meta":{"userId":"user-1","error":"Unexpected systemic failure","invalidEvent":true}}
+
+stdout | tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Actions (Server Action) > 10. normalizes empty strings to null for text fields
+{"level":"WARN","timestamp":"2026-03-19T19:09:18.843Z","event":"unknown_event","requestId":"test-request-id","meta":{"userId":"user-1","error":"Unexpected systemic failure","invalidEvent":true}}
+
+ ✓ tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Page (Server Component) > 1. renders profile and DOES NOT call ensureProfileExists when profile exists 11ms
+ ✓ tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Page (Server Component) > 2. calls ensureProfileExists (lazy bootstrap) ONLY when ProfileNotFoundError is thrown 49ms
+ ✓ tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Page (Server Component) > 3. handles Read-After-Write replication lag resiliently via bounded retry 15ms
+ ✓ tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Page (Server Component) > 11. handles definitive replication lag failure by throwing after max retries (Boundedness Guarantee) 14ms
+ ✓ tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Page (Server Component) > 13. renders profile IMMEDIATELY when it exists (No Bootstrap Optimization) 5ms
+ ✓ tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Page (Server Component) > 12. natively propagates systemic infrastructure errors and DOES NOT retry (Failure Guarantee) 2ms
+ ✓ tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Page (Server Component) > 14. propagates bootstrap failure (Insert Error) 1ms
+ ✓ tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Page (Server Component) > 15. does NOT retry on infra error AFTER bootstrap 1ms
+ ✓ tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Page (Server Component) > 4. redirects to /sign-in if unauthenticated 2ms
+ ✓ tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Actions (Server Action) > 5. successfully updates provided fields 62ms
+ ✓ tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Actions (Server Action) > 6. correctly maps InvalidTimezoneError to specific message 1ms
+ ✓ tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Actions (Server Action) > 7. correctly maps NoProfileFieldsError to specific message directly from service layer 1ms
+ ✓ tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Actions (Server Action) > 8. maps ProfileNotFoundError to specific message 0ms
+ ✓ tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Actions (Server Action) > 9. maps unexpected errors to generic fallback message 1ms
+ ✓ tests/integration/auth-profile-actions.test.ts > Profile Transport Layer (Phase 2 Task 8) > Profile Actions (Server Action) > 10. normalizes empty strings to null for text fields 1ms
+ ✓ tests/integration/supabase-realtime.test.ts > supabase realtime > isConfigured > returns true when configured is true 14ms
+ ✓ tests/integration/supabase-realtime.test.ts > supabase realtime > isConfigured > returns false when configured is false 4ms
+ ✓ tests/integration/supabase-realtime.test.ts > supabase realtime > createChannel > delegates channel creation to the provided Supabase client 15ms
+ ✓ tests/integration/supabase-realtime.test.ts > supabase realtime > subscribe > resolves when the channel reaches SUBSCRIBED 11ms
+ ✓ tests/integration/supabase-realtime.test.ts > supabase realtime > subscribe > ignores non-terminal statuses before succeeding 4ms
+ ✓ tests/integration/supabase-realtime.test.ts > supabase realtime > subscribe > rejects when the channel reaches terminal status CHANNEL_ERROR 4ms
+ ✓ tests/integration/supabase-realtime.test.ts > supabase realtime > subscribe > rejects when the channel reaches terminal status TIMED_OUT 5ms
+ ✓ tests/integration/supabase-realtime.test.ts > supabase realtime > subscribe > rejects when the channel reaches terminal status CLOSED 8ms
+ ✓ tests/integration/supabase-realtime.test.ts > supabase realtime > subscribe > propagates subscribe callback registration errors 4ms
+ ✓ tests/integration/supabase-realtime.test.ts > supabase realtime > closeChannel > delegates channel cleanup to the provided Supabase client 3ms
+stderr | tests/integration/auth-ui-actions.test.ts > Auth UI Actions Transport Layer > 4. sign in failure prevents leakage of verbose trace data by wrapping raw errors safely
+[auth] unexpected error in signInAction
+
+ ✓ tests/integration/auth-ui-actions.test.ts > Auth UI Actions Transport Layer > 1. sign up success calls ensureModulesBootstrapped BEFORE auth service 5ms
+ ✓ tests/integration/auth-ui-actions.test.ts > Auth UI Actions Transport Layer > 2. sign up validation failure rejects bad inputs BEFORE triggering services 1ms
+ ✓ tests/integration/auth-ui-actions.test.ts > Auth UI Actions Transport Layer > 3. sign in success triggers bootstrap and services nicely 2ms
+ ✓ tests/integration/auth-ui-actions.test.ts > Auth UI Actions Transport Layer > 4. sign in failure prevents leakage of verbose trace data by wrapping raw errors safely 2ms
+ ✓ tests/integration/auth-ui-actions.test.ts > Auth UI Actions Transport Layer > 5. sign out execution runs appropriately 1ms
+ ✓ tests/integration/auth-ui-actions.test.ts > Auth Callback Route Handler > 1. rejects request with missing query param code by triggering redirect 6ms
+ ✓ tests/integration/auth-ui-actions.test.ts > Auth Callback Route Handler > 2. supports bootstrap order and triggers auth exchange correctly with code 1ms
+ ✓ tests/integration/auth-ui-actions.test.ts > Auth Callback Route Handler > 3. falls back safely upon internal callback service faults 23ms
+ ✓ tests/integration/auth-ui-actions.test.ts > Auth Callback Route Handler > 4. redirects to root if the next parameter is an open redirect path 1ms
+ ✓ tests/integration/gemini-client.test.ts > gemini client > isConfigured > returns true when API key is present 3ms
+ ✓ tests/integration/gemini-client.test.ts > gemini client > isConfigured > returns false when API key is missing 6ms
+ ✓ tests/integration/gemini-client.test.ts > gemini client > generateContent > constructs the correct API request 2ms
+ ✓ tests/integration/gemini-client.test.ts > gemini client > generateContent > returns the API response on success 1ms
+ ✓ tests/integration/gemini-client.test.ts > gemini client > generateContent > includes abort signal when provided 4ms
+ ✓ tests/integration/gemini-client.test.ts > gemini client > generateContent > throws an error when the API request fails with 400 21ms
+ ✓ tests/integration/gemini-client.test.ts > gemini client > generateContent > throws an error when the API request fails with 401 5ms
+ ✓ tests/integration/gemini-client.test.ts > gemini client > generateContent > throws an error when the API request fails with 500 1ms
+ ✓ tests/integration/gemini-client.test.ts > gemini client > generateContent > handles network errors 1ms
+ ✓ tests/integration/gemini-client.test.ts > gemini client > generateContent > supports multiple content parts 3ms
+ ✓ tests/integration/gemini-client.test.ts > gemini client > generateContent > supports multi-turn conversations 15ms
+ ✓ tests/integration/gemini-client.test.ts > gemini client > API integration > uses the correct base URL 1ms
+ ✓ tests/integration/gemini-client.test.ts > gemini client > API integration > includes the model name in the URL path 0ms
+ ✓ tests/integration/user-profiles-module.test.ts > User Profiles Module Integration > throws error when profile not found 5ms
+ ✓ tests/integration/user-profiles-module.test.ts > User Profiles Module Integration > updates a profile and validates RLS indirectly by ensuring equality check 43ms
+ ✓ tests/integration/user-profiles-module.test.ts > User Profiles Module Integration > retries fetching the profile if read-after-write initially fails (bounded retry) 70ms
+stdout | tests/integration/user-profiles-module.test.ts > User Profiles Module Integration > getOrCreateUserProfile throws ProfileNotFoundError when bootstrap fails to yield a readable profile
+{"level":"INFO","timestamp":"2026-03-19T19:09:19.425Z","event":"user-profiles.bootstrap","requestId":"test-req","meta":{"type":"domain","userId":"user-999","phase":"insert","source":"lazy_page_load"}}
+
+stdout | tests/integration/user-profiles-module.test.ts > User Profiles Module Integration > getOrCreateUserProfile throws ProfileNotFoundError when bootstrap fails to yield a readable profile
+{"level":"ERROR","timestamp":"2026-03-19T19:09:19.443Z","event":"user-profiles.ensure","meta":{"type":"domain","userId":"user-999","phase":"insert","outcome":"failure","durationMs":17,"reason":"repository_returned_null","_missingRequestId":true},"requestId":"unknown"}
+
+stdout | tests/integration/user-profiles-module.test.ts > User Profiles Module Integration > getOrCreateUserProfile throws ProfileNotFoundError when bootstrap fails to yield a readable profile
+[metrics][increment] profile_bootstrap_failure_total [test-req] {
+  source: [32m'lazy_page_load'[39m,
+  cause: [32m'replication_lag_limit'[39m,
+  phase: [32m'retry'[39m
+}
+{"level":"ERROR","timestamp":"2026-03-19T19:09:19.445Z","event":"user-profiles.bootstrap","requestId":"test-req","meta":{"type":"domain","userId":"user-999","phase":"insert","outcome":"failure","durationMs":21,"source":"lazy_page_load"}}
+
+stdout | tests/integration/user-profiles-module.test.ts > User Profiles Module Integration > getOrCreateUserProfile preserves ProfileInvariantError (boundary specificity)
+{"level":"INFO","timestamp":"2026-03-19T19:09:19.446Z","event":"user-profiles.bootstrap","requestId":"test-req","meta":{"type":"domain","userId":"user-999","phase":"insert","source":"lazy_page_load"}}
+
+stdout | tests/integration/user-profiles-module.test.ts > User Profiles Module Integration > getOrCreateUserProfile preserves ProfileInvariantError (boundary specificity)
+{"level":"ERROR","timestamp":"2026-03-19T19:09:19.447Z","event":"user-profiles.ensure","meta":{"type":"domain","userId":"user-999","phase":"insert","outcome":"failure","durationMs":1,"returnedUserId":"WRONG-ID","_missingRequestId":true},"requestId":"unknown"}
+
+stdout | modules/authentication/tests/authentication-service.test.ts > Authentication Services > signUpUser > does not throw if event publishing fails (best-effort)
+{"level":"ERROR","timestamp":"2026-03-19T19:09:19.436Z","event":"auth.userRegistered.publishFailed","userId":"user-456","error":{},"message":"Failed to publish auth_user_registered event for user user-456","meta":{"type":"system","phase":"infra","_missingRequestId":true},"requestId":"unknown"}
+
+ ✓ tests/integration/user-profiles-module.test.ts > User Profiles Module Integration > returns null after exhausting bounded retries if profile cannot be found 17ms
+ ✓ tests/integration/user-profiles-module.test.ts > User Profiles Module Integration > getOrCreateUserProfile throws ProfileNotFoundError when bootstrap fails to yield a readable profile 22ms
+ ✓ tests/integration/user-profiles-module.test.ts > User Profiles Module Integration > getOrCreateUserProfile preserves ProfileInvariantError (boundary specificity) 2ms
+ ✓ tests/integration/user-profiles-module.test.ts > User Profiles Module Integration > getOrCreateUserProfile preserves infrastructure errors (boundary specificity) 2ms
+ ✓ modules/authentication/tests/authentication-service.test.ts > Authentication Services > signUpUser > delegates to repository and emits auth_user_registered on success 7ms
+ ✓ modules/authentication/tests/authentication-service.test.ts > Authentication Services > signUpUser > does not emit event if user creation fails (userId is null) 2ms
+ ✓ modules/authentication/tests/authentication-service.test.ts > Authentication Services > signUpUser > bubbles up repository errors 4ms
+ ✓ modules/authentication/tests/authentication-service.test.ts > Authentication Services > signUpUser > does not throw if event publishing fails (best-effort) 14ms
+ ✓ modules/authentication/tests/authentication-service.test.ts > Authentication Services > signInUser > delegates to repository 22ms
+ ✓ modules/authentication/tests/authentication-service.test.ts > Authentication Services > signOutUser > delegates to repository 0ms
+ ✓ modules/authentication/tests/authentication-service.test.ts > Authentication Services > getCurrentSession > delegates to repository and returns active session 1ms
+ ✓ modules/authentication/tests/authentication-service.test.ts > Authentication Services > getCurrentSession > returns null session when not authenticated 0ms
+ ✓ modules/authentication/tests/authentication-service.test.ts > Authentication Services > handleAuthCallback > delegates to repository for valid code 2ms
+ ✓ modules/authentication/tests/authentication-service.test.ts > Authentication Services > handleAuthCallback > throws error for empty code without calling repository 1ms
+ ✓ tests/integration/sympy-client.test.ts > sympy client > getBaseUrl > returns the default URL if environment variable is not set 8ms
+ ✓ tests/integration/sympy-client.test.ts > sympy client > getBaseUrl > respects the SYMPY_SERVICE_URL environment variable 6ms
+ ✓ tests/integration/sympy-client.test.ts > sympy client > evaluate > constructs the correct POST request 2ms
+ ✓ tests/integration/sympy-client.test.ts > sympy client > evaluate > handles success without optional context 1ms
+ ✓ tests/integration/sympy-client.test.ts > sympy client > evaluate > forwards AbortSignal to fetch 1ms
+ ✓ tests/integration/sympy-client.test.ts > sympy client > evaluate > throws error when response is not ok 2ms
+ ✓ tests/integration/sympy-client.test.ts > sympy client > evaluate > handles network failures 1ms
+ ✓ tests/integration/job-validation.test.ts > job runner payload validation > executes normally without a schema (backward compatibility) 4ms
+ ✓ tests/integration/job-validation.test.ts > job runner payload validation > executes successfully with a valid payload when a schema is present 4ms
+ ✓ tests/integration/job-validation.test.ts > job runner payload validation > fails with terminal failure when payload does not match the schema 3ms
+ ✓ tests/integration/event-bus.test.ts > event bus > does not throw when publishing with no subscribers 6ms
+ ✓ tests/integration/event-bus.test.ts > event bus > invokes a single subscriber 29ms
+ ✓ tests/integration/event-bus.test.ts > event bus > invokes multiple subscribers 3ms
+ ✓ tests/integration/event-bus.test.ts > event bus > stops delivering events after unsubscribe 1ms
+ ✓ tests/integration/event-bus.test.ts > event bus > awaits async handlers 4ms
+ ✓ tests/integration/event-bus.test.ts > event bus > continues invoking other handlers when one fails 3ms
+ ✓ tests/integration/event-bus.test.ts > event bus > continues invoking other handlers when one throws synchronously 2ms
+ ✓ tests/integration/event-bus.test.ts > event bus > Phase 2 Event Subscribers > delivers auth_user_registered events to subscribers 2ms
+ ✓ tests/integration/event-bus.test.ts > event bus > Phase 2 Event Subscribers > delivers user_profile_initialized events to subscribers 2ms
+ ✓ tests/integration/event-bus.test.ts > event bus > Phase 2 Event Subscribers > delivers user_profile_updated events to subscribers 51ms
+ ✓ modules/user-profiles/tests/logger_robustness.test.ts > ProductionLogger Robustness > Normalization & Non-Mutation > clones input to prevent mutation 5ms
+ ✓ modules/user-profiles/tests/logger_robustness.test.ts > ProductionLogger Robustness > LOGGER_STRICT=true (Development) > throws if event format is invalid (missing dot) 2ms
+ ✓ modules/user-profiles/tests/logger_robustness.test.ts > ProductionLogger Robustness > LOGGER_STRICT=true (Development) > throws if domain log misses userId 23ms
+ ✓ modules/user-profiles/tests/logger_robustness.test.ts > ProductionLogger Robustness > LOGGER_STRICT=true (Development) > throws if phase is missing 2ms
+ ✓ modules/user-profiles/tests/logger_robustness.test.ts > ProductionLogger Robustness > Production Mode Fallback > does not throw on invalid format in production 4ms
+ ✓ modules/user-profiles/tests/logger_robustness.test.ts > ProductionLogger Robustness > Production Mode Fallback > injects _missingRequestId but No fake phase injection 1ms
+ ✓ tests/integration/practice-loop.test.ts > Practice Loop Service Integration > should complete a basic practice flow: start session -> create attempt -> submit steps 9ms
+ ✓ tests/integration/practice-loop.test.ts > Practice Loop Service Integration > should throw error when submitting empty step 6ms
+ ✓ tests/integration/auth-profile-flow.test.ts > Auth-to-Profile Cross-Module Flow > handles the registered event to lazily bootstrap a profile 13ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/integration/module-boundaries.test.ts > module boundaries > does not read raw process.env in app routes, server actions, or module code
+AssertionError: expected [ Array(1) ] to deeply equal []
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- [][39m
+[31m+ [[39m
+[31m+   "modules/user-profiles/tests/logger_robustness.test.ts",[39m
+[31m+ ][39m
+
+ ❯ tests/integration/module-boundaries.test.ts:96:24
+     94|     );
+     95| 
+     96|     expect(violations).toEqual([]);
+       |                        ^
+     97|   });
+     98| 
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 21 passed (22)
+      Tests  1 failed | 199 passed (200)
+   Start at  02:09:15
+   Duration  4.71s (transform 1.11s, setup 172ms, collect 4.49s, tests 2.42s, environment 11ms, prepare 6.92s)
+

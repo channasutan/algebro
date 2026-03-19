@@ -14,7 +14,7 @@ export async function signOutAction(): Promise<ActionResult> {
     await signOutUser();
 
     return { success: true };
-  } catch (error) {
+  } catch {
     console.warn("[auth] unexpected error in signOutAction");
     return { success: false, error: "Failed to sign out" };
   }

@@ -105,17 +105,16 @@ describe("supabase client boundary", () => {
       });
 
       it("maintains cookie state per cookie store", async () => {
+        const cookies: Array<{ name: string; value: string }> = [];
         const mockCookieStore = {
-          cookies: [] as Array<{ name: string; value: string }>,
-          getAll: vi.fn(function () {
-            return this.cookies;
+          getAll: vi.fn(() => cookies),
+          set: vi.fn((name: string, value: string) => {
+            const idx = cookies.findIndex((c) => c.name === name);
+            if (idx !== -1) cookies.splice(idx, 1);
+            cookies.push({ name, value });
           }),
-          set: vi.fn(function (name: string, value: string) {
-            this.cookies = this.cookies.filter((c: { name: string }) => c.name !== name);
-            this.cookies.push({ name, value });
-          }),
-          get: vi.fn(function (name: string) {
-            return this.cookies.find((c: { name: string }) => c.name === name);
+          get: vi.fn((name: string) => {
+            return cookies.find((c) => c.name === name);
           })
         };
 

@@ -12,11 +12,15 @@ vi.mock("next/headers", () => ({
 
 import { createSupabaseProfileRepository } from "@/modules/user-profiles/repositories/supabase-profile-repository";
 import { getCurrentProfile } from "@/modules/user-profiles/services/get-current-profile";
+import { getOrCreateUserProfile } from "@/modules/user-profiles/services/get-or-create-user-profile";
 import { updateProfile } from "@/modules/user-profiles/services/update-profile";
+import { InitializationSource } from "@/modules/user-profiles/domain/initialization-source";
 import { eventBus } from "@/events/event-bus";
 import { USER_PROFILE_UPDATED } from "@/modules/user-profiles/events/profile-updated";
+import { ProfileNotFoundError, ProfileCreationError, ProfileInvariantError } from "@/modules/user-profiles/errors";
 
 import * as ServerClientAuth from "@/lib/supabase/server-client";
+import * as ServerClientAdmin from "@/lib/supabase/admin-client";
 
 // Mock event bus
 vi.mock("@/events/event-bus", () => ({
@@ -34,7 +38,7 @@ describe("User Profiles Module Integration", () => {
       select: vi.fn().mockReturnThis(),
       update: vi.fn().mockReturnThis(),
       insert: vi.fn().mockReturnThis(),
-      upsert: vi.fn().mockReturnThis(),
+      upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
       eq: vi.fn().mockReturnThis(),
       maybeSingle: maybeSingleMock,
     };
@@ -84,7 +88,7 @@ describe("User Profiles Module Integration", () => {
 
     await expect(
       getCurrentProfile(repo, { userId: "user-123" })
-    ).rejects.toThrow(/\[user-profiles\] Profile not found/);
+    ).rejects.toThrow(ProfileNotFoundError);
   });
 
   it("updates a profile and validates RLS indirectly by ensuring equality check", async () => {
@@ -131,7 +135,6 @@ describe("User Profiles Module Integration", () => {
   it("retries fetching the profile if read-after-write initially fails (bounded retry)", async () => {
     vi.spyOn(ServerClientAuth, "getSupabaseServerClient").mockImplementation(getClient);
     const repo = createSupabaseProfileRepository();
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
     // findById operations: Attempt 1 returns null, Attempt 2 returns valid profile
     const createdProfile = {
@@ -165,29 +168,27 @@ describe("User Profiles Module Integration", () => {
     // It should have taken at least 5ms due to the first retry sleep
     expect(endTime - startTime).toBeGreaterThanOrEqual(5);
 
-    expect(warnSpy).not.toHaveBeenCalled();
-    warnSpy.mockRestore();
+    expect(endTime - startTime).toBeGreaterThanOrEqual(5);
   });
 
   // This test ensures failure path is deterministic and observable.
-  it("throws after exhausting bounded retries if profile cannot be found, logging exactly once", async () => {
+  it("returns null after exhausting bounded retries if profile cannot be found", async () => {
     vi.spyOn(ServerClientAuth, "getSupabaseServerClient").mockImplementation(getClient);
     const repo = createSupabaseProfileRepository();
     
-    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
     // maybeSingle always returns null
     maybeSingleMock.mockResolvedValue({ data: null, error: null });
 
     const startTime = Date.now();
-    await expect(
-      repo.insertProfile({
-        id: "fail-123",
-        email: "fail@ex.com",
-        timezone: "UTC"
-      })
-    ).rejects.toThrow(/\[user-profiles\] failed to create or load profile/);
+    const result = await repo.insertProfile({
+      id: "fail-123",
+      email: "fail@ex.com",
+      timezone: "UTC"
+    });
     const endTime = Date.now();
+
+    expect(result).toBeNull();
 
     // Assert exactly one upsert
     expect(upsertMock).toHaveBeenCalledTimes(1);
@@ -198,16 +199,59 @@ describe("User Profiles Module Integration", () => {
     // Exact count reflects current implementation; upper bound protects against future refactors.
     expect(callCount).toBeLessThanOrEqual(3);
 
-    // Assert warning was logged exactly once
-    expect(warnSpy).toHaveBeenCalledTimes(1);
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining("requireById failed"),
-      expect.objectContaining({ userId: expect.any(String) })
-    );
-
     // It should have taken at least 5 + 10 ms = 15ms due to sleep sequence before it throws.
     expect(endTime - startTime).toBeGreaterThanOrEqual(15);
+  });
+ 
+  it("getOrCreateUserProfile throws ProfileNotFoundError when bootstrap fails to yield a readable profile", async () => {
+    vi.spyOn(ServerClientAuth, "getSupabaseServerClient").mockImplementation(getClient);
+    vi.spyOn(ServerClientAdmin, "getSupabaseAdminClient").mockImplementation(() => mockClient as unknown as import("@supabase/supabase-js").SupabaseClient);
     
-    warnSpy.mockRestore();
+    // maybeSingle always returns null
+    maybeSingleMock.mockResolvedValue({ data: null, error: null });
+ 
+    await expect(
+      getOrCreateUserProfile(
+        { userId: "user-999", email: "test@ex.com", source: InitializationSource.LAZY_PAGE_LOAD },
+        { requestId: "test-req" }
+      )
+    ).rejects.toThrow(ProfileNotFoundError);
+  });
+
+  it("getOrCreateUserProfile preserves ProfileInvariantError (boundary specificity)", async () => {
+    vi.spyOn(ServerClientAuth, "getSupabaseServerClient").mockImplementation(getClient);
+    vi.spyOn(ServerClientAdmin, "getSupabaseAdminClient").mockImplementation(() => mockClient as unknown as import("@supabase/supabase-js").SupabaseClient);
+    
+    // Deterministic mock implementation using a scoped counter
+    let callCount = 0;
+    maybeSingleMock.mockImplementation(async () => {
+      callCount++;
+      if (callCount === 1) return { data: null, error: null }; // getOrCreateUserProfile initial check
+      if (callCount === 2) return { data: null, error: null }; // ensureProfileExists initial check
+      if (callCount === 3) return { data: { id: "WRONG-ID", email: "test@ex.com" }, error: null }; // insertProfile find
+      return { data: null, error: null };
+    });
+
+    await expect(
+      getOrCreateUserProfile(
+        { userId: "user-999", email: "test@ex.com", source: InitializationSource.LAZY_PAGE_LOAD },
+        { requestId: "test-req" }
+      )
+    ).rejects.toBeInstanceOf(ProfileInvariantError);
+  });
+
+  it("getOrCreateUserProfile preserves infrastructure errors (boundary specificity)", async () => {
+    vi.spyOn(ServerClientAuth, "getSupabaseServerClient").mockImplementation(getClient);
+    
+    maybeSingleMock.mockImplementation(async () => {
+      throw new Error("Database connection lost");
+    });
+
+    await expect(
+      getOrCreateUserProfile(
+        { userId: "user-999", email: "test@ex.com", source: InitializationSource.LAZY_PAGE_LOAD },
+        { requestId: "test-req" }
+      )
+    ).rejects.toThrow("Database connection lost");
   });
 });

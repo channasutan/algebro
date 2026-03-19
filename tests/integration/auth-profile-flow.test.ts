@@ -24,7 +24,7 @@ describe("Auth-to-Profile Cross-Module Flow", () => {
     // We mock ensureProfileExists using the mocked repository
     const mockRepo = {
       findById: vi.fn().mockResolvedValue(null),  // First call - no existing profile
-      insertProfile: vi.fn().mockResolvedValue({ id: "user-999", email: "test@ex.com" }),
+      insertProfile: vi.fn().mockResolvedValue({ userId: "user-999", email: "test@ex.com" }),
       updateProfile: vi.fn(),
     };
 

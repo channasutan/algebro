@@ -72,7 +72,17 @@ describe("module bootstrap", () => {
   it("exposes only the user-profiles module public API through index.ts", async () => {
     const userProfilesModule = await import("@/modules/user-profiles");
 
-    expect(Object.keys(userProfilesModule).sort()).toEqual(["userProfilesModule"]);
+    expect(Object.keys(userProfilesModule).sort()).toEqual([
+      "InitializationSource",
+      "InvalidTimezoneError",
+      "NoProfileFieldsError",
+      "ProfileNotFoundError",
+      "ensureProfileExists",
+      "getCurrentProfile",
+      "getOrCreateUserProfile",
+      "updateUserProfile",
+      "userProfilesModule"
+    ]);
     expect(userProfilesModule.userProfilesModule).toEqual({
       name: "user-profiles"
     });

@@ -19,7 +19,8 @@ export async function GET(request: NextRequest) {
     await handleAuthCallback(code);
     // Validate next is a relative path to avoid open redirect vulnerabilities
     redirectUrl = next.startsWith("/") ? next : "/";
-  } catch (error) {
+  } catch {
+    // Auth code exchange failed — redirect to sign-in with error indicator
     redirectUrl = "/sign-in?error=auth_failed";
   }
 

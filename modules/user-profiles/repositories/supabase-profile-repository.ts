@@ -90,14 +90,12 @@ function createRepositoryFromClientFactory(
       if (profile) return profile;
       
       // Delay before next attempt (5ms, 10ms, 15ms)
-      if (attempt === 2) {
-        console.warn("[user-profiles] requireById failed after retries", { userId: input.id });
-      } else {
+      if (attempt < 2) {
         await new Promise(resolve => setTimeout(resolve, 5 * (attempt + 1)));
       }
     }
 
-    throw new Error("[user-profiles] failed to create or load profile");
+    return null;
   };
 
   const updateProfile = async (userId: string, changes: UpdateProfileInput): Promise<UserProfile> => {

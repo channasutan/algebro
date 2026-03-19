@@ -14,12 +14,13 @@ type RootLayoutProps = {
 
 export default async function RootLayout({ children }: RootLayoutProps) {
   await ensureModulesBootstrapped();
-  let session = null;
+  // Warm the Supabase session cookie so downstream server components
+  // can read authenticated state without a redundant round-trip.
+  // The result is intentionally unused here; child routes consume it.
   try {
-    const result = await getCurrentSession();
-    session = result.session;
+    await getCurrentSession();
   } catch {
-    session = null;
+    // Session unavailable — continue with unauthenticated layout
   }
 
   return (

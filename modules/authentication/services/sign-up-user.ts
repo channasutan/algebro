@@ -4,6 +4,7 @@ import { eventBus } from "@/events/event-bus";
 import { createAuthUserRegisteredEvent } from "@/modules/authentication/events/auth-user-registered";
 
 import type { SignUpInput, SignUpResult } from "../contracts/sign-up";
+import { logger } from "@/lib/observability";
 import type { AuthRepository } from "../repositories/supabase-auth-repository";
 
 /**
@@ -39,10 +40,12 @@ export async function signUpUser(
       await eventBus.publish(event);
     } catch (publishError) {
       // Log the error but do not throw - user registration must succeed.
-      console.error(
-        `[authentication] Failed to publish auth_user_registered event for user ${result.userId}:`,
-        publishError
-      );
+      logger.error({
+        event: "auth.userRegistered.publishFailed",
+        userId: result.userId,
+        error: publishError,
+        message: `Failed to publish auth_user_registered event for user ${result.userId}`,
+      });
     }
   }
 

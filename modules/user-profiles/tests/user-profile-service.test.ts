@@ -1,13 +1,32 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+
+vi.mock("@/lib/observability", () => ({
+  logger: {
+    error: vi.fn(),
+    warn: vi.fn(),
+    info: vi.fn(),
+  },
+  metrics: {
+    increment: vi.fn(),
+  },
+  createServiceLogger: vi.fn(() => ({
+    error: vi.fn(),
+    warn: vi.fn(),
+    info: vi.fn(),
+  })),
+}));
+
 import { ensureProfileExists } from "../services/ensure-profile-exists";
 import { getCurrentProfile } from "../services/get-current-profile";
 import { updateProfile } from "../services/update-profile";
+import { ProfileNotFoundError, ProfileCreationError, ProfileInvariantError } from "../errors";
 import type { ProfileRepository } from "../repositories/supabase-profile-repository";
 import { eventBus } from "@/events/event-bus";
 import { USER_PROFILE_INITIALIZED } from "../events/profile-initialized";
 import { USER_PROFILE_UPDATED } from "../events/profile-updated";
 import type { UserProfile } from "../domain/profile";
 import type { Mock, Mocked } from "vitest";
+import { logger } from "@/lib/observability";
 
 vi.mock("@/events/event-bus", () => ({
   eventBus: {
@@ -77,13 +96,94 @@ describe("User Profiles Service Logic", () => {
       expect(result).toEqual(newProfile);
     });
 
-    it("throws if insert returns null (e.g. race condition prevents creation)", async () => {
+    it("throws ProfileCreationError if insert returns null and logs error", async () => {
       mockRepo.findById.mockResolvedValue(null);
       mockRepo.insertProfile.mockResolvedValue(null); // insert failed to create or fetch profile
 
+      const promise = ensureProfileExists(mockRepo, { userId: "user-1", email: "test@ex.com" });
+      
+      await expect(promise).rejects.toBeInstanceOf(ProfileCreationError);
+      expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
+        event: "user-profiles.ensure",
+        meta: expect.objectContaining({ 
+          type: "domain",
+          userId: "user-1",
+          phase: "insert",
+          outcome: "failure",
+          durationMs: expect.any(Number)
+        })
+      }));
+    });
+
+    it("enforces data invariant (userId mismatch) and throws ProfileInvariantError", async () => {
+      mockRepo.findById.mockResolvedValue(null);
+      // Invariant violation: repository returns wrong userId
+      mockRepo.insertProfile.mockResolvedValue({ 
+        userId: "WRONG-ID", 
+        email: "test@ex.com" 
+      } as UserProfile);
+
+      const promise = ensureProfileExists(mockRepo, { userId: "user-1", email: "test@ex.com" });
+
+      await expect(promise).rejects.toBeInstanceOf(ProfileInvariantError);
+      expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
+        event: "user-profiles.ensure",
+        meta: expect.objectContaining({ 
+          type: "domain",
+          userId: "user-1",
+          phase: "insert",
+          outcome: "failure",
+          durationMs: expect.any(Number),
+          returnedUserId: "WRONG-ID"
+        })
+      }));
+    });
+
+    it("verifies repository retry is bounded (service only calls insertProfile once)", async () => {
+      mockRepo.findById.mockResolvedValue(null);
+      mockRepo.insertProfile.mockResolvedValue(null);
+
+      try {
+        await ensureProfileExists(mockRepo, { userId: "user-1", email: "test@ex.com" });
+      } catch {
+        // Expected
+      }
+
+      // The service should only call the repo once; the repo itself is responsible for retries.
+      expect(mockRepo.insertProfile).toHaveBeenCalledTimes(1);
+    });
+
+    it("preserves infrastructure errors from repository and logs them without wrapping", async () => {
+      mockRepo.findById.mockResolvedValue(null);
+      const networkError = new Error("Connection timeout");
+      mockRepo.insertProfile.mockRejectedValue(networkError);
+
       await expect(
         ensureProfileExists(mockRepo, { userId: "user-1", email: "test@ex.com" })
-      ).rejects.toThrow(/failed to create or load profile/);
+      ).rejects.toThrow("Connection timeout");
+      
+      expect(mockRepo.insertProfile).toHaveBeenCalled();
+      expect(logger.error).toHaveBeenCalledWith(expect.objectContaining({
+        event: "user-profiles.ensure",
+        meta: expect.objectContaining({ 
+          type: "domain",
+          userId: "user-1",
+          phase: "infra",
+          outcome: "failure",
+          durationMs: expect.any(Number),
+          error: "Connection timeout"
+        })
+      }));
+    });
+
+    it("does not log anything when findById returns null (expected state)", async () => {
+      mockRepo.findById.mockResolvedValue(null);
+      mockRepo.insertProfile.mockResolvedValue({ userId: "user-1" } as UserProfile);
+
+      await ensureProfileExists(mockRepo, { userId: "user-1", email: "test@ex.com" });
+
+      // No error logs for lookup miss
+      expect(logger.error).not.toHaveBeenCalled();
     });
     
     it("never crashes the event bus if publish fails because it catches internally", async () => {
@@ -114,7 +214,7 @@ describe("User Profiles Service Logic", () => {
 
       await expect(
         getCurrentProfile(mockRepo, { userId: "user-1" })
-      ).rejects.toThrow(/\[user-profiles\] Profile not found/);
+      ).rejects.toBeInstanceOf(ProfileNotFoundError);
 
       expect(mockRepo.insertProfile).not.toHaveBeenCalled();
     });
