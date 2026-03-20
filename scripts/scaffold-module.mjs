@@ -206,42 +206,69 @@ describe("${ctx.pascalName}", () => {
  */
 function renderModule(config, template) {
   const basePath = path.join(process.cwd(), "modules", config.name);
+  const wrap = { ...config, template };
+
+  renderDirectories(wrap, basePath);
+  return renderFiles(wrap, basePath);
+}
+
+function renderDirectories(wrap, basePath) {
+  const { name, dryRun } = wrap;
+  const { directories } = wrap.template;
+
+  for (const dir of directories) {
+    const dirPath = dir ? path.join(basePath, dir) : basePath;
+    const displayPath = `modules/${name}${dir ? "/" + dir : ""}`;
+
+    if (dryRun) {
+      logDryRun("directory", displayPath);
+      continue;
+    }
+
+    ensureDirectory(dirPath);
+    logCreated("directory", displayPath);
+  }
+}
+
+function renderFiles(wrap, basePath) {
+  const { name, dryRun } = wrap;
+  const { files } = wrap.template;
   const createdPaths = [];
 
-  renderDirectories(config, template, basePath, createdPaths);
-  renderFiles(config, template, basePath, createdPaths);
+  for (const file of files) {
+    const filePath = file.path.replaceAll("${name}", name);
+    const fullPath = path.join(basePath, filePath);
+    const content = file.content(wrap);
+    const displayPath = `modules/${name}/${filePath}`;
+
+    if (dryRun) {
+      logDryRun("file", displayPath);
+      createdPaths.push(fullPath);
+      continue;
+    }
+
+    writeFile(fullPath, content);
+    logCreated("file", displayPath);
+    createdPaths.push(fullPath);
+  }
 
   return createdPaths;
 }
 
-function renderDirectories(config, template, basePath, createdPaths) {
-  for (const dir of template.directories) {
-    const dirPath = dir ? path.join(basePath, dir) : basePath;
-
-    if (config.dryRun) {
-      console.log(`[DRY-RUN] Would create directory: modules/${config.name}${dir ? "/" + dir : ""}`);
-    } else {
-      fs.mkdirSync(dirPath, { recursive: true });
-      console.log(`[CREATED] Directory: modules/${config.name}${dir ? "/" + dir : ""}`);
-    }
-    createdPaths.push(dirPath);
-  }
+function ensureDirectory(dirPath) {
+  fs.mkdirSync(dirPath, { recursive: true });
 }
 
-function renderFiles(config, template, basePath, createdPaths) {
-  for (const file of template.files) {
-    const filePath = file.path.replaceAll("${name}", config.name);
-    const fullPath = path.join(basePath, filePath);
-    const content = file.content(config);
+function writeFile(fullPath, content) {
+  fs.writeFileSync(fullPath, content, "utf-8");
+}
 
-    if (config.dryRun) {
-      console.log(`[DRY-RUN] Would create file: modules/${config.name}/${filePath}`);
-    } else {
-      fs.writeFileSync(fullPath, content, "utf-8");
-      console.log(`[CREATED] File: modules/${config.name}/${filePath}`);
-    }
-    createdPaths.push(fullPath);
-  }
+function logDryRun(type, displayPath) {
+  console.log(`[DRY-RUN] Would create ${type}: ${displayPath}`);
+}
+
+function logCreated(type, displayPath) {
+  console.log(`[CREATED] ${type.charAt(0).toUpperCase() + type.slice(1)}: ${displayPath}`);
 }
 
 /**
