@@ -1,3 +1,2 @@
-export const stepValidationModule = {
-  name: "step-validation"
-} as const;
+export { validateStep } from "./services/validate-step";
+export type { ValidationResult } from "./contracts/validation";

@@ -2,6 +2,7 @@ import { createSupabasePracticeRepository } from "../repositories/supabase-pract
 import { PracticeRepository } from "../repositories/practice-repository";
 import { SolutionStep } from "../domain/practice";
 import { createServiceLogger, type ServiceContext } from "@/lib/observability";
+import { validateStep } from "@/modules/step-validation";
 
 export type SubmitStepInput = {
   attemptId: string;
@@ -54,9 +55,20 @@ export async function submitStepWithRepository(
     const existingSteps = await repo.getSteps(attemptId);
     const nextIndex = existingSteps.length;
 
-    // Phase 3: Minimal validation (always valid for now)
+    // Phase 4: AST-based step validation
+    const previousLatex = existingSteps.length > 0
+      ? existingSteps[existingSteps.length - 1].stepLatex
+      : null;
+
+    const validation = previousLatex !== null
+      ? await validateStep({ previousLatex, currentLatex: stepLatex }, context)
+      : { isValid: true, errorType: null }; // first step: skip validation
+
     const step = await repo.addStep(attemptId, nextIndex, stepLatex);
-    const updatedStep = await repo.updateStep(step.id, { isValid: true });
+    const updatedStep = await repo.updateStep(step.id, {
+      isValid: validation.isValid,
+      errorType: validation.errorType,
+    });
 
     log.info({ 
       event: "practice.step", 
