@@ -3,7 +3,7 @@
 import { ensureModulesBootstrapped } from "@/modules/bootstrap";
 import { startSession, createAttempt, submitStep } from "@/modules/practice";
 import { getCurrentSession } from "@/modules/authentication";
-import { createServiceLogger } from "@/lib/observability";
+import { createServiceLogger, getRequestId } from "@/lib/observability";
 import type { StartPracticeResult, SubmitStepResult } from "@/modules/practice/contracts/practice";
 
 export async function startPracticeFlowAction(topicId: string | null): Promise<StartPracticeResult> {
@@ -15,7 +15,7 @@ export async function startPracticeFlowAction(topicId: string | null): Promise<S
   }
 
   const userId = sessionResult.session.userId;
-  const requestId = crypto.randomUUID();
+  const requestId = await getRequestId();
   const context = { requestId };
   const log = createServiceLogger(requestId);
 
@@ -55,7 +55,7 @@ export async function submitPracticeStepAction(
   }
 
   const userId = sessionResult.session.userId;
-  const requestId = crypto.randomUUID();
+  const requestId = await getRequestId();
   const context = { requestId };
   const log = createServiceLogger(requestId);
 
@@ -67,6 +67,6 @@ export async function submitPracticeStepAction(
     stepId: step.id,
     stepIndex: step.stepIndex,
     stepLatex: step.stepLatex,
-    isValid: step.isValid ?? true
+    isValid: step.isValid === true
   };
 }

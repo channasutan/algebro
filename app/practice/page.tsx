@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { startPracticeFlowAction, submitPracticeStepAction } from "./actions";
-import type { StartPracticeResult, SubmitStepResult } from "@/modules/practice/contracts/practice";
+import type { StartPracticeResult, SubmitStepResult } from "@/modules/practice";
 
 type PracticeState =
   | { status: "idle" }
@@ -31,7 +31,7 @@ type PracticeViewProps = {
   steps: SubmitStepResult[];
   inputValue: string;
   onInputChange: (value: string) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (e: FormEvent) => void;
 };
 
 function PracticeView({ isSubmitting, steps, inputValue, onInputChange, onSubmit }: PracticeViewProps) {
@@ -105,6 +105,8 @@ export default function PracticePage() {
   const canSubmit = isReady && inputValue.trim().length > 0;
 
   async function handleStart() {
+    setSteps([]);
+    setInputValue("");
     setState({ status: "loading" });
     try {
       const result = await startPracticeFlowAction(null);
