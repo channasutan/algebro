@@ -25,7 +25,7 @@ export async function startPracticeFlowAction(topicId: string | null): Promise<S
   const practiceSession = await startSession({ userId, topicId }, context);
 
   // Hardcode problem ID for Phase 3 (single problem type)
-  const problemId = "problem-001";
+  const problemId = "11111111-1111-1111-1111-111111111111";
 
   // Create attempt internally (not exposed to UI)
   const attempt = await createAttempt({
