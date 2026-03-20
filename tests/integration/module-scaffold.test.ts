@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-const TEST_MODULE_NAME = `test-scaffold-${randomUUID()}`;
+const TEST_MODULE_NAME = `test-${randomUUID().slice(0, 8)}`;
 const MODULES_DIR = path.join(process.cwd(), "modules");
 const TEST_MODULE_PATH = path.join(MODULES_DIR, TEST_MODULE_NAME);
 
