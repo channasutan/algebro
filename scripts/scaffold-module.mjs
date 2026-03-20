@@ -119,7 +119,7 @@ export const ${ctx.camelName}Module = {
     },
     {
       path: "contracts/example.ts",
-      content: (ctx) => `export type ExampleInput = {
+      content: (_ctx) => `export type ExampleInput = {
   // TODO: Define input fields
 };
 
