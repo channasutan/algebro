@@ -114,7 +114,7 @@ export const ${ctx.camelName}Module = {
     },
     {
       path: "contracts/index.ts",
-      content: () => `export * from "./example";
+      content: (_ctx) => `export * from "./example";
 `,
     },
     {
@@ -130,7 +130,7 @@ export type ExampleResult = {
     },
     {
       path: "domain/entities.ts",
-      content: () => `// Optional domain entities
+      content: (_ctx) => `// Optional domain entities
 // Define your domain models here
 `,
     },
@@ -245,18 +245,19 @@ function main() {
   try {
     // Parse arguments
     const config = parseArgs();
-    
+
     // Render template
     const createdPaths = renderModule(config, MODULE_TEMPLATE);
-    
+
     // Print success output
     console.log("");
     console.log(`[OK] Module created: modules/${config.name}`);
     console.log("");
+    console.log(`[OK] Created ${createdPaths.length} items (files and directories)`);
     console.log("[OK] Structure: contracts, domain, services, repositories, events, tests");
     console.log("");
     console.log(`[OK] Next step: Add register${config.pascalName}EventHandlers() to modules/bootstrap.ts`);
-    
+
     process.exit(0);
   } catch (error) {
     console.error("Error:", error.message);

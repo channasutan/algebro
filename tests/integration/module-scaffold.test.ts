@@ -10,26 +10,25 @@ const TEST_MODULE_PATH = path.join(MODULES_DIR, TEST_MODULE_NAME);
 
 describe("Module Scaffold", () => {
   beforeAll(() => {
-    // Ensure test module doesn't exist
+    // Ensure test module doesn't exist before running scaffold
     if (fs.existsSync(TEST_MODULE_PATH)) {
       fs.rmSync(TEST_MODULE_PATH, { recursive: true, force: true });
     }
+    // Run scaffold command once for all tests
+    execFileSync(process.execPath, ["scripts/scaffold-module.mjs", TEST_MODULE_NAME], {
+      cwd: process.cwd(),
+      encoding: "utf-8",
+    });
   });
 
   afterAll(() => {
-    // Cleanup: remove test module
+    // Cleanup: remove test module after all tests complete
     if (fs.existsSync(TEST_MODULE_PATH)) {
       fs.rmSync(TEST_MODULE_PATH, { recursive: true, force: true });
     }
   });
 
   it("generates all required directories", () => {
-    // Run scaffold command
-    execFileSync(process.execPath, ["scripts/scaffold-module.mjs", TEST_MODULE_NAME], {
-      cwd: process.cwd(),
-      encoding: "utf-8",
-    });
-
     // Assert all directories exist
     expect(fs.existsSync(path.join(TEST_MODULE_PATH))).toBe(true);
     expect(fs.existsSync(path.join(TEST_MODULE_PATH, "contracts"))).toBe(true);
@@ -198,16 +197,21 @@ describe("Module Scaffold", () => {
       "utf-8"
     );
 
-    // Assert services do not import from other modules
+    // Assert services do not import from other modules (relative paths)
     expect(serviceContent).not.toMatch(/from\s+["']\.\.\/other-module/);
     expect(serviceContent).not.toMatch(/.{2}\/.{2}\/modules\//);
+    expect(serviceContent).not.toMatch(/from\s+["']\.\.\/\.\.\/modules\//);
+
+    // Assert services do not import from other modules (absolute paths)
+    expect(serviceContent).not.toMatch(/from\s+["']@\/modules\//);
 
     // Assert services only import from within module or shared contracts
     const importMatches = serviceContent.match(/from\s+["']([^"']+)["']/g) || [];
     for (const importStmt of importMatches) {
-      // Should not contain relative paths to other modules
+      // Should not contain paths to other modules
       expect(importStmt).not.toContain("../other");
       expect(importStmt).not.toContain("../../modules/");
+      expect(importStmt).not.toContain("@/modules/");
     }
   });
 
@@ -217,13 +221,17 @@ describe("Module Scaffold", () => {
       "utf-8"
     );
 
-    // Assert repositories do not import from other modules
+    // Assert repositories do not import from other modules (relative paths)
     expect(repoImplContent).not.toMatch(/from\s+["']\.\.\/other-module/);
     expect(repoImplContent).not.toMatch(/.{2}\/.{2}\/modules\//);
+    expect(repoImplContent).not.toMatch(/from\s+["']\.\.\/\.\.\/modules\//);
+
+    // Assert repositories do not import from other modules (absolute paths)
+    expect(repoImplContent).not.toMatch(/from\s+["']@\/modules\//);
   });
 
   it("fails when module already exists", () => {
-    // Module already exists from previous test
+    // Module already exists from beforeAll scaffold execution
     expect(() => {
       execFileSync(process.execPath, ["scripts/scaffold-module.mjs", TEST_MODULE_NAME], {
         cwd: process.cwd(),
