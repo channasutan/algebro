@@ -20,5 +20,6 @@ export {
   getMayarApiKey,
   getMayarWebhookSecret,
   getMayarApiBaseUrl,
-  getSympyServiceUrl
+  getSympyServiceUrl,
+  getLoggerStrict
 } from "./env.server";

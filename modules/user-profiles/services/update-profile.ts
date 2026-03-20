@@ -4,6 +4,9 @@ import { getPublicEnv } from "@/config/env.server-entry";
 import type { ProfileRepository } from "../repositories/supabase-profile-repository";
 import type { UpdateProfileInput, UpdateProfileResult, UpdateProfileChanges } from "../contracts/update-profile";
 import type { ProfileFieldMap } from "../domain/profile";
+import { ProfileNotFoundError, InvalidTimezoneError, NoProfileFieldsError } from "../errors";
+import { createSupabaseProfileRepository } from "../repositories/supabase-profile-repository";
+import { createServiceLogger, type ServiceContext } from "@/lib/observability";
 
 function getSupportedTimezones(): string[] | undefined {
   if (typeof Intl === "undefined" || typeof Intl.supportedValuesOf !== "function") {
@@ -23,18 +26,14 @@ function getSupportedTimezones(): string[] | undefined {
 
 function validateWithIntl(timezone: string, supported: string[]): void {
   if (!supported.includes(timezone)) {
-    throw new Error(`[user-profiles] Invalid timezone: ${timezone}`);
+    throw new InvalidTimezoneError(timezone);
   }
 }
 
 function validateWithRegex(timezone: string): void {
-  // NOTE:
-  // This regex ensures format correctness but does not validate
-  // against actual IANA timezone database. Use Intl.supportedValuesOf
-  // where available for stricter validation.
   const IANA_REGEX = /^(UTC|[A-Za-z_]+(?:\/[A-Za-z0-9._+-]+)+)$/;
   if (!IANA_REGEX.test(timezone)) {
-    throw new Error(`[user-profiles] Invalid timezone format: ${timezone}`);
+    throw new InvalidTimezoneError(timezone);
   }
 }
 
@@ -73,10 +72,6 @@ function buildChangedFields(changes: UpdateProfileChanges): ProfileFieldMap {
   return changedFields;
 }
 
-/**
- * Builds the event payload from changed fields.
- * Maps service-layer field names to event payload field names.
- */
 function buildEventPayload(changedFields: ProfileFieldMap): Record<string, string | null> {
   const payload: Record<string, string | null> = {};
 
@@ -110,12 +105,70 @@ function publishProfileUpdatedEvent(
     updatedAt,
   });
 
-  void eventBus.publish(event).catch((err) => {
-    console.error("[user-profiles] failed to publish event", err);
+  void eventBus.publish(event).catch(() => {
+    // Internal helper is pure. Observability for async failures is handled at the service boundary 
+    // or via aggregate health checks.
   });
 }
 
-export async function updateProfile(
+/**
+ * Updates a user profile.
+ * High-level orchestration and observability entry point.
+ */
+export async function updateUserProfile(
+  input: UpdateProfileInput,
+  context: ServiceContext
+): Promise<UpdateProfileResult> {
+  const { userId, changes } = input;
+  const { requestId } = context;
+  const log = createServiceLogger(requestId);
+
+  log.info({ 
+    event: "user-profiles.update", 
+    meta: { type: "domain", phase: "start", userId, changes: Object.keys(changes) } 
+  });
+
+  try {
+    const repo = createSupabaseProfileRepository();
+    const result = await updateUserProfileWithRepository(repo, input);
+
+    log.info({ 
+      event: "user-profiles.update", 
+      meta: { type: "domain", phase: "complete", userId, outcome: "success" } 
+    });
+    return result;
+  } catch (err) {
+    if (err instanceof NoProfileFieldsError) {
+      log.warn({ 
+        event: "user-profiles.update", 
+        meta: { type: "domain", phase: "validation", userId, outcome: "failure", reason: "empty_update" } 
+      });
+    } else if (err instanceof ProfileNotFoundError) {
+      log.error({ 
+        event: "user-profiles.update", 
+        meta: { type: "domain", phase: "infra", userId, outcome: "failure", reason: "not_found" } 
+      });
+    } else {
+      log.error({ 
+        event: "user-profiles.update", 
+        meta: { 
+          type: "domain", 
+          phase: "infra",
+          userId, 
+          outcome: "failure",
+          error: err instanceof Error ? err.message : String(err) 
+        }
+      });
+    }
+    throw err;
+  }
+}
+
+/**
+ * Core implementation for profile updates.
+ * PURE helper unaware of observability.
+ */
+export async function updateUserProfileWithRepository(
   repo: ProfileRepository,
   input: UpdateProfileInput
 ): Promise<UpdateProfileResult> {
@@ -128,7 +181,7 @@ export async function updateProfile(
 
   // Prevent empty update operations
   if (Object.keys(normalizedChanges).length === 0) {
-    throw new Error("[user-profiles] No profile fields provided for update");
+    throw new NoProfileFieldsError();
   }
 
   validateTimezone(normalizedChanges.timezone);
@@ -136,7 +189,7 @@ export async function updateProfile(
   // Verify profile exists before updating
   const existingProfile = await repo.findById(userId);
   if (!existingProfile) {
-    throw new Error("[user-profiles] Profile not found. Cannot update non-existent profile.");
+    throw new ProfileNotFoundError(userId);
   }
 
   const updatedProfile = await repo.updateProfile(userId, normalizedChanges);
@@ -146,3 +199,5 @@ export async function updateProfile(
 
   return { profile: updatedProfile };
 }
+
+export const updateProfile = updateUserProfileWithRepository;

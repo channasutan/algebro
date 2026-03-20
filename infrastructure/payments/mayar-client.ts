@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getMayarApiBaseUrl, getMayarApiKey, getMayarWebhookSecret } from "@/config/env.server-entry";
+import { getPublicEnv, getMayarApiBaseUrl, getMayarApiKey, getMayarWebhookSecret } from "@/config/env.server-entry";
 
 export type MayarCheckoutItem = {
   name: string;
@@ -45,7 +45,7 @@ function isConfigured(): boolean {
     const webhookSecret = getMayarWebhookSecret();
     return Boolean(apiKey && webhookSecret);
   } catch {
-    if (process.env.NODE_ENV !== "production") {
+    if (getPublicEnv().nodeEnv !== "production") {
       console.warn("[mayar-client] Failed to verify configuration, returning false");
     }
     return false;

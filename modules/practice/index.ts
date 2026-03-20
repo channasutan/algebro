@@ -1,3 +1,26 @@
-export const practiceModule = {
-  name: "practice"
-} as const;
+export { 
+  startSession, 
+  startSessionWithRepository, 
+  type StartSessionInput 
+} from "./services/start-session";
+export { 
+  createAttempt, 
+  createAttemptWithRepository, 
+  type CreateAttemptInput 
+} from "./services/create-attempt";
+export { 
+  submitStep, 
+  submitStepWithRepository, 
+  type SubmitStepInput 
+} from "./services/submit-step";
+export { 
+  type PracticeSession, 
+  type Attempt, 
+  type SolutionStep 
+} from "./domain/practice";
+export { 
+  PracticeError, 
+  SessionNotFoundError, 
+  AttemptNotFoundError, 
+  StepAdditionError 
+} from "./errors";

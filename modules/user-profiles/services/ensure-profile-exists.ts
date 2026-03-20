@@ -1,6 +1,7 @@
 import { eventBus } from "@/events/event-bus";
 import { createUserProfileInitializedEvent } from "../events/profile-initialized";
-import type { ProfileRepository } from "../repositories/supabase-profile-repository";
+import { ProfileCreationError } from "../errors";
+import { type ProfileRepository } from "../repositories/supabase-profile-repository";
 import type { UserProfile } from "../domain/profile";
 
 export type EnsureProfileExistsInput = {
@@ -9,6 +10,10 @@ export type EnsureProfileExistsInput = {
   initializationSource?: string;
 };
 
+/**
+ * Pure behavioral helper to ensure a profile exists in the repository.
+ * Observability (logging/metrics) is owned by the calling service.
+ */
 export async function ensureProfileExists(
   repo: ProfileRepository,
   input: EnsureProfileExistsInput
@@ -19,25 +24,24 @@ export async function ensureProfileExists(
     throw new Error("[user-profiles] Cannot create profile without email");
   }
 
-  // Check if profile already exists
+  // 1. Check if profile already exists
   const existing = await repo.findById(userId);
   if (existing) {
     return existing;
   }
 
-  // insertProfile returns a UserProfile or throws on failure
+  // 2. Attempt to insert profile
   const profile = await repo.insertProfile({
     id: userId,
     email,
     timezone: "UTC",
   });
 
-  // Explicit null check - throw if insert returned null (e.g., race condition)
   if (!profile) {
-    throw new Error("[user-profiles] failed to create or load profile");
+    throw new ProfileCreationError(userId, "Repository returned null after creation attempt");
   }
 
-  // Emit event after profile is ensured (may be new or existing)
+  // 3. Emit initialization event
   const event = createUserProfileInitializedEvent({
     userId,
     email,
@@ -45,9 +49,9 @@ export async function ensureProfileExists(
     initializedAt: new Date().toISOString(),
     initializationSource: input.initializationSource ?? "lazy_bootstrap",
   });
-  void eventBus.publish(event).catch((err) => {
-    console.error("[user-profiles] failed to publish event", err);
-  });
+  
+  // Fire and forget
+  void eventBus.publish(event).catch(() => {});
 
   return profile;
 }

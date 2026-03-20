@@ -1,6 +1,7 @@
 import type { ProfileRepository } from "../repositories/supabase-profile-repository";
 import type { UserProfile } from "../domain/profile";
 import type { GetProfileInput } from "../contracts/get-profile";
+import { ProfileNotFoundError } from "../errors";
 
 export async function getCurrentProfile(
   repo: ProfileRepository,
@@ -12,5 +13,9 @@ export async function getCurrentProfile(
     return profile;
   }
 
-  throw new Error("[user-profiles] Profile not found. Create profile via ensureProfileExists.");
+  // ProfileNotFoundError is expected in lazy bootstrap scenarios.
+  // It is treated as recoverable — not data corruption.
+  throw new ProfileNotFoundError(input.userId);
 }
+
+

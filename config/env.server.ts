@@ -26,6 +26,7 @@ type RawServerEnv = {
   mayarWebhookSecret?: string;
   mayarApiBaseUrl?: string;
   sympyServiceUrl?: string;
+  loggerStrict?: string;
 };
 
 function getRawServerEnv(): RawServerEnv {
@@ -36,7 +37,8 @@ function getRawServerEnv(): RawServerEnv {
     mayarApiKey: process.env.MAYAR_API_KEY,
     mayarWebhookSecret: process.env.MAYAR_WEBHOOK_SECRET,
     mayarApiBaseUrl: process.env.MAYAR_API_BASE_URL,
-    sympyServiceUrl: process.env.SYMPY_SERVICE_URL
+    sympyServiceUrl: process.env.SYMPY_SERVICE_URL,
+    loggerStrict: process.env.LOGGER_STRICT
   };
 }
 
@@ -72,6 +74,7 @@ export type InfrastructureServerEnv = ServerEnv & {
   mayarWebhookSecret: string;
   mayarApiBaseUrl: string;
   sympyServiceUrl: string;
+  loggerStrict: boolean;
 };
 
 export function getPublicEnv(): PublicEnv {
@@ -97,7 +100,8 @@ export function getInfrastructureServerEnv(): InfrastructureServerEnv {
     mayarApiKey: getMayarApiKey(),
     mayarWebhookSecret: getMayarWebhookSecret(),
     mayarApiBaseUrl: getMayarApiBaseUrl(),
-    sympyServiceUrl: getSympyServiceUrl()
+    sympyServiceUrl: getSympyServiceUrl(),
+    loggerStrict: getLoggerStrict()
   };
 }
 
@@ -151,6 +155,11 @@ export function getSympyServiceUrl(): string {
   const rawEnv = getRawServerEnv();
 
   return rawEnv.sympyServiceUrl ?? "http://127.0.0.1:8000";
+}
+
+export function getLoggerStrict(): boolean {
+  const rawEnv = getRawServerEnv();
+  return rawEnv.loggerStrict === "true";
 }
 
 function getPublicEnvFromClientSafeConfig(): PublicEnv {

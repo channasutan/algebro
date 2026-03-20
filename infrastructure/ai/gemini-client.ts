@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getAiProviderApiKey } from "@/config/env.server-entry";
+import { getPublicEnv, getAiProviderApiKey } from "@/config/env.server-entry";
 
 const GEMINI_API_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
@@ -28,7 +28,7 @@ function isConfigured(): boolean {
   try {
     return Boolean(getAiProviderApiKey()?.trim());
   } catch {
-    if (process.env.NODE_ENV !== "production") {
+    if (getPublicEnv().nodeEnv !== "production") {
       console.warn("[gemini-client] Failed to get API key, returning false");
     }
     return false;

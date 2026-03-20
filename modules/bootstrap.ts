@@ -1,7 +1,7 @@
 import "server-only";
 
 import { eventBus } from "@/events/event-bus";
-import { AUTH_USER_REGISTERED } from "@/modules/authentication/events/auth-user-registered";
+import { AUTH_USER_REGISTERED } from "@/events/auth-events";
 import { handleAuthUserRegistered } from "@/modules/user-profiles/events/on-auth-user-registered";
 import { createServiceRoleProfileRepository } from "@/modules/user-profiles/repositories/supabase-profile-repository";
 

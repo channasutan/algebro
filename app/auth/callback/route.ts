@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { NextRequest } from "next/server";
 import { ensureModulesBootstrapped } from "@/modules/bootstrap";
 import { handleAuthCallback } from "@/modules/authentication";
+import { getRequestId, createServiceLogger } from "@/lib/observability";
 
 /**
  * Validates that a redirect path is safe (relative, not absolute).
@@ -56,10 +57,22 @@ export async function GET(request: NextRequest) {
   // Initialize redirect URL to safeNext (will be "/" for unsafe next values)
   let redirectUrl = safeNext;
 
+  const requestId = await getRequestId();
+  const log = createServiceLogger(requestId);
+
   // Handle auth callback - unsafe next still processes auth but redirects to safe path
   try {
-    await handleAuthCallback(code);
-  } catch {
+    await handleAuthCallback(code, { requestId });
+  } catch (error) {
+    log.error({
+      event: "user-profiles.auth",
+      meta: {
+        type: "system",
+        phase: "infra",
+        outcome: "failure",
+        error: error instanceof Error ? error.message : String(error)
+      }
+    });
     redirectUrl = "/sign-in?error=auth_failed";
   }
 

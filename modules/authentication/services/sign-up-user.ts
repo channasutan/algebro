@@ -4,6 +4,7 @@ import { eventBus } from "@/events/event-bus";
 import { createAuthUserRegisteredEvent } from "@/modules/authentication/events/auth-user-registered";
 
 import type { SignUpInput, SignUpResult } from "../contracts/sign-up";
+import { createServiceLogger, type ServiceContext } from "@/lib/observability";
 import type { AuthRepository } from "../repositories/supabase-auth-repository";
 
 /**
@@ -18,11 +19,15 @@ import type { AuthRepository } from "../repositories/supabase-auth-repository";
  *
  * @param repository - Auth repository (injectable for testing)
  * @param input - Email and password for the new account
+ * @param context - Service context for correlation
  */
 export async function signUpUser(
   repository: AuthRepository,
-  input: SignUpInput
+  input: SignUpInput,
+  context: ServiceContext
 ): Promise<SignUpResult> {
+  const { requestId } = context;
+  const log = createServiceLogger(requestId);
   const result = await repository.signUp(input);
 
   // Emit only when Supabase returned a user id — confirming the account was created.
@@ -39,10 +44,15 @@ export async function signUpUser(
       await eventBus.publish(event);
     } catch (publishError) {
       // Log the error but do not throw - user registration must succeed.
-      console.error(
-        `[authentication] Failed to publish auth_user_registered event for user ${result.userId}:`,
-        publishError
-      );
+      log.error({
+        event: "user-profiles.event_failure",
+        meta: {
+          type: "domain",
+          phase: "infra",
+          userId: result.userId,
+          error: publishError instanceof Error ? publishError.message : String(publishError)
+        }
+      });
     }
   }
 

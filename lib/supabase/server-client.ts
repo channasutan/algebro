@@ -1,6 +1,7 @@
 import "server-only";
 
 import { type SupabaseClient } from "@supabase/supabase-js";
+export type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
@@ -23,7 +24,7 @@ function createCookieAdapter(cookieStore: Awaited<ReturnType<typeof cookies>>) {
           cookieStore.set(name, value, options);
         });
       } catch {
-        if (process.env.NODE_ENV !== "production") {
+        if (getPublicEnv().nodeEnv !== "production") {
           console.warn("[supabase-server-client] Cannot set cookies in Server Component context");
         }
       }

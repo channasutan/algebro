@@ -22,19 +22,19 @@ jobs:
 
       - run:
           name: Install dependencies
-          command: npm ci
+          command: npx pnpm@8 install
 
       - run:
           name: Run tests
-          command: npm run test
+          command: npx pnpm@8 test
 
       - run:
           name: Run lint
-          command: npm run lint
+          command: npx pnpm@8 run lint
 
       - run:
           name: Build project
-          command: npm run build
+          command: npx pnpm@8 run build
 
       - sonarcloud/scan
 

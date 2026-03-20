@@ -45,7 +45,7 @@ describe("Auth UI Actions Transport Layer", () => {
         formData.append("email", "test@example.com");
         formData.append("password", "test-password"); // TEST ONLY: DO NOT USE REAL CREDENTIALS
 
-        (signUpUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+    vi.mocked(signUpUser).mockResolvedValue({
             userId: "123",
             requiresEmailConfirmation: false,
         });
@@ -58,8 +58,8 @@ describe("Auth UI Actions Transport Layer", () => {
     expect(ensureModulesBootstrapped).toHaveBeenCalledTimes(1);
     
     // 7. ensureModulesBootstrapped is called BEFORE auth service
-    const bootstrapOrder = (ensureModulesBootstrapped as unknown as ReturnType<typeof vi.fn>).mock.invocationCallOrder[0];
-    const signUpOrder = (signUpUser as unknown as ReturnType<typeof vi.fn>).mock.invocationCallOrder[0];
+    const bootstrapOrder = vi.mocked(ensureModulesBootstrapped).mock.invocationCallOrder[0];
+    const signUpOrder = vi.mocked(signUpUser).mock.invocationCallOrder[0];
     expect(bootstrapOrder).toBeLessThan(signUpOrder);
   });
 
@@ -86,7 +86,7 @@ describe("Auth UI Actions Transport Layer", () => {
         formData.append("email", " TEST@example.com ");
         formData.append("password", "test-password"); // TEST ONLY: DO NOT USE REAL CREDENTIALS
 
-    (signInUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+    vi.mocked(signInUser).mockResolvedValue({
       success: true,
     });
 
@@ -99,7 +99,7 @@ describe("Auth UI Actions Transport Layer", () => {
      expect(signInUser).toHaveBeenCalledWith({
        email: "test@example.com",
        password: "test-password", // TEST ONLY: DO NOT USE REAL CREDENTIALS
-     });
+     }, { requestId: "system" });
   });
 
     it("4. sign in failure prevents leakage of verbose trace data by wrapping raw errors safely", async () => {
@@ -108,7 +108,7 @@ describe("Auth UI Actions Transport Layer", () => {
         formData.append("password", "test-password"); // TEST ONLY: DO NOT USE REAL CREDENTIALS
 
     // Mock a verbose unsafe database error 
-    (signInUser as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+    vi.mocked(signInUser).mockRejectedValue(
       new Error("RAW_SUPABASE_ERROR: INVALID_CREDENTIALS [10x5R]")
     );
 
@@ -120,7 +120,7 @@ describe("Auth UI Actions Transport Layer", () => {
   });
 
   it("5. sign out execution runs appropriately", async () => {
-    (signOutUser as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+    vi.mocked(signOutUser).mockResolvedValue(undefined);
 
     const result = await signOutAction();
 
@@ -150,11 +150,11 @@ describe("Auth Callback Route Handler", () => {
 
     await expect(handleCallbackRoute(req)).rejects.toThrow();
 
-    expect(handleAuthCallback).toHaveBeenCalledWith("EXCHANGE_CODE");
+    expect(handleAuthCallback).toHaveBeenCalledWith("EXCHANGE_CODE", { requestId: "system" });
     
     // Validate bounds order: bootstrap MUST run before endpoint logic
-    const bootstrapOrder = (ensureModulesBootstrapped as unknown as ReturnType<typeof vi.fn>).mock.invocationCallOrder[0];
-    const callbackOrder = (handleAuthCallback as unknown as ReturnType<typeof vi.fn>).mock.invocationCallOrder[0];
+    const bootstrapOrder = vi.mocked(ensureModulesBootstrapped).mock.invocationCallOrder[0];
+    const callbackOrder = vi.mocked(handleAuthCallback).mock.invocationCallOrder[0];
     expect(bootstrapOrder).toBeLessThan(callbackOrder);
 
     expect(redirect).toHaveBeenCalledWith("/dashboard");
@@ -162,7 +162,7 @@ describe("Auth Callback Route Handler", () => {
 
   it("3. falls back safely upon internal callback service faults", async () => {
     const req = new NextRequest("http://localhost/auth/callback?code=BAD_CODE");
-    (handleAuthCallback as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("Auth failed"));
+    vi.mocked(handleAuthCallback).mockRejectedValue(new Error("Auth failed"));
 
     await expect(handleCallbackRoute(req)).rejects.toThrow();
 
@@ -171,13 +171,13 @@ describe("Auth Callback Route Handler", () => {
 
   it("4. redirects to root if the next parameter is an open redirect path", async () => {
     // Reset mock to ensure it resolves (not rejects from previous test)
-    (handleAuthCallback as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+    vi.mocked(handleAuthCallback).mockResolvedValue(undefined);
     
     const req = new NextRequest("http://localhost/auth/callback?code=EXCHANGE_CODE&next=http://malicious.com");
 
     await expect(handleCallbackRoute(req)).rejects.toThrow();
 
-    expect(handleAuthCallback).toHaveBeenCalledWith("EXCHANGE_CODE");
+    expect(handleAuthCallback).toHaveBeenCalledWith("EXCHANGE_CODE", { requestId: "system" });
     // Should fall back to root "/"
     expect(redirect).toHaveBeenCalledWith("/");
   });
