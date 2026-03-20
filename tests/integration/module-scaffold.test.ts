@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeAll, afterAll } from "vitest";
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 import fs from "fs";
 import path from "path";
 
@@ -24,7 +24,7 @@ describe("Module Scaffold", () => {
 
   it("generates all required directories", () => {
     // Run scaffold command
-    execSync(`node scripts/scaffold-module.mjs ${TEST_MODULE_NAME}`, {
+    execFileSync("node", ["scripts/scaffold-module.mjs", TEST_MODULE_NAME], {
       cwd: process.cwd(),
       encoding: "utf-8",
     });
@@ -224,7 +224,7 @@ describe("Module Scaffold", () => {
   it("fails when module already exists", () => {
     // Module already exists from previous test
     expect(() => {
-      execSync(`node scripts/scaffold-module.mjs ${TEST_MODULE_NAME}`, {
+      execFileSync("node", ["scripts/scaffold-module.mjs", TEST_MODULE_NAME], {
         cwd: process.cwd(),
         encoding: "utf-8",
       });
