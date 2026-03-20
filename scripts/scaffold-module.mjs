@@ -101,9 +101,7 @@ import { createSupabase${ctx.pascalName}Repository } from "./repositories/supaba
 
 export * from "./contracts";
 
-export { exampleService };
-
-// Example: Use repository in module functions
+// Facade: creates repository and calls service with injection
 export async function ${ctx.camelName}Example(input: ExampleInput): Promise<ExampleResult> {
   const repo = createSupabase${ctx.pascalName}Repository();
   return exampleService(repo, input);
