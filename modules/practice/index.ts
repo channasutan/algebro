@@ -18,6 +18,10 @@ export {
   type Attempt, 
   type SolutionStep 
 } from "./domain/practice";
+export type {
+  StartPracticeResult,
+  SubmitStepResult
+} from "./contracts/practice";
 export { 
   PracticeError, 
   SessionNotFoundError, 
