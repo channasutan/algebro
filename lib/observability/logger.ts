@@ -143,8 +143,8 @@ function normalizeEvent(event: string): EventName {
  * Normalizes metadata, injecting requestId and marking invalid events.
  */
 function normalizeMeta(meta: unknown, event: string, requestId?: string): BaseMeta | DomainMeta {
-  const metaSafe = (meta as Record<string, unknown>) ?? {};
-  const normalized = { ...metaSafe };
+  const m = (meta as Record<string, unknown>) ?? {};
+  const normalized = { ...m };
   
   // Trimming for Domain Events
   if (normalized.type === "domain" && typeof normalized.userId === "string") {
@@ -152,7 +152,7 @@ function normalizeMeta(meta: unknown, event: string, requestId?: string): BaseMe
   }
 
   // Mark as invalid if event was changed
-  if (event === "unknown_event" && metaSafe.type !== "unknown_event") {
+  if (event === "unknown_event" && m.type !== "unknown_event") {
     normalized.invalidEvent = true;
   }
 

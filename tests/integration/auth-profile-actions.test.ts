@@ -67,9 +67,9 @@ describe("Profile Transport Layer (Phase 2 Task 8)", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (ensureModulesBootstrapped as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
-    (getCurrentSession as ReturnType<typeof vi.fn>).mockResolvedValue({
-      session: { userId: "user-1", email: "test@example.com" }
+    vi.mocked(ensureModulesBootstrapped).mockResolvedValue(undefined);
+    vi.mocked(getCurrentSession).mockResolvedValue({
+      session: { userId: "user-1", email: "test@example.com", isAuthenticated: true }
     });
     
     mockRepo.findById.mockResolvedValue(null);
@@ -207,7 +207,7 @@ describe("Profile Transport Layer (Phase 2 Task 8)", () => {
       const formData = new FormData();
       formData.append("timezone", "Invalid/TZ");
 
-      (updateUserProfile as ReturnType<typeof vi.fn>).mockRejectedValue(new InvalidTimezoneError("Invalid/TZ"));
+      vi.mocked(updateUserProfile).mockRejectedValue(new InvalidTimezoneError("Invalid/TZ"));
 
       const result = await updateProfileAction({ success: false, error: "" }, formData);
 
@@ -218,7 +218,7 @@ describe("Profile Transport Layer (Phase 2 Task 8)", () => {
       const formData = new FormData();
       formData.append("displayName", "Valid Bypass");
 
-      (updateUserProfile as ReturnType<typeof vi.fn>).mockRejectedValue(new NoProfileFieldsError());
+      vi.mocked(updateUserProfile).mockRejectedValue(new NoProfileFieldsError());
 
       const result = await updateProfileAction({ success: false, error: "" }, formData);
 
@@ -229,7 +229,7 @@ describe("Profile Transport Layer (Phase 2 Task 8)", () => {
       const formData = new FormData();
       formData.append("displayName", "John");
 
-      (updateUserProfile as ReturnType<typeof vi.fn>).mockRejectedValue(new ProfileNotFoundError("user-1"));
+      vi.mocked(updateUserProfile).mockRejectedValue(new ProfileNotFoundError("user-1"));
 
       const result = await updateProfileAction({ success: false, error: "" }, formData);
 
@@ -240,7 +240,7 @@ describe("Profile Transport Layer (Phase 2 Task 8)", () => {
       const formData = new FormData();
       formData.append("displayName", "John");
 
-      (updateUserProfile as ReturnType<typeof vi.fn>).mockRejectedValue(new Error("Unexpected systemic failure"));
+      vi.mocked(updateUserProfile).mockRejectedValue(new Error("Unexpected systemic failure"));
 
       const result = await updateProfileAction({ success: false, error: "" }, formData);
 
