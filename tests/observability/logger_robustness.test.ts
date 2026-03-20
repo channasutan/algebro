@@ -6,8 +6,10 @@ describe("Logger Governance Robustness", () => {
   let consoleSpy: ReturnType<typeof vi.spyOn>;
   
   // Helper to deduplicate logger creation + call
-  const logAction = (event: any, meta: any = { type: "system", phase: "test" }) => 
-    createServiceLogger(requestId).info({ event, meta });
+  const logAction = (event: any, meta?: any) => {
+    const m = meta ?? { type: "system", phase: "test" };
+    return createServiceLogger(requestId).info({ event, meta: m });
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
