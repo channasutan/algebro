@@ -691,6 +691,46 @@ Invariants
 
 ---
 
+Creating New Modules
+
+Use the scaffold command to generate a new module with the correct structure:
+
+node scripts/scaffold-module.mjs <kebab-case-module-name>
+
+Example:
+
+node scripts/scaffold-module.mjs practice-engine
+
+This creates a complete module structure at modules/practice-engine/ with:
+- contracts/ (split by use case)
+- domain/ (optional entities)
+- services/ (business logic, no supabase imports)
+- repositories/ (data access, supabase isolated here)
+- events/ (event handler registration placeholder)
+- tests/ (unit tests)
+
+Architecture Decisions
+
+When building features, choose the right pattern:
+
+Events
+- Use for: cross-module side effects, async workflows
+- Example: Gamification reacts to attempt_completed events
+
+Jobs
+- Use for: background processing, long-running tasks
+- Example: Material processing, AI topic extraction
+
+Server Actions
+- Use for: first-party UI mutations
+- Example: Form submissions, profile updates
+
+Route Handlers
+- Use for: external webhooks, API consumers
+- Example: Payment webhooks from Mayar
+
+---
+
 Module Interaction Rules
 
 Modules must follow these rules:

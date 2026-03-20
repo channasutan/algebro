@@ -136,6 +136,12 @@ events| Domain event handlers
 tests| Module unit tests
 bootstrap.ts| Server-side one-time registration for shared handlers and module wiring
 
+Use the scaffold command to generate this structure:
+
+node scripts/scaffold-module.mjs <module-name>
+
+See docs/modules.md for detailed module architecture and pattern guidance.
+
 Contracts should be split by use case when a module grows, for example:
 
 - `contracts/sign-up.ts`
