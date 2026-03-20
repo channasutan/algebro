@@ -1,14 +1,18 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createServiceLogger } from "@/lib/observability/logger";
+import type { EventName, BaseMeta } from "@/lib/observability/types";
 
 describe("Logger Governance Robustness", () => {
   const requestId = "test-request-id";
   let consoleSpy: ReturnType<typeof vi.spyOn>;
   
   // Helper to deduplicate logger creation + call
-  const logAction = (event: any, meta?: any) => {
+  const logAction = (event: unknown, meta?: unknown) => {
     const m = meta ?? { type: "system", phase: "test" };
-    return createServiceLogger(requestId).info({ event, meta: m });
+    return createServiceLogger(requestId).info({ 
+      event: event as unknown as EventName, 
+      meta: m as unknown as BaseMeta 
+    });
   };
 
   beforeEach(() => {
@@ -95,13 +99,13 @@ describe("Logger Governance Robustness", () => {
     // Case A: Strict Dev (should throw)
     // Environment is already set to development/strict in beforeEach
     expect(() => {
-      log.info({ event: "test.event" as any, meta: null as any });
+      log.info({ event: "test.event" as unknown as EventName, meta: null as unknown as BaseMeta });
     }).toThrow(/Missing or invalid metadata/);
 
     // Case B: Production (should NOT throw, should fallback safely)
     vi.stubEnv("NODE_ENV", "production");
     expect(() => {
-      log.info({ event: "test.event" as any, meta: null as any });
+      log.info({ event: "test.event" as unknown as EventName, meta: null as unknown as BaseMeta });
     }).not.toThrow();
 
     expect(consoleSpy).toHaveBeenCalledWith(
