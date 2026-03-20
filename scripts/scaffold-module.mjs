@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 
 /**
  * Convert kebab-case string to PascalCase
@@ -208,10 +208,16 @@ function renderModule(config, template) {
   const basePath = path.join(process.cwd(), "modules", config.name);
   const createdPaths = [];
 
-  // Create directories
+  renderDirectories(config, template, basePath, createdPaths);
+  renderFiles(config, template, basePath, createdPaths);
+
+  return createdPaths;
+}
+
+function renderDirectories(config, template, basePath, createdPaths) {
   for (const dir of template.directories) {
     const dirPath = dir ? path.join(basePath, dir) : basePath;
-    
+
     if (config.dryRun) {
       console.log(`[DRY-RUN] Would create directory: modules/${config.name}${dir ? "/" + dir : ""}`);
     } else {
@@ -220,13 +226,14 @@ function renderModule(config, template) {
     }
     createdPaths.push(dirPath);
   }
+}
 
-  // Create files
+function renderFiles(config, template, basePath, createdPaths) {
   for (const file of template.files) {
-    const filePath = file.path.replace(/\$\{name\}/g, config.name);
+    const filePath = file.path.replaceAll("${name}", config.name);
     const fullPath = path.join(basePath, filePath);
     const content = file.content(config);
-    
+
     if (config.dryRun) {
       console.log(`[DRY-RUN] Would create file: modules/${config.name}/${filePath}`);
     } else {
@@ -235,8 +242,6 @@ function renderModule(config, template) {
     }
     createdPaths.push(fullPath);
   }
-
-  return createdPaths;
 }
 
 /**

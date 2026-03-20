@@ -1,8 +1,8 @@
 import { describe, expect, it, beforeAll, afterAll } from "vitest";
-import { execFileSync } from "child_process";
-import { randomUUID } from "crypto";
-import fs from "fs";
-import path from "path";
+import { execFileSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
 
 const TEST_MODULE_NAME = `test-scaffold-${randomUUID()}`;
 const MODULES_DIR = path.join(process.cwd(), "modules");
@@ -118,12 +118,6 @@ describe("Module Scaffold", () => {
       path.join(TEST_MODULE_PATH, "index.ts"),
       "utf-8"
     );
-
-    // Convert to PascalCase for expected import path
-    const pascalName = TEST_MODULE_NAME
-      .split("-")
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join("");
 
     // Assert index.ts imports repository factory
     expect(indexContent).toContain(`"./repositories/supabase-${TEST_MODULE_NAME}-repository"`);
