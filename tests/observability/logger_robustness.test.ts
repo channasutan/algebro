@@ -90,9 +90,22 @@ describe("Logger Governance Robustness", () => {
   });
 
   it("guards against null or non-object metadata safely", () => {
-    // Passing null meta should throw in dev
+    const log = createServiceLogger(requestId);
+
+    // Case A: Strict Dev (should throw)
+    // Environment is already set to development/strict in beforeEach
     expect(() => {
-      logAction("test.event", null as any);
+      log.info({ event: "test.event" as any, meta: null as any });
     }).toThrow(/Missing or invalid metadata/);
+
+    // Case B: Production (should NOT throw, should fallback safely)
+    vi.stubEnv("NODE_ENV", "production");
+    expect(() => {
+      log.info({ event: "test.event" as any, meta: null as any });
+    }).not.toThrow();
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining("test.event")
+    );
   });
 });
