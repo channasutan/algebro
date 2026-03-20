@@ -21,24 +21,20 @@ jobs:
             git fetch --tags
 
       - run:
-          name: Install pnpm
-          command: npm install -g pnpm@8
-
-      - run:
           name: Install dependencies
-          command: pnpm install
+          command: npx pnpm@8 install
 
       - run:
           name: Run tests
-          command: pnpm test
+          command: npx pnpm@8 test
 
       - run:
           name: Run lint
-          command: pnpm run lint
+          command: npx pnpm@8 run lint
 
       - run:
           name: Build project
-          command: pnpm run build
+          command: npx pnpm@8 run build
 
       - sonarcloud/scan
 
