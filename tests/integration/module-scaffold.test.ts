@@ -135,8 +135,8 @@ describe("Module Scaffold", () => {
       "utf-8"
     );
 
-    // Assert exports services
-    expect(indexContent).toContain("export { exampleService }");
+    // Assert exports facade function (not direct service)
+    expect(indexContent).toMatch(/export\s+async\s+function\s+\w+Example/);
 
     // Assert has module metadata
     expect(indexContent).toContain("as const");
