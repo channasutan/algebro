@@ -1,13 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createServiceLogger } from "@/lib/observability/logger";
-import type { BaseMeta, DomainMeta } from "@/lib/observability/types";
 
 describe("Logger Governance Robustness", () => {
   const requestId = "test-request-id";
   let consoleSpy: ReturnType<typeof vi.spyOn>;
   
   // Helper to deduplicate logger creation + call
-  const logAction = (event: any, meta: any = { type: "system", phase: "test" as any }) => 
+  const logAction = (event: any, meta: any = { type: "system", phase: "test" }) => 
     createServiceLogger(requestId).info({ event, meta });
 
   beforeEach(() => {
@@ -42,13 +41,13 @@ describe("Logger Governance Robustness", () => {
 
   it("fails in dev if meta.type is domain but userId is missing", () => {
     expect(() => {
-      logAction("domain.action", { type: "domain", phase: "test" as any });
+      logAction("domain.action", { type: "domain", phase: "test" });
     }).toThrow(/Domain logs must include non-empty userId/);
   });
 
   it("fails in dev if meta.type is domain but userId is an empty string", () => {
     expect(() => {
-      logAction("domain.action", { type: "domain", userId: "  ", phase: "test" as any });
+      logAction("domain.action", { type: "domain", userId: "  ", phase: "test" });
     }).toThrow(/Domain logs must include non-empty userId/);
   });
 
@@ -78,7 +77,7 @@ describe("Logger Governance Robustness", () => {
   });
 
   it("ensures userId is correctly trimmed and present in final log for domain events", () => {
-    logAction("user.login", { type: "domain", userId: "  user-123  ", phase: "test" as any });
+    logAction("user.login", { type: "domain", userId: "  user-123  ", phase: "test" });
 
     expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining("user-123")

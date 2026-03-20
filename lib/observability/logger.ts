@@ -127,10 +127,10 @@ function validateMeta(meta: unknown, event: string): void {
 /**
  * Normalizes event name, falling back to unknown_event if invalid.
  */
-function normalizeEvent(event: string): string {
+function normalizeEvent(event: string): EventName {
   try {
     validateEvent(event);
-    return event;
+    return event as EventName;
   } catch (err) {
     if (getPublicEnv().nodeEnv !== "production" && getLoggerStrict()) {
       throw err;
@@ -143,8 +143,8 @@ function normalizeEvent(event: string): string {
  * Normalizes metadata, injecting requestId and marking invalid events.
  */
 function normalizeMeta(meta: unknown, event: string, requestId?: string): BaseMeta | DomainMeta {
-  const m = meta as Record<string, unknown>;
-  const normalized = { ...m };
+  const metaSafe = (meta as Record<string, unknown>) ?? {};
+  const normalized = { ...metaSafe };
   
   // Trimming for Domain Events
   if (normalized.type === "domain" && typeof normalized.userId === "string") {
@@ -152,7 +152,7 @@ function normalizeMeta(meta: unknown, event: string, requestId?: string): BaseMe
   }
 
   // Mark as invalid if event was changed
-  if (event === "unknown_event" && m.type !== "unknown_event") {
+  if (event === "unknown_event" && metaSafe.type !== "unknown_event") {
     normalized.invalidEvent = true;
   }
 
@@ -200,7 +200,7 @@ class ProductionLogger {
 
     return {
       ...log,
-      event: event as EventName, // Cast to handle the string template literal type safely
+      event,
       meta
     };
   }
