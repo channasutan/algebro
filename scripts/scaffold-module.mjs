@@ -95,12 +95,19 @@ const MODULE_TEMPLATE = {
   files: [
     {
       path: "index.ts",
-      content: (ctx) => `import { exampleService } from "./services/example";
+      content: (ctx) => `import type { ExampleInput, ExampleResult } from "./contracts/example";
+import { exampleService } from "./services/example";
 import { createSupabase${ctx.pascalName}Repository } from "./repositories/supabase-${ctx.name}-repository";
 
 export * from "./contracts";
 
 export { exampleService };
+
+// Example: Use repository in module functions
+export async function ${ctx.camelName}Example(input: ExampleInput): Promise<ExampleResult> {
+  const repo = createSupabase${ctx.pascalName}Repository();
+  return exampleService(repo, input);
+}
 
 export const ${ctx.camelName}Module = {
   name: "${ctx.name}",

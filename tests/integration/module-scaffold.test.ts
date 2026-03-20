@@ -1,9 +1,10 @@
 import { describe, expect, it, beforeAll, afterAll } from "vitest";
 import { execFileSync } from "child_process";
+import { randomUUID } from "crypto";
 import fs from "fs";
 import path from "path";
 
-const TEST_MODULE_NAME = `test-scaffold-${Date.now()}`;
+const TEST_MODULE_NAME = `test-scaffold-${randomUUID()}`;
 const MODULES_DIR = path.join(process.cwd(), "modules");
 const TEST_MODULE_PATH = path.join(MODULES_DIR, TEST_MODULE_NAME);
 
@@ -199,7 +200,7 @@ describe("Module Scaffold", () => {
 
     // Assert services do not import from other modules
     expect(serviceContent).not.toMatch(/from\s+["']\.\.\/other-module/);
-    expect(serviceContent).not.toMatch(/from\s+["']\.\.\.\.\.\/modules\//);
+    expect(serviceContent).not.toMatch(/.{2}\/.{2}\/modules\//);
 
     // Assert services only import from within module or shared contracts
     const importMatches = serviceContent.match(/from\s+["']([^"']+)["']/g) || [];
@@ -218,7 +219,7 @@ describe("Module Scaffold", () => {
 
     // Assert repositories do not import from other modules
     expect(repoImplContent).not.toMatch(/from\s+["']\.\.\/other-module/);
-    expect(repoImplContent).not.toMatch(/from\s+["']\.\.\.\.\.\/modules\//);
+    expect(repoImplContent).not.toMatch(/.{2}\/.{2}\/modules\//);
   });
 
   it("fails when module already exists", () => {
