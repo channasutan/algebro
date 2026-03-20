@@ -25,7 +25,7 @@ describe("Module Scaffold", () => {
 
   it("generates all required directories", () => {
     // Run scaffold command
-    execFileSync("node", ["scripts/scaffold-module.mjs", TEST_MODULE_NAME], {
+    execFileSync(process.execPath, ["scripts/scaffold-module.mjs", TEST_MODULE_NAME], {
       cwd: process.cwd(),
       encoding: "utf-8",
     });
@@ -225,7 +225,7 @@ describe("Module Scaffold", () => {
   it("fails when module already exists", () => {
     // Module already exists from previous test
     expect(() => {
-      execFileSync("node", ["scripts/scaffold-module.mjs", TEST_MODULE_NAME], {
+      execFileSync(process.execPath, ["scripts/scaffold-module.mjs", TEST_MODULE_NAME], {
         cwd: process.cwd(),
         encoding: "utf-8",
       });
