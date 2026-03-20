@@ -164,11 +164,12 @@ export interface ${ctx.pascalName}Repository {
 import type { ${ctx.pascalName}Repository } from "./${ctx.name}-repository";
 
 export function createSupabase${ctx.pascalName}Repository(): ${ctx.pascalName}Repository {
-  const client = getSupabaseServerClient();
-  
-  // TODO: Implement repository methods using client
+  // Each method calls getSupabaseServerClient() internally for request-scoped client
   return {
-    // Repository implementation
+    async exampleMethod() {
+      const client = getSupabaseServerClient();
+      // TODO: Implement using client
+    }
   };
 }
 `,
