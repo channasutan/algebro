@@ -38,7 +38,7 @@ export async function submitStepWithRepository(
       userId, 
       phase: "start", 
       attemptId, 
-      stepLatex: stepLatex.length > 20 ? stepLatex.slice(0, 20) + "..." : stepLatex 
+      stepLatex: truncateForLog(stepLatex) 
     }
   });
 
@@ -91,4 +91,8 @@ export async function submitStepWithRepository(
 
 function getPreviousLatex(steps: SolutionStep[]): string | null {
   return steps.length > 0 ? steps[steps.length - 1].stepLatex : null;
+}
+
+function truncateForLog(value: string, maxLength = 20): string {
+  return value.length > maxLength ? value.slice(0, maxLength) + "..." : value;
 }
