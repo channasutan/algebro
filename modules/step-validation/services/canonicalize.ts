@@ -9,7 +9,7 @@ export function canonicalize(latex: string): string {
     const expr = ce.parse(latex);
     const simplified = expr.simplify();
     return simplified.toLatex();
-  } catch {
-    throw new Error("parse_error");
+  } catch (error) {
+    throw new Error("parse_error", { cause: error });
   }
 }

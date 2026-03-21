@@ -30,10 +30,11 @@ export async function validateStep(
       isValid,
       errorType: isValid ? null : "invalid"
     };
-  } catch {
-    log.info({
+  } catch (error) {
+    log.warn({
       event: "practice.step-validation",
-      meta: { type: "domain", phase: "validation", userId: "system", outcome: "failure", reason: "parse_error" }
+      meta: { type: "domain", phase: "validation", userId: "system", outcome: "failure", reason: "parse_error" },
+      error
     });
 
     return {
