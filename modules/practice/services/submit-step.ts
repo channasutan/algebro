@@ -56,9 +56,7 @@ export async function submitStepWithRepository(
     const nextIndex = existingSteps.length;
 
     // Phase 4: AST-based step validation
-    const previousLatex = existingSteps.length > 0
-      ? existingSteps[existingSteps.length - 1].stepLatex
-      : null;
+    const previousLatex = getPreviousLatex(existingSteps);
 
     const validation = previousLatex !== null
       ? await validateStep({ previousLatex, currentLatex: stepLatex }, context)
@@ -89,4 +87,8 @@ export async function submitStepWithRepository(
     });
     throw err;
   }
+}
+
+function getPreviousLatex(steps: SolutionStep[]): string | null {
+  return steps.length > 0 ? steps[steps.length - 1].stepLatex : null;
 }
