@@ -20,7 +20,7 @@ export async function submitStep(
 
 /**
  * Submits a solution step during a practice attempt.
- * Minimal validation for Phase 3.
+ * Phase 4: integrates AST-based step validation via validateStep.
  */
 export async function submitStepWithRepository(
   repo: PracticeRepository,
