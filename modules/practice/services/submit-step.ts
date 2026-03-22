@@ -2,6 +2,7 @@ import { createSupabasePracticeRepository } from "../repositories/supabase-pract
 import { PracticeRepository } from "../repositories/practice-repository";
 import { SolutionStep } from "../domain/practice";
 import { createServiceLogger, type ServiceContext } from "@/lib/observability";
+import { validateStep } from "@/modules/step-validation";
 
 export type SubmitStepInput = {
   attemptId: string;
@@ -19,7 +20,7 @@ export async function submitStep(
 
 /**
  * Submits a solution step during a practice attempt.
- * Minimal validation for Phase 3.
+ * Phase 4: integrates AST-based step validation via validateStep.
  */
 export async function submitStepWithRepository(
   repo: PracticeRepository,
@@ -37,7 +38,7 @@ export async function submitStepWithRepository(
       userId, 
       phase: "start", 
       attemptId, 
-      stepLatex: stepLatex.length > 20 ? stepLatex.slice(0, 20) + "..." : stepLatex 
+      stepLatex: truncateForLog(stepLatex) 
     }
   });
 
@@ -54,9 +55,18 @@ export async function submitStepWithRepository(
     const existingSteps = await repo.getSteps(attemptId);
     const nextIndex = existingSteps.length;
 
-    // Phase 3: Minimal validation (always valid for now)
+    // Phase 4: AST-based step validation
+    const previousLatex = getPreviousLatex(existingSteps);
+
+    const validation = previousLatex === null
+      ? { isValid: true, errorType: null } // first step: skip validation
+      : await validateStep({ previousLatex, currentLatex: stepLatex }, context);
+
     const step = await repo.addStep(attemptId, nextIndex, stepLatex);
-    const updatedStep = await repo.updateStep(step.id, { isValid: true });
+    const updatedStep = await repo.updateStep(step.id, {
+      isValid: validation.isValid,
+      errorType: validation.errorType,
+    });
 
     log.info({ 
       event: "practice.step", 
@@ -77,4 +87,12 @@ export async function submitStepWithRepository(
     });
     throw err;
   }
+}
+
+function getPreviousLatex(steps: SolutionStep[]): string | null {
+  return steps.length > 0 ? steps.at(-1)!.stepLatex : null;
+}
+
+function truncateForLog(value: string, maxLength = 20): string {
+  return value.length > maxLength ? value.slice(0, maxLength) + "..." : value;
 }
