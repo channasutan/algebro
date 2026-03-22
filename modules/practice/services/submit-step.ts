@@ -58,9 +58,9 @@ export async function submitStepWithRepository(
     // Phase 4: AST-based step validation
     const previousLatex = getPreviousLatex(existingSteps);
 
-    const validation = previousLatex !== null
-      ? await validateStep({ previousLatex, currentLatex: stepLatex }, context)
-      : { isValid: true, errorType: null }; // first step: skip validation
+    const validation = previousLatex === null
+      ? { isValid: true, errorType: null } // first step: skip validation
+      : await validateStep({ previousLatex, currentLatex: stepLatex }, context);
 
     const step = await repo.addStep(attemptId, nextIndex, stepLatex);
     const updatedStep = await repo.updateStep(step.id, {
@@ -90,7 +90,7 @@ export async function submitStepWithRepository(
 }
 
 function getPreviousLatex(steps: SolutionStep[]): string | null {
-  return steps.length > 0 ? steps[steps.length - 1].stepLatex : null;
+  return steps.length > 0 ? steps.at(-1)!.stepLatex : null;
 }
 
 function truncateForLog(value: string, maxLength = 20): string {
