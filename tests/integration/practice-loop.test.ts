@@ -103,7 +103,7 @@ describe("Practice Loop Service Integration", () => {
 
     expect(step1).toEqual(mockStep1);
     expect(mockRepo.addStep).toHaveBeenCalledWith("attempt-1", 0, "2x = 4");
-    expect(mockRepo.updateStep).toHaveBeenCalledWith(expect.any(String), { isValid: true });
+    expect(mockRepo.updateStep).toHaveBeenCalledWith(expect.any(String), { isValid: true, errorType: null });
   });
 
   it("should throw error when submitting empty step", async () => {
