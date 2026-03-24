@@ -2,26 +2,33 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createRepositoryFromClient } from "../../repositories/supabase-problem-repository";
 import type { GeneratedProblem, ProblemPoolEntry } from "../../domain";
 
-// Mock Supabase client
+// Mock Supabase client - creates a chainable mock that matches supabase-js query builder behavior
 const makeMockChain = (finalValue: { data: unknown; error: null | object }) => {
-  // Create a thenable (Promise-like) object that resolves to the final value
-  const chain: Record<string, unknown> & { then?: (onfulfilled: (val: typeof finalValue) => void) => void } = {};
+  const chain: Record<string, unknown> = {};
   const end = vi.fn().mockResolvedValue(finalValue);
-  
-  // Make chain itself a thenable (when awaited directly)
-  chain.then = (onfulfilled) => {
-    onfulfilled(finalValue);
-  };
-  
-  // Terminal methods
+
+  // Terminal methods - return mock results directly (when repository calls .single()/.maybeSingle())
   chain.single = end;
   chain.maybeSingle = end;
-  // Intermediate chainable methods (each returns the same chain object)
+
+  // Intermediate chainable methods - return the same chain object to allow method chaining
   const returnChain = () => chain;
   chain.select = vi.fn(returnChain);
   chain.insert = vi.fn(returnChain);
   chain.eq = vi.fn(returnChain);
   chain.order = vi.fn(returnChain);
+
+  // Make chain itself awaitable - required for queries without .single()/.maybeSingle()
+  // (e.g., listTemplates uses: await query which expects { data, error })
+  // Using Promise.resolve ensures proper async resolution
+  Object.defineProperty(chain, 'then', {
+    value: (onFulfilled: (value: typeof finalValue) => void) => {
+      Promise.resolve(finalValue).then(onFulfilled);
+    },
+    writable: true,
+    configurable: true,
+  });
+
   return chain;
 };
 
