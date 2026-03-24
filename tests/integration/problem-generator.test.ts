@@ -176,42 +176,34 @@ describe("Problem Generator Integration", () => {
   });
 
   describe("Parameter randomization determinism", () => {
-    it("generates identical problems with same seed", async () => {
-      const input: GenerateProblemInput = {
-        templateId: testTemplateId,
-        topicId: "integration-test-topic",
-        difficultyLevel: 3,
-        seed: "deterministic-seed-123",
-      };
+    // Test helpers to reduce duplication
+    const makeInput = (seed: string): GenerateProblemInput => ({
+      templateId: testTemplateId,
+      topicId: "integration-test-topic",
+      difficultyLevel: 3,
+      seed,
+    });
 
-      const result1 = await generateProblem(repo, input, context);
-      const result2 = await generateProblem(repo, input, context);
+    const parametersAreDifferent = (
+      p1: Record<string, number> | null | undefined,
+      p2: Record<string, number> | null | undefined
+    ): boolean =>
+      p1?.a !== p2?.a || p1?.b !== p2?.b;
+
+    it("generates identical problems with same seed", async () => {
+      const result1 = await generateProblem(repo, makeInput("deterministic-seed-123"), context);
+      const result2 = await generateProblem(repo, makeInput("deterministic-seed-123"), context);
 
       expect(result1.problem?.parameters).toEqual(result2.problem?.parameters);
     });
 
     it("generates different problems with different seeds", async () => {
-      const input1: GenerateProblemInput = {
-        templateId: testTemplateId,
-        topicId: "integration-test-topic",
-        difficultyLevel: 3,
-        seed: "seed-a",
-      };
-
-      const input2: GenerateProblemInput = {
-        templateId: testTemplateId,
-        topicId: "integration-test-topic",
-        difficultyLevel: 3,
-        seed: "seed-b",
-      };
-
-      const result1 = await generateProblem(repo, input1, context);
-      const result2 = await generateProblem(repo, input2, context);
+      const result1 = await generateProblem(repo, makeInput("seed-a"), context);
+      const result2 = await generateProblem(repo, makeInput("seed-b"), context);
 
       // Very unlikely to be identical with different seeds
       expect(
-        result1.problem?.parameters?.a !== result2.problem?.parameters?.a ||
-          result1.problem?.parameters?.b !== result2.problem?.parameters?.b
+        parametersAreDifferent(result1.problem?.parameters, result2.problem?.parameters)
       ).toBe(true);
     });
   });
