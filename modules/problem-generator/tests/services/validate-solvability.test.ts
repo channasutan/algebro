@@ -23,19 +23,26 @@ vi.mock("@/lib/observability", () => ({
 const context = { requestId: "test-req" };
 
 describe("validateSolvability", () => {
+  // Test helpers to reduce duplication
+  const mockEvaluate = () => vi.mocked(sympyClient.evaluate);
+
+  const mockSuccess = (result: unknown) =>
+    mockEvaluate().mockResolvedValue({ result });
+
+  const mockFailure = (message: string) =>
+    mockEvaluate().mockRejectedValue(new Error(message));
+
+  const makeInput = (problemLatex: string): ValidateProblemInput => ({
+    problemLatex,
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("returns isSolvable: true when SymPy finds a solution", async () => {
-    const mockEvaluate = vi.mocked(sympyClient.evaluate);
-    mockEvaluate.mockResolvedValue({
-      result: { x: 3 }, // Solution exists
-    });
-
-    const input: ValidateProblemInput = {
-      problemLatex: "2x + 4 = 10",
-    };
+    mockSuccess({ x: 3 });
+    const input = makeInput("2x + 4 = 10");
 
     const result = await validateSolvability(input, context);
 
@@ -44,14 +51,8 @@ describe("validateSolvability", () => {
   });
 
   it("returns isSolvable: false with unsolvable error when no solution", async () => {
-    const mockEvaluate = vi.mocked(sympyClient.evaluate);
-    mockEvaluate.mockResolvedValue({
-      result: null, // No solution
-    });
-
-    const input: ValidateProblemInput = {
-      problemLatex: "x = x + 1", // Contradiction
-    };
+    mockSuccess(null);
+    const input = makeInput("x = x + 1");
 
     const result = await validateSolvability(input, context);
 
@@ -60,12 +61,8 @@ describe("validateSolvability", () => {
   });
 
   it("returns parse_error when SymPy reports parse error", async () => {
-    const mockEvaluate = vi.mocked(sympyClient.evaluate);
-    mockEvaluate.mockRejectedValue(new Error("parse error: invalid syntax"));
-
-    const input: ValidateProblemInput = {
-      problemLatex: "%%%invalid%%%",
-    };
+    mockFailure("parse error: invalid syntax");
+    const input = makeInput("%%%invalid%%%");
 
     const result = await validateSolvability(input, context);
 
@@ -74,12 +71,8 @@ describe("validateSolvability", () => {
   });
 
   it("returns sympy_unavailable on network error", async () => {
-    const mockEvaluate = vi.mocked(sympyClient.evaluate);
-    mockEvaluate.mockRejectedValue(new Error("Network error: connection refused"));
-
-    const input: ValidateProblemInput = {
-      problemLatex: "2x = 4",
-    };
+    mockFailure("Network error: connection refused");
+    const input = makeInput("2x = 4");
 
     const result = await validateSolvability(input, context);
 
@@ -88,16 +81,12 @@ describe("validateSolvability", () => {
   });
 
   it("calls SymPy with correct parameters", async () => {
-    const mockEvaluate = vi.mocked(sympyClient.evaluate);
-    mockEvaluate.mockResolvedValue({ result: { x: 2 } });
-
-    const input: ValidateProblemInput = {
-      problemLatex: "2x = 4",
-    };
+    mockSuccess({ x: 2 });
+    const input = makeInput("2x = 4");
 
     await validateSolvability(input, context);
 
-    expect(mockEvaluate).toHaveBeenCalledWith({
+    expect(mockEvaluate()).toHaveBeenCalledWith({
       expression: "2x = 4",
       operation: "solve",
       context: {
@@ -107,12 +96,8 @@ describe("validateSolvability", () => {
   });
 
   it("handles SymPy timeout gracefully", async () => {
-    const mockEvaluate = vi.mocked(sympyClient.evaluate);
-    mockEvaluate.mockRejectedValue(new Error("timeout"));
-
-    const input: ValidateProblemInput = {
-      problemLatex: "complex equation",
-    };
+    mockFailure("timeout");
+    const input = makeInput("complex equation");
 
     const result = await validateSolvability(input, context);
 
