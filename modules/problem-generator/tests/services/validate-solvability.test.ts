@@ -35,7 +35,6 @@ describe("validateSolvability", () => {
 
     const input: ValidateProblemInput = {
       problemLatex: "2x + 4 = 10",
-      solutionLatex: "x = 3",
     };
 
     const result = await validateSolvability(input, context);
@@ -52,7 +51,6 @@ describe("validateSolvability", () => {
 
     const input: ValidateProblemInput = {
       problemLatex: "x = x + 1", // Contradiction
-      solutionLatex: "",
     };
 
     const result = await validateSolvability(input, context);
@@ -67,7 +65,6 @@ describe("validateSolvability", () => {
 
     const input: ValidateProblemInput = {
       problemLatex: "%%%invalid%%%",
-      solutionLatex: "",
     };
 
     const result = await validateSolvability(input, context);
@@ -82,7 +79,6 @@ describe("validateSolvability", () => {
 
     const input: ValidateProblemInput = {
       problemLatex: "2x = 4",
-      solutionLatex: "x = 2",
     };
 
     const result = await validateSolvability(input, context);
@@ -97,7 +93,6 @@ describe("validateSolvability", () => {
 
     const input: ValidateProblemInput = {
       problemLatex: "2x = 4",
-      solutionLatex: "x = 2",
     };
 
     await validateSolvability(input, context);
@@ -117,7 +112,6 @@ describe("validateSolvability", () => {
 
     const input: ValidateProblemInput = {
       problemLatex: "complex equation",
-      solutionLatex: "",
     };
 
     const result = await validateSolvability(input, context);

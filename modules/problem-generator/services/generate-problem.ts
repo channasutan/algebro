@@ -60,7 +60,7 @@ export async function generateProblem(
 
   // 4. Validate solvability
   const validation = await validateSolvability(
-    { problemLatex: rendered, solutionLatex: rendered },
+    { problemLatex: rendered },
     context
   );
 
