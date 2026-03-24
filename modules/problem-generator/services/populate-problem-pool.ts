@@ -19,7 +19,6 @@ export async function populatePool(
     topicId: string;
     difficulty: number;
     count: number;
-    batchSize?: number;
   },
   context: ServiceContext
 ): Promise<{ generated: number; failed: number }> {

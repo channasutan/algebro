@@ -69,7 +69,8 @@ function createSeededRandom(seed?: string): () => number {
     state ^= state << 13;
     state ^= state >>> 17;
     state ^= state << 5;
-    return Math.abs(state) / 2147483647;
+    state |= 0;
+    return (state >>> 0) / 2 ** 32;
   };
 }
 
