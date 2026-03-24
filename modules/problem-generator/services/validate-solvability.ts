@@ -16,7 +16,7 @@ export async function validateSolvability(
   const log = createServiceLogger(context.requestId);
 
   log.info({
-    event: "problem-generator.validate-solvability",
+    event: "practice.validate-solvability",
     meta: { type: "domain", phase: "start", userId: "system" },
   });
 
@@ -34,7 +34,7 @@ export async function validateSolvability(
     const hasSolution = response.result !== null && response.result !== undefined;
 
     log.info({
-      event: "problem-generator.validate-solvability",
+      event: "practice.validate-solvability",
       meta: {
         type: "domain",
         phase: "complete",
@@ -59,7 +59,7 @@ export async function validateSolvability(
       errorMessage.includes("invalid")
     ) {
       log.warn({
-        event: "problem-generator.validate-solvability",
+        event: "practice.validate-solvability",
         meta: {
           type: "domain",
           phase: "validation",
@@ -74,7 +74,7 @@ export async function validateSolvability(
 
     // Network/unavailability error
     log.error({
-      event: "problem-generator.validate-solvability",
+      event: "practice.validate-solvability",
       meta: {
         type: "domain",
         phase: "infra",
