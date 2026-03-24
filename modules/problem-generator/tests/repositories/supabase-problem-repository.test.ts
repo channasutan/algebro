@@ -3,12 +3,35 @@ import { createRepositoryFromClient } from "../../repositories/supabase-problem-
 import type { GeneratedProblem, ProblemPoolEntry } from "../../domain";
 
 // Mock Supabase client
-const mockSelect = vi.fn();
-const mockInsert = vi.fn();
-const mockFrom = vi.fn(() => ({
-  select: mockSelect,
-  insert: mockInsert,
-}));
+const makeMockChain = (finalValue: { data: unknown; error: null | object }) => {
+  // Create a thenable (Promise-like) object that resolves to the final value
+  const chain: Record<string, unknown> & { then?: (onfulfilled: (val: typeof finalValue) => void) => void } = {};
+  const end = vi.fn().mockResolvedValue(finalValue);
+  
+  // Make chain itself a thenable (when awaited directly)
+  chain.then = (onfulfilled) => {
+    onfulfilled(finalValue);
+  };
+  
+  // Terminal methods
+  chain.single = end;
+  chain.maybeSingle = end;
+  // Intermediate chainable methods (each returns the same chain object)
+  const returnChain = () => chain;
+  chain.select = vi.fn(returnChain);
+  chain.insert = vi.fn(returnChain);
+  chain.eq = vi.fn(returnChain);
+  chain.order = vi.fn(returnChain);
+  return chain;
+};
+
+const mockChainState = {
+  value: { data: null as unknown, error: null as null | object },
+};
+
+const mockFrom = vi.fn(() =>
+  makeMockChain(mockChainState.value)
+);
 
 const mockClient = {
   from: mockFrom,
@@ -17,6 +40,7 @@ const mockClient = {
 describe("SupabaseProblemRepository", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockChainState.value = { data: null, error: null };
   });
 
   describe("getTemplate", () => {
@@ -30,10 +54,7 @@ describe("SupabaseProblemRepository", () => {
         created_at: "2024-01-01T00:00:00Z",
       };
 
-      mockSelect.mockResolvedValue({
-        data: mockData,
-        error: null,
-      });
+      mockChainState.value = { data: mockData, error: null };
 
       const repo = createRepositoryFromClient(mockClient);
       const result = await repo.getTemplate("template-1");
@@ -46,10 +67,7 @@ describe("SupabaseProblemRepository", () => {
     });
 
     it("returns null when template not found", async () => {
-      mockSelect.mockResolvedValue({
-        data: null,
-        error: null,
-      });
+      mockChainState.value = { data: null, error: null };
 
       const repo = createRepositoryFromClient(mockClient);
       const result = await repo.getTemplate("non-existent");
@@ -79,10 +97,7 @@ describe("SupabaseProblemRepository", () => {
         },
       ];
 
-      mockSelect.mockResolvedValue({
-        data: mockData,
-        error: null,
-      });
+      mockChainState.value = { data: mockData, error: null };
 
       const repo = createRepositoryFromClient(mockClient);
       const result = await repo.listTemplates();
@@ -119,10 +134,7 @@ describe("SupabaseProblemRepository", () => {
         created_at: "2024-01-01T00:00:00Z",
       };
 
-      mockInsert.mockResolvedValue({
-        data: mockData,
-        error: null,
-      });
+      mockChainState.value = { data: mockData, error: null };
 
       const repo = createRepositoryFromClient(mockClient);
       const result = await repo.saveProblem(problem);
@@ -149,10 +161,7 @@ describe("SupabaseProblemRepository", () => {
         created_at: "2024-01-01T00:00:00Z",
       };
 
-      mockInsert.mockResolvedValue({
-        data: mockData,
-        error: null,
-      });
+      mockChainState.value = { data: mockData, error: null };
 
       const repo = createRepositoryFromClient(mockClient);
       const result = await repo.addToPool(entry);
