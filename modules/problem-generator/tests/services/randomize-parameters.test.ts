@@ -87,7 +87,11 @@ describe("randomizeParameters", () => {
 
     const result = randomizeParameters(singleParamSchema, 2);
 
+    // At difficulty 2: multiplier = 3.25, scaledMax = 1 + floor(99 * 3.25) = 322
+    // The upper bound is scaledMax, NOT the raw schema max.
+    // Lower bound is always schema.min regardless of difficulty.
+    const expectedScaledMax = 1 + Math.floor((100 - 1) * (1 + (2 - 1) * 2.25));
     expect(result.x).toBeGreaterThanOrEqual(1);
-    expect(result.x).toBeLessThanOrEqual(100);
+    expect(result.x).toBeLessThanOrEqual(expectedScaledMax);
   });
 });
