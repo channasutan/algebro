@@ -3,6 +3,84 @@ import type { ProblemPoolEntry } from "../domain/problem-pool-entry";
 import { generateProblem } from "./generate-problem";
 import { createServiceLogger, type ServiceContext } from "@/lib/observability";
 
+async function generateAndAddToPool(
+  repo: ProblemRepository,
+  params: {
+    templateId: string;
+    topicId: string;
+    difficulty: number;
+  },
+  context: ServiceContext,
+  log: ReturnType<typeof createServiceLogger>
+): Promise<"generated" | "failed"> {
+  const result = await generateProblem(
+    repo,
+    {
+      templateId: params.templateId,
+      topicId: params.topicId,
+      difficultyLevel: params.difficulty,
+    },
+    context
+  );
+
+  if (result.wasValidated && result.problem) {
+    const poolEntry: ProblemPoolEntry = {
+      id: "",
+      problemId: result.problem.id,
+      topicId: params.topicId,
+      createdAt: "",
+    };
+    await repo.addToPool(poolEntry);
+    return "generated";
+  }
+
+  log.warn({
+    event: "practice.populate-pool",
+    meta: {
+      type: "domain",
+      phase: "validation",
+      userId: "system",
+      outcome: "failure",
+      reason: result.errorType,
+    },
+  });
+  return "failed";
+}
+
+function countBatchResults(
+  results: PromiseSettledResult<"generated" | "failed">[],
+  log: ReturnType<typeof createServiceLogger>
+): { generated: number; failed: number } {
+  let generated = 0;
+  let failed = 0;
+
+  for (const settled of results) {
+    if (settled.status === "fulfilled" && settled.value === "generated") {
+      generated++;
+    } else {
+      if (settled.status === "rejected") {
+        const errorMessage =
+          settled.reason instanceof Error
+            ? settled.reason.message
+            : String(settled.reason);
+        log.error({
+          event: "practice.populate-pool",
+          meta: {
+            type: "domain",
+            phase: "infra",
+            userId: "system",
+            outcome: "failure",
+            error: errorMessage,
+          },
+        });
+      }
+      failed++;
+    }
+  }
+
+  return { generated, failed };
+}
+
 /**
  * Batch generates problems and populates the problem pool.
  * Continues on individual failures to maximize yield.
@@ -58,68 +136,20 @@ export async function populatePool(
 
   for (const batch of batches) {
     const results = await Promise.allSettled(
-      batch.map(async (i) => {
-        const result = await generateProblem(
+      batch.map(() =>
+        generateAndAddToPool(
           repo,
-          {
-            templateId,
-            topicId,
-            difficultyLevel: difficulty,
-          },
-          context
-        );
-
-        if (result.wasValidated && result.problem) {
-          const poolEntry: ProblemPoolEntry = {
-            id: "",
-            problemId: result.problem.id,
-            topicId,
-            createdAt: "",
-          };
-          await repo.addToPool(poolEntry);
-          return "generated";
-        } else {
-          log.warn({
-            event: "practice.populate-pool",
-            meta: {
-              type: "domain",
-              phase: "validation",
-              userId: "system",
-              outcome: "failure",
-              reason: result.errorType,
-              index: i,
-            },
-          });
-          return "failed";
-        }
-      })
+          { templateId, topicId, difficulty },
+          context,
+          log
+        )
+      )
     );
 
-    for (const settled of results) {
-      if (settled.status === "fulfilled" && settled.value === "generated") {
-        generated++;
-      } else {
-        if (settled.status === "rejected") {
-          const errorMessage =
-            settled.reason instanceof Error
-              ? settled.reason.message
-              : String(settled.reason);
-          log.error({
-            event: "practice.populate-pool",
-            meta: {
-              type: "domain",
-              phase: "infra",
-              userId: "system",
-              outcome: "failure",
-              error: errorMessage,
-            },
-          });
-        }
-        failed++;
-      }
-    }
+    const counts = countBatchResults(results, log);
+    generated += counts.generated;
+    failed += counts.failed;
 
-    // Log progress after each batch
     log.info({
       event: "practice.populate-pool",
       meta: {
