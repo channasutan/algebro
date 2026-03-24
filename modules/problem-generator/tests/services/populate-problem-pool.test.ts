@@ -4,7 +4,7 @@ import type { ProblemRepository } from "../../repositories/problem-repository";
 import type { GeneratedProblem } from "../../domain";
 
 // Mock generateProblem
-vi.mock("./generate-problem", () => ({
+vi.mock("../../services/generate-problem", () => ({
   generateProblem: vi.fn(),
 }));
 

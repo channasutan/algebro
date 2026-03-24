@@ -1,4 +1,8 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
+
+// Must be first: mock next/headers before importing server-side modules
+vi.mock("next/headers", () => ({ cookies: vi.fn() }));
+
 import { createSupabaseProblemRepository } from "@/modules/problem-generator/repositories/supabase-problem-repository";
 import { generateProblem, populatePool } from "@/modules/problem-generator";
 import type { GenerateProblemInput } from "@/modules/problem-generator";
@@ -14,6 +18,14 @@ vi.mock("@/infrastructure/math/sympy-client", () => ({
 const context = { requestId: "integration-test" };
 
 describe("Problem Generator Integration", () => {
+  const isRealDB = process.env.NEXT_PUBLIC_SUPABASE_URL !== "https://test.supabase.co"
+    && !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!isRealDB) {
+    it.skip("skipped: no real Supabase URL configured", () => {});
+    return;
+  }
+
   let repo: Awaited<ReturnType<typeof createSupabaseProblemRepository>>;
   let testTemplateId: string;
   const adminClient = getSupabaseAdminClient();
