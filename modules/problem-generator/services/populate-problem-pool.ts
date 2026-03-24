@@ -81,6 +81,19 @@ function countBatchResults(
   return { generated, failed };
 }
 
+function buildBatches(count: number, batchSize: number): number[][] {
+  const batches: number[][] = [];
+  for (let i = 0; i < count; i += batchSize) {
+    batches.push(
+      Array.from(
+        { length: Math.min(batchSize, count - i) },
+        (_, j) => i + j
+      )
+    );
+  }
+  return batches;
+}
+
 /**
  * Batch generates problems and populates the problem pool.
  * Continues on individual failures to maximize yield.
@@ -128,11 +141,7 @@ export async function populatePool(
   let failed = 0;
 
   // Process in batches to allow concurrency control
-  const indices = Array.from({ length: count }, (_, i) => i);
-  const batches: number[][] = [];
-  for (let i = 0; i < indices.length; i += batchSize) {
-    batches.push(indices.slice(i, i + batchSize));
-  }
+  const batches = buildBatches(count, batchSize);
 
   for (const batch of batches) {
     const results = await Promise.allSettled(
