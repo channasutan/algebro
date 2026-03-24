@@ -6,6 +6,46 @@ import { validateSolvability } from "./validate-solvability";
 import { createServiceLogger, type ServiceContext } from "@/lib/observability";
 
 /**
+ * Builds the record object for saving a generated problem to the database.
+ */
+function buildProblemRecord(
+  input: GenerateProblemInput,
+  rendered: string,
+  parameters: Record<string, number>
+) {
+  return {
+    id: "",
+    templateId: input.templateId,
+    topicId: input.topicId ?? null,
+    difficultyLevel: input.difficultyLevel,
+    problemLatex: rendered,
+    solutionLatex: rendered,
+    parameters,
+    isValidated: true,
+    createdAt: "",
+  };
+}
+
+/**
+ * Logs a warning for generation failure.
+ */
+function logGenerationFailure(
+  log: ReturnType<typeof createServiceLogger>,
+  reason: string
+): void {
+  log.warn({
+    event: "practice.generate-problem",
+    meta: {
+      type: "domain",
+      phase: "validation",
+      userId: "system",
+      outcome: "failure",
+      reason,
+    },
+  });
+}
+
+/**
  * Generates a problem from a template, randomizes parameters, validates solvability, and persists.
  *
  * @param repo - Problem repository for persistence
@@ -35,16 +75,7 @@ export async function generateProblem(
   // 1. Get the template
   const template = await repo.getTemplate(input.templateId);
   if (!template) {
-    log.warn({
-      event: "practice.generate-problem",
-      meta: {
-        type: "domain",
-        phase: "validation",
-        userId: "system",
-        outcome: "failure",
-        reason: "template_not_found",
-      },
-    });
+    logGenerationFailure(log, "template_not_found");
     return { wasValidated: false, errorType: "template_not_found" };
   }
 
@@ -65,31 +96,14 @@ export async function generateProblem(
   );
 
   if (!validation.isSolvable) {
-    log.warn({
-      event: "practice.generate-problem",
-      meta: {
-        type: "domain",
-        phase: "validation",
-        userId: "system",
-        outcome: "failure",
-        reason: validation.errorType ?? "validation_failed",
-      },
-    });
+    logGenerationFailure(log, validation.errorType ?? "validation_failed");
     return { wasValidated: false, errorType: "validation_failed" };
   }
 
   // 5. Save the problem
-  const saved = await repo.saveProblem({
-    id: "",
-    templateId: input.templateId,
-    topicId: input.topicId ?? null,
-    difficultyLevel: input.difficultyLevel,
-    problemLatex: rendered,
-    solutionLatex: rendered,
-    parameters,
-    isValidated: true,
-    createdAt: "",
-  });
+  const saved = await repo.saveProblem(
+    buildProblemRecord(input, rendered, parameters)
+  );
 
   log.info({
     event: "practice.generate-problem",
