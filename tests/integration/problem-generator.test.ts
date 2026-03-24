@@ -3,9 +3,12 @@ import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
 // Must be first: mock next/headers before importing server-side modules
 vi.mock("next/headers", () => ({ cookies: vi.fn() }));
 
-import { createSupabaseProblemRepository } from "@/modules/problem-generator";
-import { generateProblem, populatePool } from "@/modules/problem-generator";
-import type { GenerateProblemInput } from "@/modules/problem-generator";
+import {
+  createSupabaseProblemRepository,
+  generateProblem,
+  populatePool,
+  type GenerateProblemInput,
+} from "@/modules/problem-generator";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin-client";
 
 // Mock SymPy client for deterministic tests
