@@ -42,16 +42,18 @@ export function renderTemplate(
   let rendered = templateLatex;
 
   // Replace ${param} syntax first (more specific pattern)
-  for (const [paramName, value] of Object.entries(parameters)) {
-    const pattern = new RegExp(`\\$\\{${escapeRegex(paramName)}\\}`, "g");
-    rendered = rendered.replace(pattern, String(value));
-  }
+  rendered = substitutePattern(
+    rendered,
+    parameters,
+    (escaped) => new RegExp(`\\$\\{${escaped}\\}`, "g")
+  );
 
   // Replace $param syntax second
-  for (const [paramName, value] of Object.entries(parameters)) {
-    const pattern = new RegExp(`\\$${escapeRegex(paramName)}(?!\\w)`, "g");
-    rendered = rendered.replace(pattern, String(value));
-  }
+  rendered = substitutePattern(
+    rendered,
+    parameters,
+    (escaped) => new RegExp(`\\$${escaped}(?!\\w)`, "g")
+  );
 
   // Validate all placeholders were replaced
   const remainingPlaceholders = extractPlaceholders(rendered);
@@ -91,4 +93,20 @@ function extractPlaceholders(template: string): string[] {
  */
 function escapeRegex(str: string): string {
   return str.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
+}
+
+/**
+ * Substitutes parameters into a template using a custom regex pattern builder.
+ */
+function substitutePattern(
+  template: string,
+  parameters: Record<string, number>,
+  buildPattern: (escapedName: string) => RegExp
+): string {
+  let result = template;
+  for (const [paramName, value] of Object.entries(parameters)) {
+    const pattern = buildPattern(escapeRegex(paramName));
+    result = result.replace(pattern, String(value));
+  }
+  return result;
 }
