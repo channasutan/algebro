@@ -7,8 +7,14 @@ alter table public.problem_templates
 
 -- Add base_difficulty to problem_templates for template difficulty baseline
 alter table public.problem_templates
-  add column if not exists base_difficulty integer default 1
-  constraint chk_base_difficulty_range check (base_difficulty >= 1 and base_difficulty <= 5);
+  add column if not exists base_difficulty integer default 1;
+
+alter table public.problem_templates
+  drop constraint if exists chk_base_difficulty_range;
+
+alter table public.problem_templates
+  add constraint chk_base_difficulty_range
+  check (base_difficulty >= 1 and base_difficulty <= 5);
 
 -- Add parameters to problems for storing generated parameter values
 alter table public.problems
