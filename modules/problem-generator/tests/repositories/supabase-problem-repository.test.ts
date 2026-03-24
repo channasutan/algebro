@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createRepositoryFromClient } from "../../repositories/supabase-problem-repository";
-import type { ProblemTemplate, GeneratedProblem, ProblemPoolEntry } from "../../domain";
+import type { GeneratedProblem, ProblemPoolEntry } from "../../domain";
 
 // Mock Supabase client
 const mockSelect = vi.fn();
