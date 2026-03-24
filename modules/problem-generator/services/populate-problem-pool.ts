@@ -19,11 +19,18 @@ export async function populatePool(
     topicId: string;
     difficulty: number;
     count: number;
+    /**
+     * Number of problems to generate concurrently per batch.
+     * Defaults to 1 (fully sequential) to avoid DB connection pool exhaustion.
+     * Increase only when targeting a Supabase pooler with pgBouncer enabled.
+     * Reference: https://supabase.com/docs/guides/database/connection-pooling
+     */
+    batchSize?: number;
   },
   context: ServiceContext
 ): Promise<{ generated: number; failed: number }> {
   const log = createServiceLogger(context.requestId);
-  const { templateId, topicId, difficulty, count } = options;
+  const { templateId, topicId, difficulty, count, batchSize = 1 } = options;
 
   log.info({
     event: "practice.populate-pool",
@@ -35,82 +42,95 @@ export async function populatePool(
       topicId,
       difficulty,
       requestedCount: count,
+      batchSize,
     },
   });
 
   let generated = 0;
   let failed = 0;
 
-  for (let i = 0; i < count; i++) {
-    try {
-      const result = await generateProblem(
-        repo,
-        {
-          templateId,
-          topicId,
-          difficultyLevel: difficulty,
-        },
-        context
-      );
+  // Process in batches to allow concurrency control
+  const indices = Array.from({ length: count }, (_, i) => i);
+  const batches: number[][] = [];
+  for (let i = 0; i < indices.length; i += batchSize) {
+    batches.push(indices.slice(i, i + batchSize));
+  }
 
-      if (result.wasValidated && result.problem) {
-        // Add to pool
-        const poolEntry: ProblemPoolEntry = {
-          id: "", // Will be assigned by database
-          problemId: result.problem.id,
-          topicId,
-          createdAt: "", // Will be assigned by database
-        };
+  for (const batch of batches) {
+    const results = await Promise.allSettled(
+      batch.map(async (i) => {
+        const result = await generateProblem(
+          repo,
+          {
+            templateId,
+            topicId,
+            difficultyLevel: difficulty,
+          },
+          context
+        );
 
-        await repo.addToPool(poolEntry);
-        generated++;
-
-        // Log progress every 10 items
-        if ((i + 1) % 10 === 0) {
-          log.info({
+        if (result.wasValidated && result.problem) {
+          const poolEntry: ProblemPoolEntry = {
+            id: "",
+            problemId: result.problem.id,
+            topicId,
+            createdAt: "",
+          };
+          await repo.addToPool(poolEntry);
+          return "generated";
+        } else {
+          log.warn({
             event: "practice.populate-pool",
             meta: {
               type: "domain",
-              phase: "complete",
+              phase: "validation",
               userId: "system",
-              progress: `${i + 1}/${count}`,
-              generated,
-              failed,
+              outcome: "failure",
+              reason: result.errorType,
+              index: i,
+            },
+          });
+          return "failed";
+        }
+      })
+    );
+
+    for (const settled of results) {
+      if (settled.status === "fulfilled" && settled.value === "generated") {
+        generated++;
+      } else {
+        if (settled.status === "rejected") {
+          const errorMessage =
+            settled.reason instanceof Error
+              ? settled.reason.message
+              : String(settled.reason);
+          log.error({
+            event: "practice.populate-pool",
+            meta: {
+              type: "domain",
+              phase: "infra",
+              userId: "system",
+              outcome: "failure",
+              error: errorMessage,
             },
           });
         }
-      } else {
         failed++;
-        log.warn({
-          event: "practice.populate-pool",
-          meta: {
-            type: "domain",
-            phase: "validation",
-            userId: "system",
-            outcome: "failure",
-            reason: result.errorType,
-            index: i,
-          },
-        });
       }
-    } catch (error) {
-      failed++;
-      const errorMessage = error instanceof Error ? error.message : String(error);
-
-      log.error({
-        event: "practice.populate-pool",
-        meta: {
-          type: "domain",
-          phase: "infra",
-          userId: "system",
-          outcome: "failure",
-          error: errorMessage,
-          index: i,
-        },
-      });
-
-      // Continue to next iteration - don't stop batch
     }
+
+    // Log progress after each batch
+    log.info({
+      event: "practice.populate-pool",
+      meta: {
+        type: "domain",
+        phase: "progress",
+        userId: "system",
+        progress: `${generated + failed}/${count}`,
+        generated,
+        failed,
+      },
+    });
   }
 
   log.info({
