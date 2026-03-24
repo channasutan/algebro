@@ -69,7 +69,7 @@ function createSeededRandom(seed?: string): () => number {
     state ^= state << 13;
     state ^= state >>> 17;
     state ^= state << 5;
-    state |= 0;
+    state = Math.trunc(state) | 0;
     return (state >>> 0) / 2 ** 32;
   };
 }
@@ -80,8 +80,8 @@ function createSeededRandom(seed?: string): () => number {
 function hashStringToNumber(str: string): number {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash + char) | 0;
+    const char = str.codePointAt(i) ?? 0;
+    hash = Math.trunc((hash << 5) - hash + char) | 0;
   }
   return hash;
 }
