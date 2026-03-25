@@ -109,14 +109,14 @@ export function renderTemplate(
   rendered = substitutePattern(
     rendered,
     parameters,
-    (escaped) => new RegExp(`\\$\\{${escaped}\\}`, "g")
+    (escaped) => new RegExp(String.raw`\$\{${escaped}\}`, "g")
   );
 
   // Replace $param syntax second
   rendered = substitutePattern(
     rendered,
     parameters,
-    (escaped) => new RegExp(`\\$${escaped}(?!\\w)`, "g")
+    (escaped) => new RegExp(String.raw`\$${escaped}(?!\w)`, "g")
   );
 
   // Validate all placeholders were replaced
