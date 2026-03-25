@@ -3,33 +3,37 @@ import { createRepositoryFromClient } from "../../repositories/supabase-problem-
 import type { GeneratedProblem, ProblemPoolEntry } from "../../domain";
 
 // Mock Supabase client - creates a chainable mock that matches supabase-js query builder behavior
-const makeMockChain = (finalValue: { data: unknown; error: null | object }) => {
-  const chain: Record<string, unknown> = {};
-  const end = vi.fn().mockResolvedValue(finalValue);
+// Uses Proxy to handle await without storing 'then' property (SonarCloud friendly)
+const makeMockChain = () => {
+  // Terminal handler - returns resolved value directly (no stored 'then' property)
+  const end = vi.fn().mockImplementation(() => Promise.resolve(mockChainState.value));
 
-  // Terminal methods - return mock results directly (when repository calls .single()/.maybeSingle())
-  chain.single = end;
-  chain.maybeSingle = end;
+  // Create the chain object
+  const chain: Record<string, unknown> = {
+    single: end,
+    maybeSingle: end,
+    // select/insert must return a chain to support further chaining (eq, order, single, etc.)
+    select: () => proxy,
+    insert: () => proxy,
+    eq: () => proxy,
+    order: () => proxy,
+  };
 
-  // Intermediate chainable methods - return the same chain object to allow method chaining
-  const returnChain = () => chain;
-  chain.select = vi.fn(returnChain);
-  chain.insert = vi.fn(returnChain);
-  chain.eq = vi.fn(returnChain);
-  chain.order = vi.fn(returnChain);
-
-  // Make chain itself awaitable - required for queries without .single()/.maybeSingle()
-  // (e.g., listTemplates uses: await query which expects { data, error })
-  // Using Promise.resolve ensures proper async resolution
-  Object.defineProperty(chain, 'then', {
-    value: (onFulfilled: (value: typeof finalValue) => void) => {
-      Promise.resolve(finalValue).then(onFulfilled);
+  // Use Proxy to dynamically handle 'then' property without storing it
+  const proxy = new Proxy(chain, {
+    get(target, prop) {
+      // Dynamically provide 'then' for await - not stored on the object
+      if (prop === "then") {
+        return (resolve: (val: unknown) => void) => {
+          Promise.resolve(mockChainState.value).then(resolve);
+        };
+      }
+      const value = target[prop as keyof typeof target];
+      return typeof value === "function" ? value.bind(target) : value;
     },
-    writable: true,
-    configurable: true,
   });
 
-  return chain;
+  return proxy;
 };
 
 const mockChainState = {
@@ -37,7 +41,7 @@ const mockChainState = {
 };
 
 const mockFrom = vi.fn(() =>
-  makeMockChain(mockChainState.value)
+  makeMockChain()
 );
 
 const mockClient = {
