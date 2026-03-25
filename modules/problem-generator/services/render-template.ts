@@ -9,64 +9,6 @@ export class RenderError extends Error {
 }
 
 /**
- * Substitutes parameters into a LaTeX template string.
- *
- * Supports two syntaxes:
- * - `$param` - simple parameter substitution
- * - `${param}` - explicit parameter substitution
- *
- * @param templateLatex - Template string with placeholders
- * @param parameters - Key-value pairs for substitution
- * @returns Rendered LaTeX string with all placeholders replaced
- * @throws RenderError if parameters are missing or substitution is incomplete
- */
-export function renderTemplate(
-  templateLatex: string,
-  parameters: Record<string, number>
-): string {
-  if (!templateLatex) {
-    throw new RenderError("Template cannot be empty");
-  }
-
-  if (!parameters || Object.keys(parameters).length === 0) {
-    // No parameters to substitute - return template as-is
-    // But validate there are no placeholders expecting parameters
-    if (hasPlaceholders(templateLatex)) {
-      throw new RenderError(
-        `Template contains placeholders but no parameters provided: ${extractPlaceholders(templateLatex).join(", ")}`
-      );
-    }
-    return templateLatex;
-  }
-
-  let rendered = templateLatex;
-
-  // Replace ${param} syntax first (more specific pattern)
-  rendered = substitutePattern(
-    rendered,
-    parameters,
-    (escaped) => new RegExp(`\\$\\{${escaped}\\}`, "g")
-  );
-
-  // Replace $param syntax second
-  rendered = substitutePattern(
-    rendered,
-    parameters,
-    (escaped) => new RegExp(`\\$${escaped}(?!\\w)`, "g")
-  );
-
-  // Validate all placeholders were replaced
-  const remainingPlaceholders = extractPlaceholders(rendered);
-  if (remainingPlaceholders.length > 0) {
-    throw new RenderError(
-      `Unresolved placeholders after rendering: ${remainingPlaceholders.join(", ")}`
-    );
-  }
-
-  return rendered;
-}
-
-/**
  * Checks if template contains any placeholders.
  */
 function hasPlaceholders(template: string): boolean {
@@ -109,4 +51,76 @@ function substitutePattern(
     result = result.replace(pattern, String(value));
   }
   return result;
+}
+
+/**
+ * Validates that a template without parameters does not contain placeholders.
+ */
+function assertTemplateCanRenderWithoutParameters(templateLatex: string): void {
+  if (hasPlaceholders(templateLatex)) {
+    throw new RenderError(
+      `Template contains placeholders but no parameters provided: ${extractPlaceholders(templateLatex).join(", ")}`
+    );
+  }
+}
+
+/**
+ * Validates that all placeholders were resolved after rendering.
+ */
+function assertNoUnresolvedPlaceholders(rendered: string): void {
+  const remainingPlaceholders = extractPlaceholders(rendered);
+  if (remainingPlaceholders.length > 0) {
+    throw new RenderError(
+      `Unresolved placeholders after rendering: ${remainingPlaceholders.join(", ")}`
+    );
+  }
+}
+
+/**
+ * Substitutes parameters into a LaTeX template string.
+ *
+ * Supports two syntaxes:
+ * - `$param` - simple parameter substitution
+ * - `${param}` - explicit parameter substitution
+ *
+ * @param templateLatex - Template string with placeholders
+ * @param parameters - Key-value pairs for substitution
+ * @returns Rendered LaTeX string with all placeholders replaced
+ * @throws RenderError if parameters are missing or substitution is incomplete
+ */
+export function renderTemplate(
+  templateLatex: string,
+  parameters: Record<string, number>
+): string {
+  if (!templateLatex) {
+    throw new RenderError("Template cannot be empty");
+  }
+
+  if (!parameters || Object.keys(parameters).length === 0) {
+    // No parameters to substitute - return template as-is
+    // But validate there are no placeholders expecting parameters
+    assertTemplateCanRenderWithoutParameters(templateLatex);
+    return templateLatex;
+  }
+
+  let rendered = templateLatex;
+
+  // Replace ${param} syntax first (more specific pattern)
+  rendered = substitutePattern(
+    rendered,
+    parameters,
+    (escaped) => new RegExp(`\\$\\{${escaped}\\}`, "g")
+  );
+
+  // Replace $param syntax second
+  rendered = substitutePattern(
+    rendered,
+    parameters,
+    (escaped) => new RegExp(`\\$${escaped}(?!\\w)`, "g")
+  );
+
+  // Validate all placeholders were replaced
+  assertNoUnresolvedPlaceholders(rendered);
+
+  return rendered;
 }
