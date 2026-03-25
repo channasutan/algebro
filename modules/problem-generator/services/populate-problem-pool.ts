@@ -97,12 +97,20 @@ function buildBatches(count: number, batchSize: number): number[][] {
 /**
  * Processes a single batch of problem generation.
  */
+type BatchProcessingDependencies = {
+  repo: ProblemRepository;
+  params: {
+    templateId: string;
+    topicId: string;
+    difficulty: number;
+  };
+  context: ServiceContext;
+  log: ReturnType<typeof createServiceLogger>;
+};
+
 async function processBatch(
   batch: number[],
-  repo: ProblemRepository,
-  params: { templateId: string; topicId: string; difficulty: number },
-  context: ServiceContext,
-  log: ReturnType<typeof createServiceLogger>
+  { repo, params, context, log }: BatchProcessingDependencies
 ): Promise<{ generated: number; failed: number }> {
   const results = await Promise.allSettled(
     batch.map(() => generateAndAddToPool(repo, params, context, log))
@@ -160,13 +168,12 @@ export async function populatePool(
   const batches = buildBatches(count, batchSize);
 
   for (const batch of batches) {
-    const counts = await processBatch(
-      batch,
+    const counts = await processBatch(batch, {
       repo,
-      { templateId, topicId, difficulty },
+      params: { templateId, topicId, difficulty },
       context,
-      log
-    );
+      log,
+    });
     generated += counts.generated;
     failed += counts.failed;
 
