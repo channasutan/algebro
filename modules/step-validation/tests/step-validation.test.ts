@@ -19,30 +19,32 @@ const globalMockState = {
   throwError: null as Error | null,
 };
 
-// Mock @cortex-js/compute-engine
-vi.mock("@cortex-js/compute-engine", () => {
-  const canonical: Record<string, string> = {
-    "2(x+3)":    "2x+6",
-    "2x+6":      "2x+6",
-    "x^2+2x+1":  "(x+1)^2",
-    "(x+1)^2":   "(x+1)^2",
-    "2x=4":      "x=2",
-    "2x + 4":    "2x+4",
-  };
+// Canonical map extracted outside vi.mock to reduce nesting depth
+const canonical: Record<string, string> = {
+  "2(x+3)":    "2x+6",
+  "2x+6":      "2x+6",
+  "x^2+2x+1":  "(x+1)^2",
+  "(x+1)^2":   "(x+1)^2",
+  "2x=4":      "x=2",
+  "2x + 4":    "2x+4",
+};
 
-  return {
-    ComputeEngine: vi.fn().mockImplementation(() => ({
-      parse: vi.fn((latex: string) => ({
-        simplify: () => {
-          if (globalMockState.shouldThrow) {
-            throw globalMockState.throwError || new Error("parse error");
-          }
-          return { toLatex: () => canonical[latex] ?? latex };
-        },
-      })),
+// Parse function extracted outside vi.mock - handles error state internally
+const makeParseResult = (latex: string) => {
+  if (globalMockState.shouldThrow) {
+    throw globalMockState.throwError || new Error("parse error");
+  }
+  return { toLatex: () => canonical[latex] ?? latex };
+};
+
+// Mock @cortex-js/compute-engine
+vi.mock("@cortex-js/compute-engine", () => ({
+  ComputeEngine: vi.fn().mockImplementation(() => ({
+    parse: vi.fn((latex: string) => ({
+      simplify: () => makeParseResult(latex),
     })),
-  };
-});
+  })),
+}));
 
 import { canonicalize } from "../services/canonicalize";
 import { validateStep } from "../services/validate-step";
