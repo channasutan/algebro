@@ -1,14 +1,18 @@
 import "server-only";
 
 import { canonicalize } from "./canonicalize";
+import { classifyStep } from "./classify-step";
+import { detectErrorType } from "./detect-error-type";
 import type { ValidationResult } from "../contracts/validation";
 import { createServiceLogger, type ServiceContext } from "@/lib/observability";
+import { sympyClient } from "@/infrastructure/math/sympy-client";
 
 export async function validateStep(
   input: { previousLatex: string; currentLatex: string },
   context: ServiceContext
 ): Promise<ValidationResult> {
   const log = createServiceLogger(context.requestId);
+  const stepType = classifyStep(input);
 
   log.info({
     event: "practice.step-validation",
@@ -28,17 +32,37 @@ export async function validateStep(
 
     return {
       isValid,
-      errorType: isValid ? null : "invalid"
+      errorType: isValid ? null : detectErrorType(input),
+      stepType
     };
-  } catch (error) {
+  } catch (cortexError) {
     log.warn({
       event: "practice.step-validation",
-      meta: { type: "domain", phase: "validation", userId: "system", outcome: "failure", reason: "parse_error", error }
+      meta: { type: "domain", phase: "validation", userId: "system", reason: "cortex_error", fallback: "sympy_fallback" }
+    });
+
+    try {
+      const sympyResult = await sympyClient.evaluate({
+        expression: input.previousLatex,
+        operation: "equivalence",
+        context: { target: input.currentLatex }
+      });
+
+      const isValid = sympyResult.result === true;
+      const errorType = isValid ? null : ("non_equivalent_transformation" as const);
+
+      return { isValid, errorType, stepType };
+    } catch (sympyError) {
+    log.warn({
+      event: "practice.step-validation",
+      meta: { type: "domain", phase: "validation", userId: "system", outcome: "failure", reason: "parse_error", error: sympyError }
     });
 
     return {
       isValid: false,
-      errorType: "parse_error"
+      errorType: "parse_error",
+      stepType: null
     };
+    }
   }
 }
