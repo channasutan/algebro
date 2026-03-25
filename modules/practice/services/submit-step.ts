@@ -3,6 +3,8 @@ import { PracticeRepository } from "../repositories/practice-repository";
 import { SolutionStep } from "../domain/practice";
 import { createServiceLogger, type ServiceContext } from "@/lib/observability";
 import { validateStep } from "@/modules/step-validation";
+import { eventBus } from "@/events/event-bus";
+import { createDomainEvent } from "@/events/event-types";
 
 export type SubmitStepInput = {
   attemptId: string;
@@ -59,7 +61,7 @@ export async function submitStepWithRepository(
     const previousLatex = getPreviousLatex(existingSteps);
 
     const validation = previousLatex === null
-      ? { isValid: true, errorType: null } // first step: skip validation
+      ? { isValid: true, errorType: null, stepType: null } // first step: skip validation
       : await validateStep({ previousLatex, currentLatex: stepLatex }, context);
 
     const step = await repo.addStep(attemptId, nextIndex, stepLatex);
@@ -67,6 +69,20 @@ export async function submitStepWithRepository(
       isValid: validation.isValid,
       errorType: validation.errorType,
     });
+
+    void eventBus.publish(
+      createDomainEvent({
+        eventType: "step_validated",
+        payload: {
+          step_index: nextIndex,
+          is_valid: validation.isValid,
+          error_type: validation.errorType,
+          step_type: validation.stepType ?? null,
+          attempt_id: attemptId,
+          user_id: userId
+        }
+      })
+    );
 
     log.info({ 
       event: "practice.step", 
