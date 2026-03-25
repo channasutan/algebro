@@ -33,8 +33,7 @@ export async function validateStep(
   } catch (error) {
     log.warn({
       event: "practice.step-validation",
-      meta: { type: "domain", phase: "validation", userId: "system", outcome: "failure", reason: "parse_error" },
-      error
+      meta: { type: "domain", phase: "validation", userId: "system", outcome: "failure", reason: "parse_error", error }
     });
 
     return {
