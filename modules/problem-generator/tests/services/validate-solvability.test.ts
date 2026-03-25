@@ -24,13 +24,15 @@ const context = { requestId: "test-req" };
 
 describe("validateSolvability", () => {
   // Test helpers to reduce duplication
-  const mockEvaluate = () => vi.mocked(sympyClient.evaluate);
+  const getMockEvaluate = () => vi.mocked(sympyClient.evaluate);
 
-  const mockSuccess = (result: unknown) =>
-    mockEvaluate().mockResolvedValue({ result });
+  const mockSympySuccess = (result: unknown) => {
+    getMockEvaluate().mockResolvedValue({ result });
+  };
 
-  const mockFailure = (message: string) =>
-    mockEvaluate().mockRejectedValue(new Error(message));
+  const mockSympyFailure = (message: string) => {
+    getMockEvaluate().mockRejectedValue(new Error(message));
+  };
 
   const makeInput = (problemLatex: string): ValidateProblemInput => ({
     problemLatex,
@@ -40,68 +42,72 @@ describe("validateSolvability", () => {
     vi.clearAllMocks();
   });
 
-  it("returns isSolvable: true when SymPy finds a solution", async () => {
-    mockSuccess({ x: 3 });
-    const input = makeInput("2x + 4 = 10");
+  describe("success cases", () => {
+    it.each`
+      problemLatex      | expectedResult
+      ${"2x + 4 = 10"}  | ${true}
+      ${"x = 5"}        | ${true}
+      ${"3x - 6 = 0"}   | ${true}
+    `("returns isSolvable: $expectedResult for '$problemLatex'", async ({ problemLatex, expectedResult }) => {
+      mockSympySuccess({ x: 3 });
+      const input = makeInput(problemLatex);
 
-    const result = await validateSolvability(input, context);
+      const result = await validateSolvability(input, context);
 
-    expect(result.isSolvable).toBe(true);
-    expect(result.errorType).toBeUndefined();
+      expect(result.isSolvable).toBe(expectedResult);
+      expect(result.errorType).toBeUndefined();
+    });
   });
 
-  it("returns isSolvable: false with unsolvable error when no solution", async () => {
-    mockSuccess(null);
-    const input = makeInput("x = x + 1");
+  describe("unsolvable cases", () => {
+    it.each`
+      problemLatex
+      ${"x = x + 1"}
+      ${"0 = 1"}
+      ${"2 = 3"}
+    `("returns isSolvable: false for unsolvable '$problemLatex'", async ({ problemLatex }) => {
+      mockSympySuccess(null);
+      const input = makeInput(problemLatex);
 
-    const result = await validateSolvability(input, context);
+      const result = await validateSolvability(input, context);
 
-    expect(result.isSolvable).toBe(false);
-    expect(result.errorType).toBe("unsolvable");
+      expect(result.isSolvable).toBe(false);
+      expect(result.errorType).toBe("unsolvable");
+    });
   });
 
-  it("returns parse_error when SymPy reports parse error", async () => {
-    mockFailure("parse error: invalid syntax");
-    const input = makeInput("%%%invalid%%%");
+  describe("error cases", () => {
+    it.each`
+      errorMessage                         | expectedErrorType
+      ${"parse error: invalid syntax"}     | ${"parse_error"}
+      ${"invalid expression"}              | ${"parse_error"}
+      ${"bad syntax in equation"}          | ${"parse_error"}
+      ${"Network error: connection refused"} | ${"sympy_unavailable"}
+      ${"timeout"}                         | ${"sympy_unavailable"}
+      ${"ETIMEDOUT"}                       | ${"sympy_unavailable"}
+    `("returns errorType '$expectedErrorType' for '$errorMessage'", async ({ errorMessage, expectedErrorType }) => {
+      mockSympyFailure(errorMessage);
+      const input = makeInput("some equation");
 
-    const result = await validateSolvability(input, context);
+      const result = await validateSolvability(input, context);
 
-    expect(result.isSolvable).toBe(false);
-    expect(result.errorType).toBe("parse_error");
-  });
-
-  it("returns sympy_unavailable on network error", async () => {
-    mockFailure("Network error: connection refused");
-    const input = makeInput("2x = 4");
-
-    const result = await validateSolvability(input, context);
-
-    expect(result.isSolvable).toBe(false);
-    expect(result.errorType).toBe("sympy_unavailable");
+      expect(result.isSolvable).toBe(false);
+      expect(result.errorType).toBe(expectedErrorType);
+    });
   });
 
   it("calls SymPy with correct parameters", async () => {
-    mockSuccess({ x: 2 });
+    mockSympySuccess({ x: 2 });
     const input = makeInput("2x = 4");
 
     await validateSolvability(input, context);
 
-    expect(mockEvaluate()).toHaveBeenCalledWith({
+    expect(getMockEvaluate()).toHaveBeenCalledWith({
       expression: "2x = 4",
       operation: "solve",
       context: {
         variable: "x",
       },
     });
-  });
-
-  it("handles SymPy timeout gracefully", async () => {
-    mockFailure("timeout");
-    const input = makeInput("complex equation");
-
-    const result = await validateSolvability(input, context);
-
-    expect(result.isSolvable).toBe(false);
-    expect(result.errorType).toBe("sympy_unavailable");
   });
 });
