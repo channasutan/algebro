@@ -77,6 +77,31 @@ function createRepositoryFromClientFactory(
     return mapAttempt(data);
   };
 
+  const completeAttempt = async (
+    attemptId: string,
+    input: {
+      completedAt: string;
+      isCorrect: boolean;
+    }
+  ): Promise<Attempt> => {
+    const client = await getClient();
+    const { data, error } = await client
+      .from("attempts")
+      .update({
+        completed_at: input.completedAt,
+        is_correct: input.isCorrect
+      })
+      .eq("id", attemptId)
+      .select()
+      .single();
+
+    if (error) {
+      throw new AttemptNotFoundError(attemptId);
+    }
+
+    return mapAttempt(data as Record<string, unknown>);
+  };
+
   const addStep = async (attemptId: string, stepIndex: number, stepLatex: string): Promise<SolutionStep> => {
     const data = await dbInsert<Record<string, unknown>>(await getClient(), "solution_steps", {
       attempt_id: attemptId,
@@ -124,6 +149,7 @@ function createRepositoryFromClientFactory(
     createAttempt,
     getAttempt,
     updateAttempt,
+    completeAttempt,
     addStep,
     getSteps,
     updateStep,
