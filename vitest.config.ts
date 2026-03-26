@@ -10,7 +10,8 @@ export default defineConfig({
     environment: "node",
     include: [
       "tests/**/*.test.ts",
-      "modules/**/*.test.ts"
+      "modules/**/*.test.ts",
+      "jobs/**/*.test.ts"
     ],
     setupFiles: ["./tests/setup.ts"],
     coverage: {

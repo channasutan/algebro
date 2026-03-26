@@ -9,6 +9,11 @@ import {
   MATERIAL_PROCESSING_JOB,
   materialProcessingHandler
 } from "@/jobs/handlers/material-processing";
+import {
+  POPULATE_POOL_JOB,
+  populatePoolHandler,
+  populatePoolPayloadSchema
+} from "@/jobs/handlers/populate-pool";
 import { registerJobHandler } from "@/jobs/job-runner";
 
 let bootstrapped = false;
@@ -16,6 +21,10 @@ let bootstrapPromise: Promise<void> | null = null;
 
 function registerSharedInfrastructure(): void {
   registerJobHandler(MATERIAL_PROCESSING_JOB, materialProcessingHandler);
+  registerJobHandler(POPULATE_POOL_JOB, {
+    handler: populatePoolHandler,
+    schema: populatePoolPayloadSchema
+  });
 }
 
 function registerAuthenticationModule(): void {

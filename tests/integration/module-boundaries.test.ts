@@ -46,7 +46,10 @@ function toRepoRelativePath(absolutePath: string): string {
 }
 
 function isRepositoryFile(relativePath: string): boolean {
-  return /^modules\/[^/]+\/repositories\/.+\.(ts|tsx)$/.test(relativePath);
+  return (
+    /^modules\/[^/]+\/repositories\/.+\.(ts|tsx)$/.test(relativePath) ||
+    /^jobs\/repositories\/.+\.(ts|tsx)$/.test(relativePath)
+  );
 }
 
 function findSupabaseImports(source: string): string[] {

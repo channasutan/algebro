@@ -93,7 +93,7 @@ export async function validateSolvability(
     });
 
     if (hasSolution) {
-      return { isSolvable: true };
+      return { isSolvable: true, solutionRaw: response.result };
     } else {
       return { isSolvable: false, errorType: "unsolvable" };
     }
