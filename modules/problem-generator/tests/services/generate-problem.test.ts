@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { ProblemTemplate } from "../../domain/problem-template";
+import type { ProblemRepository } from "../../repositories/problem-repository";
+import { generateProblem } from "../../services/generate-problem";
+
 vi.mock("@/lib/observability", () => ({
   createServiceLogger: vi.fn(() => ({
     info: vi.fn(),
@@ -8,15 +12,20 @@ vi.mock("@/lib/observability", () => ({
   }))
 }));
 
-vi.mock("@/infrastructure/math/sympy-client", () => ({
-  sympyClient: {
-    evaluate: vi.fn()
-  }
+vi.mock("../../services/validate-solvability", () => ({
+  validateSolvability: vi.fn()
 }));
 
-import { sympyClient } from "@/infrastructure/math/sympy-client";
-import type { ProblemRepository } from "../../repositories/problem-repository";
-import { generateProblem } from "../../services/generate-problem";
+import { validateSolvability } from "../../services/validate-solvability";
+
+const TEMPLATE_FIXTURE: ProblemTemplate = {
+  id: "tpl-1",
+  name: "Linear",
+  templateLatex: "2x + 4 = 10",
+  parameterSchema: null,
+  baseDifficulty: 1,
+  createdAt: "2026-01-01T00:00:00.000Z",
+};
 
 const context = { requestId: "test-req" };
 
@@ -51,15 +60,11 @@ describe("generateProblem", () => {
 
   it("returns wasValidated: false when SymPy reports unsolvable", async () => {
     const repo = createRepoMock();
-    vi.mocked(repo.getTemplate).mockResolvedValue({
-      id: "tpl-1",
-      name: "Linear",
-      templateLatex: "2x + 4 = 10",
-      parameterSchema: null,
-      baseDifficulty: 1,
-      createdAt: "2026-01-01T00:00:00.000Z"
+    vi.mocked(repo.getTemplate).mockResolvedValue(TEMPLATE_FIXTURE);
+    vi.mocked(validateSolvability).mockResolvedValue({
+      isSolvable: false,
+      errorType: "sympy_unavailable"
     });
-    vi.mocked(sympyClient.evaluate).mockResolvedValue({ result: null });
 
     const result = await generateProblem(
       repo,
@@ -75,15 +80,11 @@ describe("generateProblem", () => {
     const repo = createRepoMock();
     const mockSolutionRaw = "x = 3";
 
-    vi.mocked(repo.getTemplate).mockResolvedValue({
-      id: "tpl-1",
-      name: "Linear",
-      templateLatex: "2x + 4 = 10",
-      parameterSchema: null,
-      baseDifficulty: 1,
-      createdAt: "2026-01-01T00:00:00.000Z"
+    vi.mocked(repo.getTemplate).mockResolvedValue(TEMPLATE_FIXTURE);
+    vi.mocked(validateSolvability).mockResolvedValue({
+      isSolvable: true,
+      solutionRaw: mockSolutionRaw
     });
-    vi.mocked(sympyClient.evaluate).mockResolvedValue({ result: mockSolutionRaw });
     vi.mocked(repo.saveProblem).mockImplementation(async (problem) => ({
       ...problem,
       id: "prob-1",
@@ -98,23 +99,19 @@ describe("generateProblem", () => {
 
     expect(result.wasValidated).toBe(true);
     expect(result.problem).toBeDefined();
-    expect(result.problem?.solutionLatex).toBe(String(mockSolutionRaw));
+    expect(result.problem?.solutionLatex).toBe("x = 3");
     expect(result.problem?.problemLatex).not.toBe(result.problem?.solutionLatex);
     expect(repo.saveProblem).toHaveBeenCalledTimes(1);
-    expect(vi.mocked(repo.saveProblem).mock.calls[0][0].solutionLatex).toBe(String(mockSolutionRaw));
+    expect(vi.mocked(repo.saveProblem).mock.calls[0][0].solutionLatex).toBe("x = 3");
   });
 
   it("calls repo.saveProblem exactly once on success", async () => {
     const repo = createRepoMock();
-    vi.mocked(repo.getTemplate).mockResolvedValue({
-      id: "tpl-1",
-      name: "Linear",
-      templateLatex: "2x + 4 = 10",
-      parameterSchema: null,
-      baseDifficulty: 1,
-      createdAt: "2026-01-01T00:00:00.000Z"
+    vi.mocked(repo.getTemplate).mockResolvedValue(TEMPLATE_FIXTURE);
+    vi.mocked(validateSolvability).mockResolvedValue({
+      isSolvable: true,
+      solutionRaw: "x = 3"
     });
-    vi.mocked(sympyClient.evaluate).mockResolvedValue({ result: "x = 3" });
     vi.mocked(repo.saveProblem).mockResolvedValue({
       id: "prob-1",
       templateId: "tpl-1",
@@ -134,15 +131,11 @@ describe("generateProblem", () => {
 
   it("does not call repo.saveProblem when validation fails", async () => {
     const repo = createRepoMock();
-    vi.mocked(repo.getTemplate).mockResolvedValue({
-      id: "tpl-1",
-      name: "Linear",
-      templateLatex: "2x + 4 = 10",
-      parameterSchema: null,
-      baseDifficulty: 1,
-      createdAt: "2026-01-01T00:00:00.000Z"
+    vi.mocked(repo.getTemplate).mockResolvedValue(TEMPLATE_FIXTURE);
+    vi.mocked(validateSolvability).mockResolvedValue({
+      isSolvable: false,
+      errorType: "sympy_unavailable"
     });
-    vi.mocked(sympyClient.evaluate).mockResolvedValue({ result: null });
 
     await generateProblem(repo, { templateId: "tpl-1", difficultyLevel: 2 }, context);
 
@@ -153,15 +146,11 @@ describe("generateProblem", () => {
     const repo = createRepoMock();
     const mockSolutionRaw = { x: 3 };
 
-    vi.mocked(repo.getTemplate).mockResolvedValue({
-      id: "tpl-1",
-      name: "Linear",
-      templateLatex: "2x + 4 = 10",
-      parameterSchema: null,
-      baseDifficulty: 1,
-      createdAt: "2026-01-01T00:00:00.000Z"
+    vi.mocked(repo.getTemplate).mockResolvedValue(TEMPLATE_FIXTURE);
+    vi.mocked(validateSolvability).mockResolvedValue({
+      isSolvable: true,
+      solutionRaw: mockSolutionRaw
     });
-    vi.mocked(sympyClient.evaluate).mockResolvedValue({ result: mockSolutionRaw });
     vi.mocked(repo.saveProblem).mockImplementation(async (problem) => ({
       ...problem,
       id: "prob-1",
@@ -185,15 +174,11 @@ describe("generateProblem", () => {
     const repo = createRepoMock();
     const mockSolutionRaw = [3];
 
-    vi.mocked(repo.getTemplate).mockResolvedValue({
-      id: "tpl-1",
-      name: "Linear",
-      templateLatex: "2x + 4 = 10",
-      parameterSchema: null,
-      baseDifficulty: 1,
-      createdAt: "2026-01-01T00:00:00.000Z"
+    vi.mocked(repo.getTemplate).mockResolvedValue(TEMPLATE_FIXTURE);
+    vi.mocked(validateSolvability).mockResolvedValue({
+      isSolvable: true,
+      solutionRaw: mockSolutionRaw
     });
-    vi.mocked(sympyClient.evaluate).mockResolvedValue({ result: mockSolutionRaw });
     vi.mocked(repo.saveProblem).mockImplementation(async (problem) => ({
       ...problem,
       id: "prob-1",
