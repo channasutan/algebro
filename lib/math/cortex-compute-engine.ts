@@ -14,20 +14,38 @@ type ParsedExpression = {
 
 const ce = new ComputeEngine();
 
+/**
+ * Checks if the value is a valid object (non-null, object type).
+ */
+function isObjectish(value: unknown): boolean {
+  return !!value && typeof value === "object";
+}
+
+/**
+ * Checks if the candidate has all required methods and properties.
+ */
+function hasRequiredInterface(candidate: Partial<ParsedExpression>): boolean {
+  return (
+    typeof candidate.canonical === "object" &&
+    typeof candidate.simplify === "function" &&
+    typeof candidate.toLatex === "function" &&
+    typeof candidate.isEqual === "function" &&
+    typeof candidate.isValid === "boolean"
+  );
+}
+
+/**
+ * Validates and casts a raw Cortex parse result to ParsedExpression.
+ * Throws MathParseError if the result is invalid or missing required interface.
+ */
 function asParsedExpression(value: unknown): ParsedExpression {
-  if (!value || typeof value !== "object") {
+  if (!isObjectish(value)) {
     throw new MathParseError("Unable to parse LaTeX expression");
   }
 
   const candidate = value as Partial<ParsedExpression>;
 
-  if (
-    typeof candidate.canonical !== "object" ||
-    typeof candidate.simplify !== "function" ||
-    typeof candidate.toLatex !== "function" ||
-    typeof candidate.isEqual !== "function" ||
-    typeof candidate.isValid !== "boolean"
-  ) {
+  if (!hasRequiredInterface(candidate)) {
     throw new MathParseError("Unable to parse LaTeX expression");
   }
 
