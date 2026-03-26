@@ -133,14 +133,14 @@ describe("validateStep", () => {
     });
   });
 
-  it("falls back to SymPy false as non-equivalent", async () => {
+  it("falls back to SymPy false as non-equivalent when cortex failed", async () => {
     evaluateMock.mockResolvedValueOnce({ result: false });
 
     const result = await validateStep({ previousLatex: String.raw`\frac{1`, currentLatex: "2x+6" }, context);
 
     expect(result).toEqual({
       isValid: false,
-      errorType: "non_equivalent_transformation",
+      errorType: "parse_error",
       stepType: "symbolic_transformation"
     });
   });
@@ -237,7 +237,7 @@ function collectTypeScriptFiles(directory: string): string[] {
     const entryPath = path.join(directory, entry.name);
 
     if (entry.isDirectory()) {
-      if (entry.name === "node_modules" || entry.name === ".next" || entry.name === "dist") {
+      if (entry.name === "node_modules" || entry.name === ".next" || entry.name === "dist" || entry.name === ".git") {
         return [];
       }
 
