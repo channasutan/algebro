@@ -14,13 +14,10 @@ export function detectErrorType(input: {
     // skip
   }
 
-    try {
-      const hasDistPattern = /[a-z0-9]\s*(\(|\\\[)/i.test(input.previousLatex);
-      if (hasDistPattern) {
-        return "incorrect_distribution";
-      }
-    } catch {
-      // skip
+  try {
+    const hasDistPattern = /[a-z0-9]\s*(\(|\\\[)/i.test(input.previousLatex);
+    if (hasDistPattern) {
+      return "incorrect_distribution";
     }
   } catch {
     // skip
