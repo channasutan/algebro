@@ -31,22 +31,49 @@ const canonicalMap: Record<string, string> = {
   "-((-2x-6))": "2x+6"
 };
 
+// Helper to create mock parse result for ComputeEngine
+function createMockParseResult(latex: string) {
+  const shouldFail = latex.includes("%%%");
+  return {
+    simplify: vi.fn(() => {
+      if (shouldFail) {
+        throw new Error("bad input");
+      }
+      return {
+        toLatex: vi.fn(() => canonicalMap[latex] ?? latex)
+      };
+    })
+  };
+}
+
+// Helper to create mock ComputeEngine instance
+function createMockComputeEngine() {
+  return {
+    parse: vi.fn((latex: string) => createMockParseResult(latex))
+  };
+}
+
 vi.mock("@cortex-js/compute-engine", () => ({
-  ComputeEngine: vi.fn().mockImplementation(() => ({
-    parse: vi.fn((latex: string) => ({
-      simplify: vi.fn(() => {
-        if (latex.includes("%%%")) {
-          throw new Error("bad input");
-        }
-        return {
-          toLatex: vi.fn(() => canonicalMap[latex] ?? latex)
-        };
-      })
-    }))
-  }))
+  ComputeEngine: vi.fn().mockImplementation(() => createMockComputeEngine())
 }));
 
 import * as canonicalizeModule from "../services/canonicalize";
+
+// Helper to wrap tests where canonicalize is mocked to fail (CortexJS failure scenario)
+async function withCortexFailing<T>(fn: () => Promise<T>): Promise<T> {
+  const canonicalizeSpy = vi
+    .spyOn(canonicalizeModule, "canonicalize")
+    .mockImplementation(() => {
+      throw new Error("cortex-fail");
+    });
+
+  try {
+    return await fn();
+  } finally {
+    canonicalizeSpy.mockRestore();
+  }
+}
+
 import { canonicalize } from "../services/canonicalize";
 import { classifyStep } from "../services/classify-step";
 import { detectErrorType } from "../services/detect-error-type";
@@ -140,20 +167,15 @@ describe("validateStep", () => {
   });
 
   it("returns isValid: false with errorType 'parse_error' when canonicalize and SymPy fail", async () => {
-    const canonicalizeSpy = vi
-      .spyOn(canonicalizeModule, "canonicalize")
-      .mockImplementation(() => {
-        throw new Error("cortex-fail");
-      });
-
     evaluateMock.mockRejectedValueOnce(new Error("sympy-fail"));
 
-    const result = await validateStep({ previousLatex: "%%%bad%%%", currentLatex: "2x+6" }, context);
+    const result = await withCortexFailing(() =>
+      validateStep({ previousLatex: "%%%bad%%%", currentLatex: "2x+6" }, context)
+    );
+
     expect(result.isValid).toBe(false);
     expect(result.errorType).toBe("parse_error");
     expect(result.stepType).toBeNull();
-
-    canonicalizeSpy.mockRestore();
   });
 });
 
@@ -164,59 +186,44 @@ describe("validateStep - SymPy fallback", () => {
   });
 
   it("returns valid when Cortex fails and SymPy returns true", async () => {
-    const canonicalizeSpy = vi
-      .spyOn(canonicalizeModule, "canonicalize")
-      .mockImplementation(() => {
-        throw new Error("cortex-fail");
-      });
-
     evaluateMock.mockResolvedValueOnce({ result: true });
 
-    const result = await validateStep({ previousLatex: "2x+4", currentLatex: "2x+4" }, context);
+    const result = await withCortexFailing(() =>
+      validateStep({ previousLatex: "2x+4", currentLatex: "2x+4" }, context)
+    );
+
     expect(result).toEqual({
       isValid: true,
       errorType: null,
       stepType: "symbolic_transformation"
     });
-
-    canonicalizeSpy.mockRestore();
   });
 
   it("returns non_equivalent_transformation when Cortex fails and SymPy returns false", async () => {
-    const canonicalizeSpy = vi
-      .spyOn(canonicalizeModule, "canonicalize")
-      .mockImplementation(() => {
-        throw new Error("cortex-fail");
-      });
-
     evaluateMock.mockResolvedValueOnce({ result: false });
 
-    const result = await validateStep({ previousLatex: "2x+4", currentLatex: "2x=4" }, context);
+    const result = await withCortexFailing(() =>
+      validateStep({ previousLatex: "2x+4", currentLatex: "2x=4" }, context)
+    );
+
     expect(result).toEqual({
       isValid: false,
       errorType: "non_equivalent_transformation",
       stepType: "equation_operation"
     });
-
-    canonicalizeSpy.mockRestore();
   });
 
   it("returns parse_error and null stepType when Cortex and SymPy both fail", async () => {
-    const canonicalizeSpy = vi
-      .spyOn(canonicalizeModule, "canonicalize")
-      .mockImplementation(() => {
-        throw new Error("cortex-fail");
-      });
-
     evaluateMock.mockRejectedValueOnce(new Error("sympy-fail"));
 
-    const result = await validateStep({ previousLatex: "2x+4", currentLatex: "2x+6" }, context);
+    const result = await withCortexFailing(() =>
+      validateStep({ previousLatex: "2x+4", currentLatex: "2x+6" }, context)
+    );
+
     expect(result).toEqual({
       isValid: false,
       errorType: "parse_error",
       stepType: null
     });
-
-    canonicalizeSpy.mockRestore();
   });
 });

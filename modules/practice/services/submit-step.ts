@@ -3,6 +3,7 @@ import { PracticeRepository } from "../repositories/practice-repository";
 import { SolutionStep } from "../domain/practice";
 import { createServiceLogger, type ServiceContext } from "@/lib/observability";
 import { validateStep } from "@/modules/step-validation";
+import type { ValidationErrorType, StepType } from "@/modules/step-validation/contracts/validation";
 import { eventBus } from "@/events/event-bus";
 import { createDomainEvent } from "@/events/event-types";
 
@@ -70,19 +71,12 @@ export async function submitStepWithRepository(
       errorType: validation.errorType,
     });
 
-    void eventBus.publish(
-      createDomainEvent({
-        eventType: "step_validated",
-        payload: {
-          step_index: nextIndex,
-          is_valid: validation.isValid,
-          error_type: validation.errorType,
-          step_type: validation.stepType ?? null,
-          attempt_id: attemptId,
-          user_id: userId
-        }
-      })
-    );
+    publishStepValidatedEvent({
+      nextIndex,
+      validation,
+      attemptId,
+      userId
+    });
 
     log.info({ 
       event: "practice.step", 
@@ -111,4 +105,27 @@ function getPreviousLatex(steps: SolutionStep[]): string | null {
 
 function truncateForLog(value: string, maxLength = 20): string {
   return value.length > maxLength ? value.slice(0, maxLength) + "..." : value;
+}
+
+function publishStepValidatedEvent(params: {
+  nextIndex: number;
+  validation: { isValid: boolean; errorType: ValidationErrorType | null; stepType: StepType | null };
+  attemptId: string;
+  userId: string;
+}): void {
+  eventBus.publish(
+    createDomainEvent({
+      eventType: "step_validated",
+      payload: {
+        step_index: params.nextIndex,
+        is_valid: params.validation.isValid,
+        error_type: params.validation.errorType,
+        step_type: params.validation.stepType ?? null,
+        attempt_id: params.attemptId,
+        user_id: params.userId
+      }
+    })
+  ).catch(() => {
+    // fire-and-forget: intentionally ignored
+  });
 }
