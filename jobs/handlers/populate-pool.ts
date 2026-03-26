@@ -41,4 +41,4 @@ export const populatePoolHandler: JobHandler = async (job) => {
       `populatePool generated 0 problems for templateId=${payload.templateId}`
     );
   }
-};
+}

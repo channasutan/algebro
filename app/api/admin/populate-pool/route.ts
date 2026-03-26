@@ -4,7 +4,7 @@ import {
   populatePoolPayloadSchema
 } from "@/jobs/handlers/populate-pool";
 import { getAdminSecret } from "@/config/env.server-entry";
-import { enqueuePopulatePoolJob } from "@/modules/problem-generator/repositories/supabase-problem-repository";
+import { enqueuePopulatePoolJob } from "@/jobs/repositories/job-repository";
 
 export async function POST(request: NextRequest) {
   const expectedSecret = getAdminSecret();
