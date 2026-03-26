@@ -1,5 +1,5 @@
 import type { SymbolicErrorType } from "../contracts/validation";
-import { cortexComputeEngine } from "@/infrastructure/math/cortex-compute-engine";
+import { cortexComputeEngine } from "@/lib/math/cortex-compute-engine";
 
 export function detectErrorType(input: {
   previousLatex: string;

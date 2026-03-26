@@ -78,6 +78,9 @@ directives:
   - name: "Modules cannot depend on infrastructure"
     constraint: "modules -> infrastructure"
     action: forbid
+  - name: "Modules can access shared lib"
+    constraint: "modules -> lib"
+    action: allow
   - name: "App cannot depend on infrastructure"
     constraint: "app -> infrastructure"
     action: forbid

@@ -5,9 +5,9 @@ import { classifyStep } from "./classify-step";
 import { detectErrorType } from "./detect-error-type";
 import type { ValidationResult } from "../contracts/validation";
 import { createServiceLogger, type ServiceContext } from "@/lib/observability";
-import { cortexComputeEngine } from "@/infrastructure/math/cortex-compute-engine";
+import { cortexComputeEngine } from "@/lib/math/cortex-compute-engine";
 import { sympyClient } from "@/infrastructure/math/sympy-client";
-import { MathEquivalenceError, MathParseError } from "@/infrastructure/math/errors";
+import { MathEquivalenceError, MathParseError } from "@/lib/math/errors";
 
 export async function validateStep(
   input: { previousLatex: string; currentLatex: string },

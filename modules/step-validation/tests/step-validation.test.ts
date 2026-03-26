@@ -24,7 +24,7 @@ vi.mock("@/lib/observability", () => ({
   }))
 }));
 
-import { MathParseError } from "@/infrastructure/math/errors";
+import { MathParseError } from "@/lib/math/errors";
 import { canonicalize } from "../services/canonicalize";
 import { classifyStep } from "../services/classify-step";
 import { detectErrorType } from "../services/detect-error-type";
@@ -159,9 +159,9 @@ describe("validateStep", () => {
 });
 
 describe("import boundaries", () => {
-  it("keeps @cortex-js/compute-engine import only in infrastructure adapter", () => {
+  it("keeps @cortex-js/compute-engine import only in lib math adapter", () => {
     const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
-    const allowedImporter = "infrastructure/math/cortex-compute-engine.ts";
+    const allowedImporter = "lib/math/cortex-compute-engine.ts";
     const allTsFiles = collectTypeScriptFiles(repoRoot);
     const cortexImportPattern = /(^|\n)\s*import[^\n]*["']@cortex-js\/compute-engine["'];?/;
 
