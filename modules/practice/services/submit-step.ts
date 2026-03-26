@@ -71,7 +71,7 @@ export async function submitStepWithRepository(
       errorType: validation.errorType,
     });
 
-    void publishStepValidatedEvent({
+    publishStepValidatedEvent({
       nextIndex,
       validation,
       attemptId,
@@ -113,7 +113,7 @@ function publishStepValidatedEvent(params: {
   attemptId: string;
   userId: string;
 }): void {
-  void eventBus.publish(
+  eventBus.publish(
     createDomainEvent({
       eventType: "step_validated",
       payload: {
@@ -125,5 +125,7 @@ function publishStepValidatedEvent(params: {
         user_id: params.userId
       }
     })
-  );
+  ).catch(() => {
+    // fire-and-forget: intentionally ignored
+  });
 }
