@@ -31,19 +31,30 @@ const canonicalMap: Record<string, string> = {
   "-((-2x-6))": "2x+6"
 };
 
+// Helper to create mock parse result for ComputeEngine
+function createMockParseResult(latex: string) {
+  const shouldFail = latex.includes("%%%");
+  return {
+    simplify: vi.fn(() => {
+      if (shouldFail) {
+        throw new Error("bad input");
+      }
+      return {
+        toLatex: vi.fn(() => canonicalMap[latex] ?? latex)
+      };
+    })
+  };
+}
+
+// Helper to create mock ComputeEngine instance
+function createMockComputeEngine() {
+  return {
+    parse: vi.fn((latex: string) => createMockParseResult(latex))
+  };
+}
+
 vi.mock("@cortex-js/compute-engine", () => ({
-  ComputeEngine: vi.fn().mockImplementation(() => ({
-    parse: vi.fn((latex: string) => ({
-      simplify: vi.fn(() => {
-        if (latex.includes("%%%")) {
-          throw new Error("bad input");
-        }
-        return {
-          toLatex: vi.fn(() => canonicalMap[latex] ?? latex)
-        };
-      })
-    }))
-  }))
+  ComputeEngine: vi.fn().mockImplementation(() => createMockComputeEngine())
 }));
 
 import * as canonicalizeModule from "../services/canonicalize";
