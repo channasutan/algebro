@@ -27,6 +27,14 @@ const TEMPLATE_FIXTURE: ProblemTemplate = {
   createdAt: "2026-01-01T00:00:00.000Z",
 };
 
+function mockSaveProblemSuccess(repo: ProblemRepository): void {
+  vi.mocked(repo.saveProblem).mockImplementation(async (problem) => ({
+    ...problem,
+    id: "prob-1",
+    createdAt: "2026-01-01T00:00:00.000Z",
+  }));
+}
+
 const context = { requestId: "test-req" };
 
 function createRepoMock(): ProblemRepository {
@@ -85,11 +93,7 @@ describe("generateProblem", () => {
       isSolvable: true,
       solutionRaw: mockSolutionRaw
     });
-    vi.mocked(repo.saveProblem).mockImplementation(async (problem) => ({
-      ...problem,
-      id: "prob-1",
-      createdAt: "2026-01-01T00:00:00.000Z"
-    }));
+    mockSaveProblemSuccess(repo);
 
     const result = await generateProblem(
       repo,
@@ -151,11 +155,7 @@ describe("generateProblem", () => {
       isSolvable: true,
       solutionRaw: mockSolutionRaw
     });
-    vi.mocked(repo.saveProblem).mockImplementation(async (problem) => ({
-      ...problem,
-      id: "prob-1",
-      createdAt: "2026-01-01T00:00:00.000Z"
-    }));
+    mockSaveProblemSuccess(repo);
 
     const result = await generateProblem(
       repo,
@@ -179,11 +179,7 @@ describe("generateProblem", () => {
       isSolvable: true,
       solutionRaw: mockSolutionRaw
     });
-    vi.mocked(repo.saveProblem).mockImplementation(async (problem) => ({
-      ...problem,
-      id: "prob-1",
-      createdAt: "2026-01-01T00:00:00.000Z"
-    }));
+    mockSaveProblemSuccess(repo);
 
     const result = await generateProblem(
       repo,
