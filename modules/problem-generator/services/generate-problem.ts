@@ -20,7 +20,9 @@ function buildProblemRecord(
     topicId: input.topicId ?? null,
     difficultyLevel: input.difficultyLevel,
     problemLatex: rendered,
-    solutionLatex: String(solutionRaw),
+    solutionLatex: typeof solutionRaw === "string"
+      ? solutionRaw
+      : JSON.stringify(solutionRaw),
     parameters,
     isValidated: true,
     createdAt: "",

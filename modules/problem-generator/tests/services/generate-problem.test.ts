@@ -148,4 +148,67 @@ describe("generateProblem", () => {
 
     expect(repo.saveProblem).toHaveBeenCalledTimes(0);
   });
+
+  it("serializes solutionLatex correctly when SymPy returns an object", async () => {
+    const repo = createRepoMock();
+    const mockSolutionRaw = { x: 3 };
+
+    vi.mocked(repo.getTemplate).mockResolvedValue({
+      id: "tpl-1",
+      name: "Linear",
+      templateLatex: "2x + 4 = 10",
+      parameterSchema: null,
+      baseDifficulty: 1,
+      createdAt: "2026-01-01T00:00:00.000Z"
+    });
+    vi.mocked(sympyClient.evaluate).mockResolvedValue({ result: mockSolutionRaw });
+    vi.mocked(repo.saveProblem).mockImplementation(async (problem) => ({
+      ...problem,
+      id: "prob-1",
+      createdAt: "2026-01-01T00:00:00.000Z"
+    }));
+
+    const result = await generateProblem(
+      repo,
+      { templateId: "tpl-1", topicId: "topic-1", difficultyLevel: 2 },
+      context
+    );
+
+    expect(result.wasValidated).toBe(true);
+    expect(result.problem).toBeDefined();
+    expect(result.problem?.solutionLatex).toBe(JSON.stringify(mockSolutionRaw));
+    expect(result.problem?.solutionLatex).not.toBe("[object Object]");
+    expect(repo.saveProblem).toHaveBeenCalledTimes(1);
+  });
+
+  it("serializes solutionLatex correctly when SymPy returns an array", async () => {
+    const repo = createRepoMock();
+    const mockSolutionRaw = [3];
+
+    vi.mocked(repo.getTemplate).mockResolvedValue({
+      id: "tpl-1",
+      name: "Linear",
+      templateLatex: "2x + 4 = 10",
+      parameterSchema: null,
+      baseDifficulty: 1,
+      createdAt: "2026-01-01T00:00:00.000Z"
+    });
+    vi.mocked(sympyClient.evaluate).mockResolvedValue({ result: mockSolutionRaw });
+    vi.mocked(repo.saveProblem).mockImplementation(async (problem) => ({
+      ...problem,
+      id: "prob-1",
+      createdAt: "2026-01-01T00:00:00.000Z"
+    }));
+
+    const result = await generateProblem(
+      repo,
+      { templateId: "tpl-1", topicId: "topic-1", difficultyLevel: 2 },
+      context
+    );
+
+    expect(result.wasValidated).toBe(true);
+    expect(result.problem).toBeDefined();
+    expect(result.problem?.solutionLatex).toBe(JSON.stringify(mockSolutionRaw));
+    expect(repo.saveProblem).toHaveBeenCalledTimes(1);
+  });
 });
