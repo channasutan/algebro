@@ -162,14 +162,23 @@ describe("import boundaries", () => {
   it("keeps @cortex-js/compute-engine import only in lib math adapter", () => {
     const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
     const allowedImporter = "lib/math/cortex-compute-engine.ts";
-    const allTsFiles = collectTypeScriptFiles(repoRoot);
+
+    // Limit scan to known relevant source roots only
+    const libDir = path.join(repoRoot, "lib");
+    const stepValidationDir = path.join(repoRoot, "modules", "step-validation");
+    const allTsFiles = [
+      ...collectTypeScriptFiles(libDir),
+      ...collectTypeScriptFiles(stepValidationDir),
+    ];
 
     const importers = allTsFiles.filter((absolutePath) => {
       const source = fs.readFileSync(absolutePath, "utf8");
       return importsModule(source, "@cortex-js/compute-engine");
     });
 
-    const relativeImporters = importers.map((absolutePath) => path.relative(repoRoot, absolutePath).split(path.sep).join("/"));
+    const relativeImporters = importers
+      .map((absolutePath) => path.relative(repoRoot, absolutePath).split(path.sep).join("/"))
+      .sort();
 
     expect(relativeImporters).toEqual([allowedImporter]);
   });

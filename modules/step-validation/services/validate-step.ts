@@ -24,15 +24,18 @@ export async function validateStep(
   try {
     const isValid = cortexComputeEngine.areEquivalent(input.previousLatex, input.currentLatex);
 
+    // Only compute canonical forms when needed (invalid steps for error detection and logging)
     let previousCanonical: string | null = null;
     let currentCanonical: string | null = null;
 
-    try {
-      previousCanonical = canonicalize(input.previousLatex);
-      currentCanonical = canonicalize(input.currentLatex);
-    } catch {
-      previousCanonical = null;
-      currentCanonical = null;
+    if (!isValid) {
+      try {
+        previousCanonical = canonicalize(input.previousLatex);
+        currentCanonical = canonicalize(input.currentLatex);
+      } catch {
+        previousCanonical = null;
+        currentCanonical = null;
+      }
     }
 
     log.info({
