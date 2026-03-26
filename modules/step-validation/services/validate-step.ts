@@ -3,11 +3,58 @@ import "server-only";
 import { canonicalize } from "./canonicalize";
 import { classifyStep } from "./classify-step";
 import { detectErrorType } from "./detect-error-type";
-import type { ValidationResult } from "../contracts/validation";
+import type { StepType, ValidationResult } from "../contracts/validation";
 import { createServiceLogger, type ServiceContext } from "@/lib/observability";
 import { cortexComputeEngine } from "@/lib/math/cortex-compute-engine";
 import { sympyClient } from "@/lib/math/sympy-client";
 import { MathEquivalenceError, MathParseError } from "@/lib/math/errors";
+
+/**
+ * Runs SymPy fallback when Cortex fails.
+ * Returns validation result based on SymPy response.
+ */
+async function resolveWithSympy(
+  input: { previousLatex: string; currentLatex: string },
+  cortexError: unknown,
+  log: ReturnType<typeof createServiceLogger>,
+  stepType: StepType | null
+): Promise<ValidationResult> {
+  try {
+    const sympyResult = await sympyClient.evaluate({
+      expression: input.previousLatex,
+      operation: "equivalence",
+      context: { target: input.currentLatex }
+    });
+
+    const isValid = sympyResult.result === true;
+    let errorType: "parse_error" | "non_equivalent_transformation" | null = null;
+    if (!isValid) {
+      errorType = cortexError instanceof MathParseError
+        ? "parse_error"
+        : "non_equivalent_transformation";
+    }
+
+    return { isValid, errorType, stepType };
+  } catch (sympyError) {
+    log.warn({
+      event: "practice.step-validation",
+      meta: {
+        type: "domain",
+        phase: "validation",
+        userId: "system",
+        outcome: "failure",
+        reason: "parse_error",
+        error: sympyError
+      }
+    });
+
+    return {
+      isValid: false,
+      errorType: "parse_error",
+      stepType: null
+    };
+  }
+}
 
 export async function validateStep(
   input: { previousLatex: string; currentLatex: string },
@@ -77,41 +124,7 @@ export async function validateStep(
       }
     });
 
-    try {
-      const sympyResult = await sympyClient.evaluate({
-        expression: input.previousLatex,
-        operation: "equivalence",
-        context: { target: input.currentLatex }
-      });
-
-      const isValid = sympyResult.result === true;
-      // Extract nested ternary to improve readability
-      let errorType: "parse_error" | "non_equivalent_transformation" | null = null;
-      if (!isValid) {
-        errorType = cortexError instanceof MathParseError
-          ? "parse_error"
-          : "non_equivalent_transformation";
-      }
-
-      return { isValid, errorType, stepType };
-    } catch (sympyError) {
-      log.warn({
-        event: "practice.step-validation",
-        meta: {
-          type: "domain",
-          phase: "validation",
-          userId: "system",
-          outcome: "failure",
-          reason: "parse_error",
-          error: sympyError
-        }
-      });
-
-      return {
-        isValid: false,
-        errorType: "parse_error",
-        stepType: null
-      };
-    }
+    // Use SymPy fallback when Cortex fails
+    return resolveWithSympy(input, cortexError, log, stepType);
   }
 }
