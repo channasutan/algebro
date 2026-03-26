@@ -16,7 +16,7 @@ export function detectErrorType(input: {
     }
 
     try {
-      const hasDistPattern = /[a-z0-9]\s*[\(\\\[]/i.test(input.previousLatex);
+      const hasDistPattern = /[a-z0-9]\s*(\(|\\\[)/i.test(input.previousLatex);
       if (hasDistPattern) {
         return "incorrect_distribution";
       }
