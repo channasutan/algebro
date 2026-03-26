@@ -35,6 +35,20 @@ function mockSaveProblemSuccess(repo: ProblemRepository): void {
   }));
 }
 
+function mockValidationFailure(): void {
+  vi.mocked(validateSolvability).mockResolvedValue({
+    isSolvable: false,
+    errorType: "sympy_unavailable",
+  });
+}
+
+function mockValidationSuccess(solutionRaw: unknown = "x = 3"): void {
+  vi.mocked(validateSolvability).mockResolvedValue({
+    isSolvable: true,
+    solutionRaw,
+  });
+}
+
 const context = { requestId: "test-req" };
 
 function createRepoMock(): ProblemRepository {
@@ -69,10 +83,7 @@ describe("generateProblem", () => {
   it("returns wasValidated: false when SymPy reports unsolvable", async () => {
     const repo = createRepoMock();
     vi.mocked(repo.getTemplate).mockResolvedValue(TEMPLATE_FIXTURE);
-    vi.mocked(validateSolvability).mockResolvedValue({
-      isSolvable: false,
-      errorType: "sympy_unavailable"
-    });
+    mockValidationFailure();
 
     const result = await generateProblem(
       repo,
@@ -89,10 +100,7 @@ describe("generateProblem", () => {
     const mockSolutionRaw = "x = 3";
 
     vi.mocked(repo.getTemplate).mockResolvedValue(TEMPLATE_FIXTURE);
-    vi.mocked(validateSolvability).mockResolvedValue({
-      isSolvable: true,
-      solutionRaw: mockSolutionRaw
-    });
+    mockValidationSuccess(mockSolutionRaw);
     mockSaveProblemSuccess(repo);
 
     const result = await generateProblem(
@@ -112,21 +120,8 @@ describe("generateProblem", () => {
   it("calls repo.saveProblem exactly once on success", async () => {
     const repo = createRepoMock();
     vi.mocked(repo.getTemplate).mockResolvedValue(TEMPLATE_FIXTURE);
-    vi.mocked(validateSolvability).mockResolvedValue({
-      isSolvable: true,
-      solutionRaw: "x = 3"
-    });
-    vi.mocked(repo.saveProblem).mockResolvedValue({
-      id: "prob-1",
-      templateId: "tpl-1",
-      topicId: null,
-      difficultyLevel: 2,
-      problemLatex: "2x + 4 = 10",
-      solutionLatex: "x = 3",
-      parameters: {},
-      isValidated: true,
-      createdAt: "2026-01-01T00:00:00.000Z"
-    });
+    mockValidationSuccess();
+    mockSaveProblemSuccess(repo);
 
     await generateProblem(repo, { templateId: "tpl-1", difficultyLevel: 2 }, context);
 
@@ -136,10 +131,7 @@ describe("generateProblem", () => {
   it("does not call repo.saveProblem when validation fails", async () => {
     const repo = createRepoMock();
     vi.mocked(repo.getTemplate).mockResolvedValue(TEMPLATE_FIXTURE);
-    vi.mocked(validateSolvability).mockResolvedValue({
-      isSolvable: false,
-      errorType: "sympy_unavailable"
-    });
+    mockValidationFailure();
 
     await generateProblem(repo, { templateId: "tpl-1", difficultyLevel: 2 }, context);
 
@@ -151,10 +143,7 @@ describe("generateProblem", () => {
     const mockSolutionRaw = { x: 3 };
 
     vi.mocked(repo.getTemplate).mockResolvedValue(TEMPLATE_FIXTURE);
-    vi.mocked(validateSolvability).mockResolvedValue({
-      isSolvable: true,
-      solutionRaw: mockSolutionRaw
-    });
+    mockValidationSuccess(mockSolutionRaw);
     mockSaveProblemSuccess(repo);
 
     const result = await generateProblem(
@@ -175,10 +164,7 @@ describe("generateProblem", () => {
     const mockSolutionRaw = [3];
 
     vi.mocked(repo.getTemplate).mockResolvedValue(TEMPLATE_FIXTURE);
-    vi.mocked(validateSolvability).mockResolvedValue({
-      isSolvable: true,
-      solutionRaw: mockSolutionRaw
-    });
+    mockValidationSuccess(mockSolutionRaw);
     mockSaveProblemSuccess(repo);
 
     const result = await generateProblem(
