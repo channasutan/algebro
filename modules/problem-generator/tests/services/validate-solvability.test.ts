@@ -55,7 +55,9 @@ describe("validateSolvability", () => {
       const result = await validateSolvability(input, context);
 
       expect(result.isSolvable).toBe(expectedResult);
-      expect(result.errorType).toBeUndefined();
+      if (result.isSolvable) {
+        expect(result.solutionRaw).toEqual({ x: 3 });
+      }
     });
   });
 
@@ -72,7 +74,9 @@ describe("validateSolvability", () => {
       const result = await validateSolvability(input, context);
 
       expect(result.isSolvable).toBe(false);
-      expect(result.errorType).toBe("unsolvable");
+      if (!result.isSolvable) {
+        expect(result.errorType).toBe("unsolvable");
+      }
     });
   });
 
@@ -92,7 +96,9 @@ describe("validateSolvability", () => {
       const result = await validateSolvability(input, context);
 
       expect(result.isSolvable).toBe(false);
-      expect(result.errorType).toBe(expectedErrorType);
+      if (!result.isSolvable) {
+        expect(result.errorType).toBe(expectedErrorType);
+      }
     });
   });
 

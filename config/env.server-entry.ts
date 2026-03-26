@@ -15,6 +15,7 @@ export {
   getAuthEnv,
   getServerEnv,
   getInfrastructureServerEnv,
+  getAdminSecret,
   getSupabaseServiceRoleKey,
   getAiProviderApiKey,
   getMayarApiKey,

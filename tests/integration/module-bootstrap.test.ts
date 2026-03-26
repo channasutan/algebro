@@ -5,6 +5,7 @@ async function loadBootstrapModule() {
 
   const registerJobHandler = vi.fn();
   const materialProcessingHandler = vi.fn(async () => {});
+  const populatePoolHandler = vi.fn(async () => {});
 
   vi.doMock("@/jobs/job-runner", () => ({
     registerJobHandler
@@ -15,12 +16,19 @@ async function loadBootstrapModule() {
     materialProcessingHandler
   }));
 
+  vi.doMock("@/jobs/handlers/populate-pool", () => ({
+    POPULATE_POOL_JOB: "populate_pool",
+    populatePoolHandler,
+    populatePoolPayloadSchema: { parse: vi.fn() }
+  }));
+
   const bootstrapModule = await import("@/modules/bootstrap");
 
   return {
     ...bootstrapModule,
     registerJobHandler,
-    materialProcessingHandler
+    materialProcessingHandler,
+    populatePoolHandler
   };
 }
 
@@ -30,12 +38,14 @@ describe("module bootstrap", () => {
     vi.resetModules();
     vi.doUnmock("@/jobs/job-runner");
     vi.doUnmock("@/jobs/handlers/material-processing");
+    vi.doUnmock("@/jobs/handlers/populate-pool");
   });
 
   it("is safe to call multiple times without re-registering shared handlers", async () => {
     const {
       ensureModulesBootstrapped,
       materialProcessingHandler,
+      populatePoolHandler,
       registerJobHandler
     } = await loadBootstrapModule();
 
@@ -46,10 +56,17 @@ describe("module bootstrap", () => {
     ]);
     await ensureModulesBootstrapped();
 
-    expect(registerJobHandler).toHaveBeenCalledTimes(1);
+    expect(registerJobHandler).toHaveBeenCalledTimes(2);
     expect(registerJobHandler).toHaveBeenCalledWith(
       "material_processing",
       materialProcessingHandler
+    );
+    expect(registerJobHandler).toHaveBeenCalledWith(
+      "populate_pool",
+      {
+        handler: populatePoolHandler,
+        schema: { parse: expect.any(Function) }
+      }
     );
   });
 

@@ -20,6 +20,7 @@ type NodeEnv = PublicEnv["nodeEnv"];
 
 type RawServerEnv = {
   nodeEnv: string;
+  adminSecret?: string;
   supabaseServiceRoleKey?: string;
   aiProviderApiKey?: string;
   mayarApiKey?: string;
@@ -32,6 +33,7 @@ type RawServerEnv = {
 function getRawServerEnv(): RawServerEnv {
   return {
     nodeEnv: process.env.NODE_ENV ?? "development",
+    adminSecret: process.env.ADMIN_SECRET,
     supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
     aiProviderApiKey: process.env.AI_PROVIDER_API_KEY,
     mayarApiKey: process.env.MAYAR_API_KEY,
@@ -112,6 +114,16 @@ export function getSupabaseServiceRoleKey(): string {
     rawEnv.supabaseServiceRoleKey,
     "SUPABASE_SERVICE_ROLE_KEY",
     "required for admin database access"
+  );
+}
+
+export function getAdminSecret(): string {
+  const rawEnv = getRawServerEnv();
+
+  return readRequiredEnv(
+    rawEnv.adminSecret,
+    "ADMIN_SECRET",
+    "required for protected admin routes"
   );
 }
 

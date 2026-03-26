@@ -1,12 +1,45 @@
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin-client";
 import { getSupabaseServerClient } from "@/lib/supabase/server-client";
+import { POPULATE_POOL_JOB } from "@/jobs/handlers/populate-pool";
 import { dbSelect, dbInsert } from "@/lib/supabase/repository-utils";
 import type { ProblemTemplate, ParameterSchema } from "../domain/problem-template";
 import type { GeneratedProblem } from "../domain/generated-problem";
 import type { ProblemPoolEntry } from "../domain/problem-pool-entry";
 import type { ProblemRepository } from "./problem-repository";
+
+export type PopulatePoolJobPayload = {
+  templateId: string;
+  topicId: string;
+  difficulty: number;
+  count: number;
+  batchSize?: number;
+};
+
+export async function enqueuePopulatePoolJob(payload: PopulatePoolJobPayload): Promise<string> {
+  const admin = getSupabaseAdminClient();
+  const { data, error } = await admin
+    .from("jobs" as never)
+    .insert(
+      {
+        type: POPULATE_POOL_JOB,
+        payload,
+        status: "pending",
+        attempt_count: 0,
+        max_attempts: 3
+      } as never
+    )
+    .select("id")
+    .single<{ id: string }>();
+
+  if (error || !data) {
+    throw new Error("Failed to enqueue job", { cause: error });
+  }
+
+  return data.id;
+}
 
 export async function createSupabaseProblemRepository(): Promise<ProblemRepository> {
   const client = await getSupabaseServerClient();
