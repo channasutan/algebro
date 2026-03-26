@@ -53,18 +53,23 @@ export async function validateStep(
       stepType
     };
   } catch (cortexError) {
+    // Determine the specific error reason for observability
+    let errorReason: string;
+    if (cortexError instanceof MathParseError) {
+      errorReason = "cortex_parse_error";
+    } else if (cortexError instanceof MathEquivalenceError) {
+      errorReason = "cortex_equivalence_error";
+    } else {
+      errorReason = "cortex_error";
+    }
+
     log.warn({
       event: "practice.step-validation",
       meta: {
         type: "domain",
         phase: "validation",
         userId: "system",
-        reason:
-          cortexError instanceof MathParseError
-            ? "cortex_parse_error"
-            : cortexError instanceof MathEquivalenceError
-              ? "cortex_equivalence_error"
-              : "cortex_error",
+        reason: errorReason,
         fallback: "sympy_fallback"
       }
     });

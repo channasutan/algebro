@@ -43,13 +43,13 @@ describe("canonicalize", () => {
   });
 
   it("throws a typed parse error for invalid input", () => {
-    expect(() => canonicalize("\\frac{1")).toThrow(MathParseError);
+    expect(() => canonicalize(String.raw`\frac{1}`)).toThrow(MathParseError);
   });
 });
 
 describe("classifyStep", () => {
   it("classifies calculus operations", () => {
-    expect(classifyStep({ previousLatex: "x^2", currentLatex: "\\int x^2 dx" })).toBe("calculus_operation");
+    expect(classifyStep({ previousLatex: "x^2", currentLatex: String.raw`\int x^2 dx` })).toBe("calculus_operation");
   });
 
   it("classifies equation operations", () => {
@@ -124,7 +124,7 @@ describe("validateStep", () => {
   it("falls back to SymPy true when Cortex parsing fails", async () => {
     evaluateMock.mockResolvedValueOnce({ result: true });
 
-    const result = await validateStep({ previousLatex: "\\frac{1", currentLatex: "2x+6" }, context);
+    const result = await validateStep({ previousLatex: String.raw`\frac{1`, currentLatex: "2x+6" }, context);
 
     expect(result).toEqual({
       isValid: true,
@@ -136,7 +136,7 @@ describe("validateStep", () => {
   it("falls back to SymPy false as non-equivalent", async () => {
     evaluateMock.mockResolvedValueOnce({ result: false });
 
-    const result = await validateStep({ previousLatex: "\\frac{1", currentLatex: "2x+6" }, context);
+    const result = await validateStep({ previousLatex: String.raw`\frac{1`, currentLatex: "2x+6" }, context);
 
     expect(result).toEqual({
       isValid: false,
@@ -148,7 +148,7 @@ describe("validateStep", () => {
   it("returns parse_error when both Cortex and SymPy fail", async () => {
     evaluateMock.mockRejectedValueOnce(new Error("sympy-fail"));
 
-    const result = await validateStep({ previousLatex: "\\frac{1", currentLatex: "2x+6" }, context);
+    const result = await validateStep({ previousLatex: String.raw`\frac{1`, currentLatex: "2x+6" }, context);
 
     expect(result).toEqual({
       isValid: false,
