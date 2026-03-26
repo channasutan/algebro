@@ -163,11 +163,10 @@ describe("import boundaries", () => {
     const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
     const allowedImporter = "lib/math/cortex-compute-engine.ts";
     const allTsFiles = collectTypeScriptFiles(repoRoot);
-    const cortexImportPattern = /(^|\n)\s*import[^\n]*["']@cortex-js\/compute-engine["'];?/;
 
     const importers = allTsFiles.filter((absolutePath) => {
       const source = fs.readFileSync(absolutePath, "utf8");
-      return cortexImportPattern.test(source);
+      return importsModule(source, "@cortex-js/compute-engine");
     });
 
     const relativeImporters = importers.map((absolutePath) => path.relative(repoRoot, absolutePath).split(path.sep).join("/"));
@@ -179,11 +178,10 @@ describe("import boundaries", () => {
     const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
     const servicesDir = path.join(repoRoot, "modules", "step-validation", "services");
     const serviceFiles = collectTypeScriptFiles(servicesDir);
-    const cortexImportPattern = /(^|\n)\s*import[^\n]*["']@cortex-js\/compute-engine["'];?/;
 
     const violatingFiles = serviceFiles.filter((absolutePath) => {
       const source = fs.readFileSync(absolutePath, "utf8");
-      return cortexImportPattern.test(source);
+      return importsModule(source, "@cortex-js/compute-engine");
     });
 
     expect(violatingFiles).toEqual([]);
@@ -193,16 +191,33 @@ describe("import boundaries", () => {
     const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
     const servicesDir = path.join(repoRoot, "modules", "step-validation", "services");
     const serviceFiles = collectTypeScriptFiles(servicesDir);
-    const infraImportPattern = /(^|\n)\s*import[^\n]*["']@\/infrastructure\/["'];?/;
 
     const violatingFiles = serviceFiles.filter((absolutePath) => {
       const source = fs.readFileSync(absolutePath, "utf8");
-      return infraImportPattern.test(source);
+      return importsModule(source, "@/infrastructure/");
     });
 
     expect(violatingFiles).toEqual([]);
   });
 });
+
+/**
+ * Checks if a source file contains an import statement for a given module.
+ * Uses simple line-by-line scanning without regex to avoid ReDoS risks.
+ */
+function importsModule(source: string, moduleName: string): boolean {
+  const lines = source.split("\n");
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    // Check if line starts with import and contains the module name
+    if (trimmed.startsWith("import ") && trimmed.includes(moduleName)) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 function collectTypeScriptFiles(directory: string): string[] {
   if (!fs.existsSync(directory)) {
