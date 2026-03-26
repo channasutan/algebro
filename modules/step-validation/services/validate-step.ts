@@ -85,12 +85,13 @@ export async function validateStep(
       });
 
       const isValid = sympyResult.result === true;
-      // Skip cortex-based detectErrorType when cortex already failed — it will throw again
-      const errorType = isValid
-        ? null
-        : cortexError instanceof MathParseError
+      // Extract nested ternary to improve readability
+      let errorType: "parse_error" | "non_equivalent_transformation" | null = null;
+      if (!isValid) {
+        errorType = cortexError instanceof MathParseError
           ? "parse_error"
           : "non_equivalent_transformation";
+      }
 
       return { isValid, errorType, stepType };
     } catch (sympyError) {

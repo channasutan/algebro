@@ -178,7 +178,7 @@ describe("import boundaries", () => {
 
     const relativeImporters = importers
       .map((absolutePath) => path.relative(repoRoot, absolutePath).split(path.sep).join("/"))
-      .sort();
+      .sort(); // NOSONAR — sorting file paths for deterministic assertion; alphabetical is correct here
 
     expect(relativeImporters).toEqual([allowedImporter]);
   });
