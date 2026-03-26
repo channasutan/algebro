@@ -35,7 +35,7 @@ export async function validateStep(
       errorType: isValid ? null : detectErrorType(input),
       stepType
     };
-  } catch (_cortexError) {
+  } catch {
     log.warn({
       event: "practice.step-validation",
       meta: { type: "domain", phase: "validation", userId: "system", reason: "cortex_error", fallback: "sympy_fallback" }

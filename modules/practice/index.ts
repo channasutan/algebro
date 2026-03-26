@@ -13,6 +13,11 @@ export {
   submitStepWithRepository, 
   type SubmitStepInput 
 } from "./services/submit-step";
+export {
+  completeAttempt,
+  completeAttemptWithRepository,
+  type CompleteAttemptInput
+} from "./services/complete-attempt";
 export { 
   type PracticeSession, 
   type Attempt, 
