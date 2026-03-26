@@ -84,22 +84,21 @@ function createRepositoryFromClientFactory(
       isCorrect: boolean;
     }
   ): Promise<Attempt> => {
-    const client = await getClient();
-    const { data, error } = await client
-      .from("attempts")
-      .update({
+    const data = await dbUpdate<Record<string, unknown>>({
+      client: await getClient(),
+      table: "attempts",
+      id: attemptId,
+      values: {
         completed_at: input.completedAt,
-        is_correct: input.isCorrect
-      })
-      .eq("id", attemptId)
-      .select()
-      .single();
+        is_correct: input.isCorrect,
+      },
+      options: {
+        context: "practice",
+        errorFactory: () => new AttemptNotFoundError(attemptId)
+      }
+    });
 
-    if (error) {
-      throw new AttemptNotFoundError(attemptId);
-    }
-
-    return mapAttempt(data as Record<string, unknown>);
+    return mapAttempt(data);
   };
 
   const addStep = async (attemptId: string, stepIndex: number, stepLatex: string): Promise<SolutionStep> => {

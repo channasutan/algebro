@@ -51,7 +51,19 @@ export async function completeAttemptWithRepository(
           }
         })
       )
-      .catch(() => {});
+      .catch((err) => {
+        log.warn({
+          event: "practice.attempt",
+          meta: {
+            type: "domain",
+            userId,
+            phase: "event",
+            outcome: "failure",
+            attemptId,
+            error: err instanceof Error ? err.message : String(err)
+          }
+        });
+      });
 
     log.info({
       event: "practice.attempt",
