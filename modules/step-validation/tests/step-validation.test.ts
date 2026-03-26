@@ -32,6 +32,20 @@ import { validateStep } from "../services/validate-step";
 
 const context = { requestId: "test-req" };
 
+// Shared path constants for import boundary tests
+const repoRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  ".."
+);
+const servicesDir = path.join(
+  repoRoot,
+  "modules",
+  "step-validation",
+  "services"
+);
+
 describe("canonicalize", () => {
   it("returns canonical form of a valid expression", () => {
     const result = canonicalize("2x+6");
@@ -160,7 +174,6 @@ describe("validateStep", () => {
 
 describe("import boundaries", () => {
   it("keeps @cortex-js/compute-engine import only in lib math adapter", () => {
-    const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
     const allowedImporter = "lib/math/cortex-compute-engine.ts";
 
     // Limit scan to known relevant source roots only
@@ -184,8 +197,6 @@ describe("import boundaries", () => {
   });
 
   it("does not import @cortex-js/compute-engine in service layer", () => {
-    const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
-    const servicesDir = path.join(repoRoot, "modules", "step-validation", "services");
     const serviceFiles = collectTypeScriptFiles(servicesDir);
 
     const violatingFiles = serviceFiles.filter((absolutePath) => {
@@ -197,8 +208,6 @@ describe("import boundaries", () => {
   });
 
   it("does not import infrastructure in step-validation services", () => {
-    const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
-    const servicesDir = path.join(repoRoot, "modules", "step-validation", "services");
     const serviceFiles = collectTypeScriptFiles(servicesDir);
 
     const violatingFiles = serviceFiles.filter((absolutePath) => {
