@@ -1,5 +1,11 @@
 import "server-only";
 
+// codescene-suppress-start Code Duplication
+// Reason: each function (parseLatex, canonicalizeLatex, simplifyLatex) wraps a distinct
+// Cortex operation with intentionally identical error-handling. Merging them would
+// sacrifice type safety and readability.
+// codescene-suppress-end
+
 import { ComputeEngine } from "@cortex-js/compute-engine";
 
 import { MathEquivalenceError, MathParseError } from "./errors";
