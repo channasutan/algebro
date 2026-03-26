@@ -10,7 +10,7 @@ const { evaluateMock } = vi.hoisted(() => ({
   evaluateMock: vi.fn()
 }));
 
-vi.mock("@/infrastructure/math/sympy-client", () => ({
+vi.mock("@/lib/math/sympy-client", () => ({
   sympyClient: {
     evaluate: evaluateMock
   }
@@ -184,6 +184,20 @@ describe("import boundaries", () => {
     const violatingFiles = serviceFiles.filter((absolutePath) => {
       const source = fs.readFileSync(absolutePath, "utf8");
       return cortexImportPattern.test(source);
+    });
+
+    expect(violatingFiles).toEqual([]);
+  });
+
+  it("does not import infrastructure in step-validation services", () => {
+    const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
+    const servicesDir = path.join(repoRoot, "modules", "step-validation", "services");
+    const serviceFiles = collectTypeScriptFiles(servicesDir);
+    const infraImportPattern = /(^|\n)\s*import[^\n]*["']@\/infrastructure\/["'];?/;
+
+    const violatingFiles = serviceFiles.filter((absolutePath) => {
+      const source = fs.readFileSync(absolutePath, "utf8");
+      return infraImportPattern.test(source);
     });
 
     expect(violatingFiles).toEqual([]);

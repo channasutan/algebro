@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { sympyClient } from "@/infrastructure/math/sympy-client";
+import { sympyClient } from "@/lib/math/sympy-client";
 
 describe("sympy client", () => {
   const mockFetch = vi.fn();
@@ -26,7 +26,7 @@ describe("sympy client", () => {
         // Reset modules to ensure fresh import picks up the unset env
         vi.resetModules();
         
-        const { sympyClient: freshClient } = await import("@/infrastructure/math/sympy-client");
+        const { sympyClient: freshClient } = await import("@/lib/math/sympy-client");
         expect(freshClient.getBaseUrl()).toBe("http://127.0.0.1:8000");
       } finally {
         // Restore original value
@@ -46,7 +46,7 @@ describe("sympy client", () => {
         process.env.SYMPY_SERVICE_URL = testUrl;
         vi.resetModules();
 
-        const { sympyClient: freshClient } = await import("@/infrastructure/math/sympy-client");
+        const { sympyClient: freshClient } = await import("@/lib/math/sympy-client");
         expect(freshClient.getBaseUrl()).toBe(testUrl);
       } finally {
         // Restore original value

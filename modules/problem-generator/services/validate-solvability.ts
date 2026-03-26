@@ -1,4 +1,4 @@
-import { sympyClient } from "@/infrastructure/math/sympy-client";
+import { sympyClient } from "@/lib/math/sympy-client";
 import type { ValidateProblemInput, ValidateProblemResult } from "../contracts/validation";
 import { createServiceLogger, type ServiceContext } from "@/lib/observability";
 

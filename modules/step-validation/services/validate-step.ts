@@ -6,7 +6,7 @@ import { detectErrorType } from "./detect-error-type";
 import type { ValidationResult } from "../contracts/validation";
 import { createServiceLogger, type ServiceContext } from "@/lib/observability";
 import { cortexComputeEngine } from "@/lib/math/cortex-compute-engine";
-import { sympyClient } from "@/infrastructure/math/sympy-client";
+import { sympyClient } from "@/lib/math/sympy-client";
 import { MathEquivalenceError, MathParseError } from "@/lib/math/errors";
 
 export async function validateStep(
