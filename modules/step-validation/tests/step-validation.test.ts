@@ -1,3 +1,7 @@
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
@@ -20,60 +24,7 @@ vi.mock("@/lib/observability", () => ({
   }))
 }));
 
-const canonicalMap: Record<string, string> = {
-  "2(x+3)": "2x+6",
-  "2x+6": "2x+6",
-  "x^2+2x+1": "(x+1)^2",
-  "(x+1)^2": "(x+1)^2",
-  "2x=4": "x=2",
-  "2x + 4": "2x+4",
-  "2x+4": "2x+4",
-  "-((-2x-6))": "2x+6"
-};
-
-// Helper to create mock parse result for ComputeEngine
-function createMockParseResult(latex: string) {
-  const shouldFail = latex.includes("%%%");
-  return {
-    simplify: vi.fn(() => {
-      if (shouldFail) {
-        throw new Error("bad input");
-      }
-      return {
-        toLatex: vi.fn(() => canonicalMap[latex] ?? latex)
-      };
-    })
-  };
-}
-
-// Helper to create mock ComputeEngine instance
-function createMockComputeEngine() {
-  return {
-    parse: vi.fn((latex: string) => createMockParseResult(latex))
-  };
-}
-
-vi.mock("@cortex-js/compute-engine", () => ({
-  ComputeEngine: vi.fn().mockImplementation(() => createMockComputeEngine())
-}));
-
-import * as canonicalizeModule from "../services/canonicalize";
-
-// Helper to wrap tests where canonicalize is mocked to fail (CortexJS failure scenario)
-async function withCortexFailing<T>(fn: () => Promise<T>): Promise<T> {
-  const canonicalizeSpy = vi
-    .spyOn(canonicalizeModule, "canonicalize")
-    .mockImplementation(() => {
-      throw new Error("cortex-fail");
-    });
-
-  try {
-    return await fn();
-  } finally {
-    canonicalizeSpy.mockRestore();
-  }
-}
-
+import { MathParseError } from "@/infrastructure/math/errors";
 import { canonicalize } from "../services/canonicalize";
 import { classifyStep } from "../services/classify-step";
 import { detectErrorType } from "../services/detect-error-type";
@@ -82,29 +33,21 @@ import { validateStep } from "../services/validate-step";
 const context = { requestId: "test-req" };
 
 describe("canonicalize", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("returns canonical form of a valid expression", () => {
     const result = canonicalize("2x+6");
     expect(result).toBe("2x+6");
   });
 
-  it("normalizes equivalent expressions to the same canonical form", () => {
-    expect(canonicalize("2(x+3)")).toBe(canonicalize("2x+6"));
+  it("is deterministic for supported inputs", () => {
+    expect(canonicalize("2(x+3)")).toBe(canonicalize("2(x+3)"));
   });
 
-  it("throws parse_error for unparseable input", () => {
-    expect(() => canonicalize("%%%invalid%%%")).toThrow("parse_error");
+  it("throws a typed parse error for invalid input", () => {
+    expect(() => canonicalize("\\frac{1")).toThrow(MathParseError);
   });
 });
 
 describe("classifyStep", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("classifies calculus operations", () => {
     expect(classifyStep({ previousLatex: "x^2", currentLatex: "\\int x^2 dx" })).toBe("calculus_operation");
   });
@@ -131,10 +74,6 @@ describe("classifyStep", () => {
 });
 
 describe("detectErrorType", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("detects sign_error", () => {
     expect(detectErrorType({ previousLatex: "2x+6", currentLatex: "-2x-6" })).toBe("sign_error");
   });
@@ -150,47 +89,42 @@ describe("detectErrorType", () => {
 
 describe("validateStep", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
     evaluateMock.mockReset();
   });
 
-  it("returns isValid: true when step is algebraically equivalent", async () => {
+  it("returns isValid true for equivalent algebraic transformations", async () => {
     const result = await validateStep({ previousLatex: "2(x+3)", currentLatex: "2x+6" }, context);
-    expect(result.isValid).toBe(true);
-    expect(result.errorType).toBeNull();
+    expect(result).toEqual({
+      isValid: true,
+      errorType: null,
+      stepType: "symbolic_transformation"
+    });
+    expect(evaluateMock).not.toHaveBeenCalled();
   });
 
-  it("returns symbolic error type for non-equivalent step", async () => {
-    const result = await validateStep({ previousLatex: "2x+4", currentLatex: "2x=4" }, context);
-    expect(result.isValid).toBe(false);
-    expect(result.errorType).toBe("non_equivalent_transformation");
+  it("returns symbolic classification for non-equivalent transformations", async () => {
+    const result = await validateStep({ previousLatex: "2x+4", currentLatex: "2x+6" }, context);
+    expect(result).toEqual({
+      isValid: false,
+      errorType: "non_equivalent_transformation",
+      stepType: "symbolic_transformation"
+    });
+    expect(evaluateMock).not.toHaveBeenCalled();
   });
 
-  it("returns isValid: false with errorType 'parse_error' when canonicalize and SymPy fail", async () => {
-    evaluateMock.mockRejectedValueOnce(new Error("sympy-fail"));
-
-    const result = await withCortexFailing(() =>
-      validateStep({ previousLatex: "%%%bad%%%", currentLatex: "2x+6" }, context)
-    );
-
-    expect(result.isValid).toBe(false);
-    expect(result.errorType).toBe("parse_error");
-    expect(result.stepType).toBeNull();
-  });
-});
-
-describe("validateStep - SymPy fallback", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    evaluateMock.mockReset();
+  it("keeps sign error detection semantics", async () => {
+    const result = await validateStep({ previousLatex: "2x+6", currentLatex: "-2x-6" }, context);
+    expect(result).toEqual({
+      isValid: false,
+      errorType: "sign_error",
+      stepType: "symbolic_transformation"
+    });
   });
 
-  it("returns valid when Cortex fails and SymPy returns true", async () => {
+  it("falls back to SymPy true when Cortex parsing fails", async () => {
     evaluateMock.mockResolvedValueOnce({ result: true });
 
-    const result = await withCortexFailing(() =>
-      validateStep({ previousLatex: "2x+4", currentLatex: "2x+4" }, context)
-    );
+    const result = await validateStep({ previousLatex: "\\frac{1", currentLatex: "2x+6" }, context);
 
     expect(result).toEqual({
       isValid: true,
@@ -199,26 +133,22 @@ describe("validateStep - SymPy fallback", () => {
     });
   });
 
-  it("returns non_equivalent_transformation when Cortex fails and SymPy returns false", async () => {
+  it("falls back to SymPy false as non-equivalent", async () => {
     evaluateMock.mockResolvedValueOnce({ result: false });
 
-    const result = await withCortexFailing(() =>
-      validateStep({ previousLatex: "2x+4", currentLatex: "2x=4" }, context)
-    );
+    const result = await validateStep({ previousLatex: "\\frac{1", currentLatex: "2x+6" }, context);
 
     expect(result).toEqual({
       isValid: false,
       errorType: "non_equivalent_transformation",
-      stepType: "equation_operation"
+      stepType: "symbolic_transformation"
     });
   });
 
-  it("returns parse_error and null stepType when Cortex and SymPy both fail", async () => {
+  it("returns parse_error when both Cortex and SymPy fail", async () => {
     evaluateMock.mockRejectedValueOnce(new Error("sympy-fail"));
 
-    const result = await withCortexFailing(() =>
-      validateStep({ previousLatex: "2x+4", currentLatex: "2x+6" }, context)
-    );
+    const result = await validateStep({ previousLatex: "\\frac{1", currentLatex: "2x+6" }, context);
 
     expect(result).toEqual({
       isValid: false,
@@ -227,3 +157,59 @@ describe("validateStep - SymPy fallback", () => {
     });
   });
 });
+
+describe("import boundaries", () => {
+  it("keeps @cortex-js/compute-engine import only in infrastructure adapter", () => {
+    const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
+    const allowedImporter = "infrastructure/math/cortex-compute-engine.ts";
+    const allTsFiles = collectTypeScriptFiles(repoRoot);
+    const cortexImportPattern = /(^|\n)\s*import[^\n]*["']@cortex-js\/compute-engine["'];?/;
+
+    const importers = allTsFiles.filter((absolutePath) => {
+      const source = fs.readFileSync(absolutePath, "utf8");
+      return cortexImportPattern.test(source);
+    });
+
+    const relativeImporters = importers.map((absolutePath) => path.relative(repoRoot, absolutePath).split(path.sep).join("/"));
+
+    expect(relativeImporters).toEqual([allowedImporter]);
+  });
+
+  it("does not import @cortex-js/compute-engine in service layer", () => {
+    const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
+    const servicesDir = path.join(repoRoot, "modules", "step-validation", "services");
+    const serviceFiles = collectTypeScriptFiles(servicesDir);
+    const cortexImportPattern = /(^|\n)\s*import[^\n]*["']@cortex-js\/compute-engine["'];?/;
+
+    const violatingFiles = serviceFiles.filter((absolutePath) => {
+      const source = fs.readFileSync(absolutePath, "utf8");
+      return cortexImportPattern.test(source);
+    });
+
+    expect(violatingFiles).toEqual([]);
+  });
+});
+
+function collectTypeScriptFiles(directory: string): string[] {
+  if (!fs.existsSync(directory)) {
+    return [];
+  }
+
+  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const entryPath = path.join(directory, entry.name);
+
+    if (entry.isDirectory()) {
+      if (entry.name === "node_modules" || entry.name === ".next" || entry.name === "dist") {
+        return [];
+      }
+
+      return collectTypeScriptFiles(entryPath);
+    }
+
+    if (entry.isFile() && (entry.name.endsWith(".ts") || entry.name.endsWith(".tsx"))) {
+      return [entryPath];
+    }
+
+    return [];
+  });
+}

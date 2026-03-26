@@ -1,13 +1,17 @@
 import type { SymbolicErrorType } from "../contracts/validation";
-import { canonicalize } from "./canonicalize";
+import { cortexComputeEngine } from "@/infrastructure/math/cortex-compute-engine";
 
 export function detectErrorType(input: {
   previousLatex: string;
   currentLatex: string;
 }): SymbolicErrorType {
   try {
-    const negated = canonicalize(`-((${input.currentLatex}))`);
-    if (negated === canonicalize(input.previousLatex)) {
+    const isSignError = cortexComputeEngine.areEquivalent(
+      input.previousLatex,
+      `-((${input.currentLatex}))`
+    );
+
+    if (isSignError) {
       return "sign_error";
     }
   } catch {

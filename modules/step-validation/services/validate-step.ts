@@ -5,7 +5,9 @@ import { classifyStep } from "./classify-step";
 import { detectErrorType } from "./detect-error-type";
 import type { ValidationResult } from "../contracts/validation";
 import { createServiceLogger, type ServiceContext } from "@/lib/observability";
+import { cortexComputeEngine } from "@/infrastructure/math/cortex-compute-engine";
 import { sympyClient } from "@/infrastructure/math/sympy-client";
+import { MathEquivalenceError, MathParseError } from "@/infrastructure/math/errors";
 
 export async function validateStep(
   input: { previousLatex: string; currentLatex: string },
@@ -20,14 +22,29 @@ export async function validateStep(
   });
 
   try {
-    const previousCanonical = canonicalize(input.previousLatex);
-    const currentCanonical = canonicalize(input.currentLatex);
+    const isValid = cortexComputeEngine.areEquivalent(input.previousLatex, input.currentLatex);
 
-    const isValid = previousCanonical === currentCanonical;
+    let previousCanonical: string | null = null;
+    let currentCanonical: string | null = null;
+
+    try {
+      previousCanonical = canonicalize(input.previousLatex);
+      currentCanonical = canonicalize(input.currentLatex);
+    } catch {
+      previousCanonical = null;
+      currentCanonical = null;
+    }
 
     log.info({
       event: "practice.step-validation",
-      meta: { type: "domain", phase: "complete", userId: "system", outcome: isValid ? "success" : "failure" }
+      meta: {
+        type: "domain",
+        phase: "complete",
+        userId: "system",
+        outcome: isValid ? "success" : "failure",
+        previousCanonical,
+        currentCanonical
+      }
     });
 
     return {
@@ -35,10 +52,21 @@ export async function validateStep(
       errorType: isValid ? null : detectErrorType(input),
       stepType
     };
-  } catch {
+  } catch (cortexError) {
     log.warn({
       event: "practice.step-validation",
-      meta: { type: "domain", phase: "validation", userId: "system", reason: "cortex_error", fallback: "sympy_fallback" }
+      meta: {
+        type: "domain",
+        phase: "validation",
+        userId: "system",
+        reason:
+          cortexError instanceof MathParseError
+            ? "cortex_parse_error"
+            : cortexError instanceof MathEquivalenceError
+              ? "cortex_equivalence_error"
+              : "cortex_error",
+        fallback: "sympy_fallback"
+      }
     });
 
     try {
@@ -49,20 +77,27 @@ export async function validateStep(
       });
 
       const isValid = sympyResult.result === true;
-      const errorType = isValid ? null : ("non_equivalent_transformation" as const);
+      const errorType = isValid ? null : detectErrorType(input);
 
       return { isValid, errorType, stepType };
     } catch (sympyError) {
-    log.warn({
-      event: "practice.step-validation",
-      meta: { type: "domain", phase: "validation", userId: "system", outcome: "failure", reason: "parse_error", error: sympyError }
-    });
+      log.warn({
+        event: "practice.step-validation",
+        meta: {
+          type: "domain",
+          phase: "validation",
+          userId: "system",
+          outcome: "failure",
+          reason: "parse_error",
+          error: sympyError
+        }
+      });
 
-    return {
-      isValid: false,
-      errorType: "parse_error",
-      stepType: null
-    };
+      return {
+        isValid: false,
+        errorType: "parse_error",
+        stepType: null
+      };
     }
   }
 }
