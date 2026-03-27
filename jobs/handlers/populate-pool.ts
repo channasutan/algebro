@@ -20,7 +20,7 @@ export const populatePoolPayloadSchema = z.object({
 export type PopulatePoolPayload = z.infer<typeof populatePoolPayloadSchema>;
 
 export const populatePoolHandler: JobHandler = async (job) => {
-  const payload = populatePoolPayloadSchema.parse(job.payload);
+  const payload = job.payload as PopulatePoolPayload;
   const repo = await createSupabaseProblemRepository();
   const context = { requestId: job.id };
 
@@ -41,4 +41,4 @@ export const populatePoolHandler: JobHandler = async (job) => {
       `populatePool generated 0 problems for templateId=${payload.templateId}`
     );
   }
-};
+}

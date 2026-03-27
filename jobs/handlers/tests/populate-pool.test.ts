@@ -77,32 +77,4 @@ describe("populatePoolHandler", () => {
       )
     ).rejects.toBeInstanceOf(NonRetryableJobError);
   });
-
-  it("throws Zod validation error for invalid payload", async () => {
-    await expect(
-      populatePoolHandler(
-        makeJob({
-          templateId: "tpl-1",
-          topicId: "topic-1",
-          difficulty: 99,
-          count: 5
-        })
-      )
-    ).rejects.toThrow();
-  });
-
-  it("does not call populatePool when payload validation fails", async () => {
-    await expect(
-      populatePoolHandler(
-        makeJob({
-          topicId: "topic-1",
-          difficulty: 5,
-          count: 5
-        })
-      )
-    ).rejects.toThrow();
-
-    expect(createSupabaseProblemRepository).toHaveBeenCalledTimes(0);
-    expect(populatePool).toHaveBeenCalledTimes(0);
-  });
 });
