@@ -296,5 +296,5 @@ describe("LatexString type guard", () => {
   });
 
   // @ts-expect-error — plain string not assignable to LatexString
-  const bad: LatexString = "x + 1";
+  const _bad: LatexString = "x + 1";
 });
