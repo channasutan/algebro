@@ -58,6 +58,15 @@ function asParsedExpression(value: unknown): ParsedExpression {
 }
 
 /**
+ * Parses LaTeX using Compute Engine and returns a valid expression.
+ * Throws MathParseError if parsing fails or produces invalid result.
+ */
+function parseExpressionOrThrow(latex: string): ParsedExpression {
+  const parsed = ce.parse(latex);
+  return asParsedExpression(parsed);
+}
+
+/**
  * Internal helper: parses LaTeX, applies a transform, serializes to LaTeX string.
  * This centralizes the parse→transform→serialize→catch shell for string-returning functions.
  */
@@ -83,7 +92,7 @@ function withLatexTransform(
  */
 function parseLatex(latex: LatexString): ParsedExpression {
   try {
-    return asParsedExpression(ce.parse(latex));
+    return parseExpressionOrThrow(latex);
   } catch (error) {
     if (error instanceof MathParseError) {
       throw error;

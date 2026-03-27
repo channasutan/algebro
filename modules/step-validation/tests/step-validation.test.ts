@@ -241,20 +241,18 @@ function importsModule(source: string, moduleName: string): boolean {
 /**
  * Checks if a directory should be ignored during recursive traversal.
  */
+const IGNORED_DIRECTORIES = new Set(["node_modules", ".next", "dist", ".git", "coverage"]);
+
 function isIgnoredDirectory(name: string): boolean {
-  return (
-    name === "node_modules" ||
-    name === ".next" ||
-    name === "dist" ||
-    name === ".git"
-  );
+  return IGNORED_DIRECTORIES.has(name);
 }
 
 /**
  * Checks if a file is a TypeScript source file (.ts or .tsx).
  */
 function isTypeScriptSourceFile(name: string): boolean {
-  return name.endsWith(".ts") || name.endsWith(".tsx");
+  const ext = path.extname(name);
+  return ext === ".ts" || ext === ".tsx";
 }
 
 /**
