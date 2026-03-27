@@ -3,13 +3,13 @@ import { validateSolvability } from "../../services/validate-solvability";
 import type { ValidateProblemInput } from "../../contracts/validation";
 
 // Mock SymPy client
-vi.mock("@/infrastructure/math/sympy-client", () => ({
+vi.mock("@/lib/math/sympy-client", () => ({
   sympyClient: {
     evaluate: vi.fn(),
   },
 }));
 
-import { sympyClient } from "@/infrastructure/math/sympy-client";
+import { sympyClient } from "@/lib/math/sympy-client";
 
 // Mock observability
 vi.mock("@/lib/observability", () => ({

@@ -12,7 +12,7 @@ import {
 import { getSupabaseAdminClient } from "@/lib/supabase/admin-client";
 
 // Mock SymPy client for deterministic tests
-vi.mock("@/infrastructure/math/sympy-client", () => ({
+vi.mock("@/lib/math/sympy-client", () => ({
   sympyClient: {
     evaluate: vi.fn(() => Promise.resolve({ result: { x: 3 } })),
   },
