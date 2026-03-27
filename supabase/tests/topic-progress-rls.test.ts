@@ -271,11 +271,16 @@ beforeAll(async () => {
 
   // ── Seed User A's topic_progress row via service-role ──────────────────
   // Clean up any stale row from a previous aborted run first
-  await serviceClient
+  const { error: deleteError } = await serviceClient
     .from("topic_progress")
     .delete()
     .eq("user_id", userAId)
     .eq("topic_id", topicId);
+  if (deleteError) {
+    throw new Error(
+      `Failed to delete stale topic_progress row for User A: ${deleteError.message}`
+    );
+  }
 
   const { data: seededRow, error: seedRowError } = await serviceClient
     .from("topic_progress")
