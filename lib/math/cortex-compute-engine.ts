@@ -4,6 +4,14 @@ import { ComputeEngine } from "@cortex-js/compute-engine";
 
 import { MathEquivalenceError, MathParseError } from "./errors";
 
+// codescene-suppress-start String Heavy Arguments
+// Reason: LaTeX expressions are inherently string-based. The math adapter's public API
+// takes string inputs because that's what the Cortex Compute Engine expects.
+// Adding branded types would require wrapping every caller site and introduce
+// significant churn without meaningful runtime safety benefit in this specific case.
+// The alternative (suppress finding) is cleaner for the adapter's current scope.
+// codescene-suppress-end
+
 type ParsedExpression = {
   isValid: boolean;
   canonical: ParsedExpression;
@@ -79,7 +87,6 @@ function withLatexTransform(
 
 /**
  * Parses LaTeX into a structured expression.
- * Note: Returns ParsedExpression, not string - kept separate from string-transform helpers.
  */
 function parseLatex(latex: string): ParsedExpression {
   try {
@@ -111,13 +118,6 @@ function simplifyLatex(latex: string): string {
  */
 function isDefinitelyEquivalent(result: boolean | undefined): boolean {
   return result === true;
-}
-
-/**
- * Checks if the equivalence result is definitively false (not unknown).
- */
-function isDefinitelyNotEquivalent(result: boolean | undefined): boolean {
-  return result === false;
 }
 
 /**
