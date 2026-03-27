@@ -15,13 +15,22 @@ WHERE timezone IS NULL
 -- - Must contain a region/city pair separated by '/'
 -- - Each part can contain letters and optional hyphens
 -- Examples: Asia/Jakarta, Europe/Berlin, America/New_York
-ALTER TABLE public.users
-ADD CONSTRAINT IF NOT EXISTS users_timezone_valid_check
-CHECK (
-    timezone IS NULL 
-    OR timezone = 'UTC' 
-    OR timezone ~ '^[A-Za-z]+(?:[-][A-Za-z]+)*/[A-Za-z]+(?:[-][A-Za-z]+)*$'
-);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'users_timezone_valid_check'
+    AND conrelid = 'public.users'::regclass
+  ) THEN
+    ALTER TABLE public.users
+    ADD CONSTRAINT users_timezone_valid_check
+    CHECK (
+        timezone IS NULL
+        OR timezone = 'UTC'
+        OR timezone ~ '^[A-Za-z]+(?:[-][A-Za-z]+)*/[A-Za-z]+(?:[-][A-Za-z]+)*$'
+    );
+  END IF;
+END $$;
 
 -- Add comment to document the constraint
 COMMENT ON CONSTRAINT users_timezone_valid_check ON public.users 
