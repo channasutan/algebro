@@ -32,7 +32,7 @@ export function calculateMasteryScore(history: AttemptHistory[]): number {
   for (const attempt of history) {
     const daysDiff =
       (now.getTime() - attempt.completedAt.getTime()) / (1000 * 60 * 60 * 24);
-    const weight = daysDiff < 7 ? 1.0 : daysDiff < 30 ? 0.7 : 0.4;
+    const weight = daysDiff < 7 ? 1.0 : daysDiff <= 30 ? 0.7 : 0.4;
 
     weightedTotal += weight;
     if (attempt.result === "correct") weightedCorrect += weight;
