@@ -5,9 +5,8 @@ import { classifyStep } from "./classify-step";
 import { detectErrorType } from "./detect-error-type";
 import type { StepType, ValidationResult } from "../contracts/validation";
 import { createServiceLogger, type ServiceContext } from "@/lib/observability";
-import { cortexComputeEngine } from "@/lib/math/cortex-compute-engine";
+import { cortexComputeEngine, MathEquivalenceError, MathParseError, toLatexString } from "@/lib/math";
 import { sympyClient } from "@/lib/math/sympy-client";
-import { MathEquivalenceError, MathParseError } from "@/lib/math/errors";
 
 /**
  * Runs SymPy fallback when Cortex fails.
@@ -69,7 +68,10 @@ export async function validateStep(
   });
 
   try {
-    const isValid = cortexComputeEngine.areEquivalent(input.previousLatex, input.currentLatex);
+    const isValid = cortexComputeEngine.areEquivalent(
+      toLatexString(input.previousLatex),
+      toLatexString(input.currentLatex)
+    );
 
     // Only compute canonical forms when needed (invalid steps for error detection and logging)
     let previousCanonical: string | null = null;

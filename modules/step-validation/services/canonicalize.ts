@@ -1,11 +1,10 @@
 import "server-only";
 
-import { cortexComputeEngine } from "@/lib/math/cortex-compute-engine";
-import { MathParseError } from "@/lib/math/errors";
+import { cortexComputeEngine, MathParseError, toLatexString } from "@/lib/math";
 
 export function canonicalize(latex: string): string {
   try {
-    return cortexComputeEngine.canonicalizeLatex(latex);
+    return cortexComputeEngine.canonicalizeLatex(toLatexString(latex));
   } catch (error) {
     if (error instanceof MathParseError) {
       throw error;

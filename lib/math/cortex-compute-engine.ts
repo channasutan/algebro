@@ -3,14 +3,7 @@ import "server-only";
 import { ComputeEngine } from "@cortex-js/compute-engine";
 
 import { MathEquivalenceError, MathParseError } from "./errors";
-
-// codescene-suppress-start String Heavy Arguments
-// Reason: LaTeX expressions are inherently string-based. The math adapter's public API
-// takes string inputs because that's what the Cortex Compute Engine expects.
-// Adding branded types would require wrapping every caller site and introduce
-// significant churn without meaningful runtime safety benefit in this specific case.
-// The alternative (suppress finding) is cleaner for the adapter's current scope.
-// codescene-suppress-end
+import { LatexString, toLatexString } from "./types";
 
 type ParsedExpression = {
   isValid: boolean;
@@ -69,14 +62,14 @@ function asParsedExpression(value: unknown): ParsedExpression {
  * This centralizes the parse→transform→serialize→catch shell for string-returning functions.
  */
 function withLatexTransform(
-  latex: string,
+  latex: LatexString,
   transform: (expr: ParsedExpression) => ParsedExpression,
   errorContext: string
-): string {
+): LatexString {
   try {
     const parsed = parseLatex(latex);
     const transformed = transform(parsed);
-    return transformed.toLatex();
+    return toLatexString(transformed.toLatex());
   } catch (error) {
     if (error instanceof MathParseError) {
       throw error;
@@ -88,7 +81,7 @@ function withLatexTransform(
 /**
  * Parses LaTeX into a structured expression.
  */
-function parseLatex(latex: string): ParsedExpression {
+function parseLatex(latex: LatexString): ParsedExpression {
   try {
     return asParsedExpression(ce.parse(latex));
   } catch (error) {
@@ -102,14 +95,14 @@ function parseLatex(latex: string): ParsedExpression {
 /**
  * Returns the canonical form of a LaTeX expression as a string.
  */
-function canonicalizeLatex(latex: string): string {
+function canonicalizeLatex(latex: LatexString): LatexString {
   return withLatexTransform(latex, (expr) => expr.canonical, "canonicalize");
 }
 
 /**
  * Returns the simplified form of a LaTeX expression as a string.
  */
-function simplifyLatex(latex: string): string {
+function simplifyLatex(latex: LatexString): LatexString {
   return withLatexTransform(latex, (expr) => expr.simplify(), "simplify");
 }
 
@@ -130,7 +123,7 @@ function shouldThrowOnUnknownEquivalence(result: boolean | undefined): boolean {
 /**
  * Checks if two LaTeX expressions are mathematically equivalent.
  */
-function areEquivalent(previousLatex: string, currentLatex: string): boolean {
+function areEquivalent(previousLatex: LatexString, currentLatex: LatexString): boolean {
   const previous = parseLatex(previousLatex);
   const current = parseLatex(currentLatex);
   const result = previous.isEqual(current);

@@ -1,5 +1,5 @@
 import type { SymbolicErrorType } from "../contracts/validation";
-import { cortexComputeEngine } from "@/lib/math/cortex-compute-engine";
+import { cortexComputeEngine, toLatexString } from "@/lib/math";
 
 export function detectErrorType(input: {
   previousLatex: string;
@@ -7,8 +7,8 @@ export function detectErrorType(input: {
 }): SymbolicErrorType {
   try {
     const isSignError = cortexComputeEngine.areEquivalent(
-      input.previousLatex,
-      `-((${input.currentLatex}))`
+      toLatexString(input.previousLatex),
+      toLatexString(`-((${input.currentLatex}))`)
     );
 
     if (isSignError) {

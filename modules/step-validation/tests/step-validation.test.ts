@@ -25,6 +25,7 @@ vi.mock("@/lib/observability", () => ({
 }));
 
 import { MathParseError } from "@/lib/math/errors";
+import { toLatexString, type LatexString } from "@/lib/math/types";
 import { canonicalize } from "../services/canonicalize";
 import { classifyStep } from "../services/classify-step";
 import { detectErrorType } from "../services/detect-error-type";
@@ -289,3 +290,13 @@ function collectTypeScriptFiles(directory: string): string[] {
 
   return results;
 }
+
+describe("LatexString type guard", () => {
+  it("isLatexString returns true for LatexString", () => {
+    const latex = toLatexString("x + 1");
+    expect(latex).toBe("x + 1");
+  });
+
+  // @ts-expect-error — plain string not assignable to LatexString
+  const bad: LatexString = "x + 1";
+});
