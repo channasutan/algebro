@@ -125,9 +125,17 @@ beforeAll(async () => {
 
     if (signInRes.data.session) {
       // Ensure public.users row exists (may have been cleaned up by a previous aborted run)
-      await serviceClient
+      const { error: existingProfileError } = await serviceClient
         .from("users")
-        .upsert({ id: signInRes.data.session.user.id, email }, { onConflict: "id", ignoreDuplicates: true });
+        .upsert(
+          { id: signInRes.data.session.user.id, email },
+          { onConflict: "id", ignoreDuplicates: true }
+        );
+      if (existingProfileError) {
+        throw new Error(
+          `Failed to ensure public.users row for existing user ${email}: ${existingProfileError.message}`
+        );
+      }
 
       return {
         id: signInRes.data.session.user.id,
@@ -216,11 +224,16 @@ beforeAll(async () => {
 
   // ── Seed User A's topic_progress row via service-role ──────────────────
   // Clean up any stale row from a previous aborted run first
-  await serviceClient
+  const { error: deleteError } = await serviceClient
     .from("topic_progress")
     .delete()
     .eq("user_id", userAId)
     .eq("topic_id", topicId);
+  if (deleteError) {
+    throw new Error(
+      `Failed to delete stale topic_progress row for User A: ${deleteError.message}`
+    );
+  }
 
   const { data: seededRow, error: seedRowError } = await serviceClient
     .from("topic_progress")

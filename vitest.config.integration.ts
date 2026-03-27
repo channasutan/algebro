@@ -53,6 +53,8 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "."),
+      "server-only": "server-only",
+      "client-only": "client-only",
     },
   },
 });

@@ -60,5 +60,5 @@ export function clampMasteryScore(score: number): number {
   return Math.min(1, Math.max(0, score));
 }
 
-// Re-export so existing consumers importing from "./mastery" remain unbroken
+// Convenience re-export — validateMasteryScore available from this module without reaching into mastery-invariants
 export { validateMasteryScore } from "./mastery-invariants";
