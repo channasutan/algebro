@@ -237,26 +237,55 @@ function importsModule(source: string, moduleName: string): boolean {
   return false;
 }
 
+/**
+ * Checks if a directory should be ignored during recursive traversal.
+ */
+function isIgnoredDirectory(name: string): boolean {
+  return (
+    name === "node_modules" ||
+    name === ".next" ||
+    name === "dist" ||
+    name === ".git"
+  );
+}
+
+/**
+ * Checks if a file is a TypeScript source file (.ts or .tsx).
+ */
+function isTypeScriptSourceFile(name: string): boolean {
+  return name.endsWith(".ts") || name.endsWith(".tsx");
+}
+
+/**
+ * Checks if a directory entry should be descended into.
+ */
+function shouldDescendInto(entry: fs.Dirent): boolean {
+  return entry.isDirectory() && !isIgnoredDirectory(entry.name);
+}
+
+/**
+ * Collects all TypeScript (.ts and .tsx) files recursively from a directory.
+ * Excludes common build/output directories.
+ */
 function collectTypeScriptFiles(directory: string): string[] {
   if (!fs.existsSync(directory)) {
     return [];
   }
 
-  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+  const entries = fs.readdirSync(directory, { withFileTypes: true });
+
+  const results: string[] = [];
+
+  for (const entry of entries) {
     const entryPath = path.join(directory, entry.name);
 
-    if (entry.isDirectory()) {
-      if (entry.name === "node_modules" || entry.name === ".next" || entry.name === "dist" || entry.name === ".git") {
-        return [];
-      }
-
-      return collectTypeScriptFiles(entryPath);
+    if (shouldDescendInto(entry)) {
+      // Recurse into subdirectories that are not ignored
+      results.push(...collectTypeScriptFiles(entryPath));
+    } else if (entry.isFile() && isTypeScriptSourceFile(entry.name)) {
+      results.push(entryPath);
     }
+  }
 
-    if (entry.isFile() && (entry.name.endsWith(".ts") || entry.name.endsWith(".tsx"))) {
-      return [entryPath];
-    }
-
-    return [];
-  });
+  return results;
 }
