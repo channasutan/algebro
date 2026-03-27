@@ -1,11 +1,5 @@
 import "server-only";
 
-// codescene-suppress-start Code Duplication
-// Reason: each function (parseLatex, canonicalizeLatex, simplifyLatex) wraps a distinct
-// Cortex operation with intentionally identical error-handling. Merging them would
-// sacrifice type safety and readability.
-// codescene-suppress-end
-
 import { ComputeEngine } from "@cortex-js/compute-engine";
 
 import { MathEquivalenceError, MathParseError } from "./errors";
@@ -62,6 +56,31 @@ function asParsedExpression(value: unknown): ParsedExpression {
   return candidate as ParsedExpression;
 }
 
+/**
+ * Internal helper: parses LaTeX, applies a transform, serializes to LaTeX string.
+ * This centralizes the parse→transform→serialize→catch shell for string-returning functions.
+ */
+function withLatexTransform(
+  latex: string,
+  transform: (expr: ParsedExpression) => ParsedExpression,
+  errorContext: string
+): string {
+  try {
+    const parsed = parseLatex(latex);
+    const transformed = transform(parsed);
+    return transformed.toLatex();
+  } catch (error) {
+    if (error instanceof MathParseError) {
+      throw error;
+    }
+    throw new MathParseError(`Unable to ${errorContext} LaTeX expression`, { cause: error });
+  }
+}
+
+/**
+ * Parses LaTeX into a structured expression.
+ * Note: Returns ParsedExpression, not string - kept separate from string-transform helpers.
+ */
 function parseLatex(latex: string): ParsedExpression {
   try {
     return asParsedExpression(ce.parse(latex));
@@ -69,58 +88,58 @@ function parseLatex(latex: string): ParsedExpression {
     if (error instanceof MathParseError) {
       throw error;
     }
-
     throw new MathParseError("Unable to parse LaTeX expression", { cause: error });
   }
 }
 
+/**
+ * Returns the canonical form of a LaTeX expression as a string.
+ */
 function canonicalizeLatex(latex: string): string {
-  try {
-    const expression = parseLatex(latex);
-    return expression.canonical.toLatex();
-  } catch (error) {
-    if (error instanceof MathParseError) {
-      throw error;
-    }
-
-    throw new MathParseError("Unable to canonicalize LaTeX expression", {
-      cause: error
-    });
-  }
+  return withLatexTransform(latex, (expr) => expr.canonical, "canonicalize");
 }
 
+/**
+ * Returns the simplified form of a LaTeX expression as a string.
+ */
 function simplifyLatex(latex: string): string {
-  try {
-    return parseLatex(latex).simplify().toLatex();
-  } catch (error) {
-    if (error instanceof MathParseError) {
-      throw error;
-    }
-
-    throw new MathParseError("Unable to simplify LaTeX expression", { cause: error });
-  }
+  return withLatexTransform(latex, (expr) => expr.simplify(), "simplify");
 }
 
+/**
+ * Checks if the equivalence result is definitively true.
+ */
+function isDefinitelyEquivalent(result: boolean | undefined): boolean {
+  return result === true;
+}
+
+/**
+ * Checks if the equivalence result is definitively false (not unknown).
+ */
+function isDefinitelyNotEquivalent(result: boolean | undefined): boolean {
+  return result === false;
+}
+
+/**
+ * Checks if equivalence result is unknown and should trigger fallback.
+ */
+function shouldThrowOnUnknownEquivalence(result: boolean | undefined): boolean {
+  return result === undefined;
+}
+
+/**
+ * Checks if two LaTeX expressions are mathematically equivalent.
+ */
 function areEquivalent(previousLatex: string, currentLatex: string): boolean {
-  try {
-    const previous = parseLatex(previousLatex);
-    const current = parseLatex(currentLatex);
-    const result = previous.isEqual(current);
+  const previous = parseLatex(previousLatex);
+  const current = parseLatex(currentLatex);
+  const result = previous.isEqual(current);
 
-    if (result === undefined) {
-      throw new MathEquivalenceError("Unable to determine expression equivalence");
-    }
-
-    return result;
-  } catch (error) {
-    if (error instanceof MathParseError || error instanceof MathEquivalenceError) {
-      throw error;
-    }
-
-    throw new MathEquivalenceError("Unable to compare expression equivalence", {
-      cause: error
-    });
+  if (shouldThrowOnUnknownEquivalence(result)) {
+    throw new MathEquivalenceError("Unable to determine expression equivalence");
   }
+
+  return isDefinitelyEquivalent(result);
 }
 
 export const cortexComputeEngine = {
