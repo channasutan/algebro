@@ -112,76 +112,69 @@ beforeAll(async () => {
   // We use createUser (not signUp) so no confirmation email is needed.
   // If users already exist from a previous aborted run, look them up instead.
 
-  async function getOrCreateUser(
+  /** Ensure public.users mirror row exists for an auth user. */
+  async function ensurePublicUsersRow(authUserId: string, email: string): Promise<void> {
+    const { error } = await serviceClient
+      .from("users")
+      .upsert({ id: authUserId, email }, { onConflict: "id", ignoreDuplicates: true });
+    if (error) {
+      throw new Error(
+        `Failed to ensure public.users row for ${email}: ${error.message}`
+      );
+    }
+  }
+
+  /** Sign in an existing user and return id + accessToken. */
+  async function signInExistingUser(
+    anonClient: SupabaseClient,
+    email: string,
+    password: string
+  ): Promise<{ id: string; accessToken: string } | null> {
+    const { data } = await anonClient.auth.signInWithPassword({ email, password });
+    if (!data.session) return null;
+    await ensurePublicUsersRow(data.session.user.id, email);
+    return { id: data.session.user.id, accessToken: data.session.access_token };
+  }
+
+  /** Create a brand-new auth user + public.users row, then sign in. */
+  async function createAndSignInUser(
+    anonClient: SupabaseClient,
     email: string,
     password: string
   ): Promise<{ id: string; accessToken: string }> {
-    // Try to sign in first — covers the "user left over from a previous run" case
-    const anonClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    });
-
-    const signInRes = await anonClient.auth.signInWithPassword({ email, password });
-
-    if (signInRes.data.session) {
-      // Ensure public.users row exists (may have been cleaned up by a previous aborted run)
-      const { error: existingProfileError } = await serviceClient
-        .from("users")
-        .upsert(
-          { id: signInRes.data.session.user.id, email },
-          { onConflict: "id", ignoreDuplicates: true }
-        );
-      if (existingProfileError) {
-        throw new Error(
-          `Failed to ensure public.users row for existing user ${email}: ${existingProfileError.message}`
-        );
-      }
-
-      return {
-        id: signInRes.data.session.user.id,
-        accessToken: signInRes.data.session.access_token,
-      };
-    }
-
-    // User doesn't exist yet — create via admin API
     const { data: created, error: createError } = await serviceClient.auth.admin.createUser({
       email,
       password,
-      email_confirm: true, // skip email verification
+      email_confirm: true,
     });
-
     if (createError || !created.user) {
       throw new Error(`Failed to create test user ${email}: ${createError?.message}`);
     }
-
-    const authUserId = created.user.id;
-
-    // Sync to public.users — no trigger exists, so we do it manually here.
-    // The service-role client bypasses RLS, so this always succeeds.
-    const { error: profileError } = await serviceClient
-      .from("users")
-      .upsert({ id: authUserId, email }, { onConflict: "id", ignoreDuplicates: true });
-
-    if (profileError) {
-      throw new Error(`Failed to create public.users row for ${email}: ${profileError.message}`);
-    }
-
-    // Now sign in to get a real session/JWT
+    await ensurePublicUsersRow(created.user.id, email);
     const { data: session, error: sessionError } = await anonClient.auth.signInWithPassword({
       email,
       password,
     });
-
     if (sessionError || !session.session) {
       throw new Error(
         `Failed to sign in newly created user ${email}: ${sessionError?.message}`
       );
     }
+    return { id: session.session.user.id, accessToken: session.session.access_token };
+  }
 
-    return {
-      id: session.session.user.id,
-      accessToken: session.session.access_token,
-    };
+  /** Get existing user by sign-in, or create new if not found. */
+  async function getOrCreateUser(
+    email: string,
+    password: string
+  ): Promise<{ id: string; accessToken: string }> {
+    const anonClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+    });
+    return (
+      (await signInExistingUser(anonClient, email, password)) ??
+      (await createAndSignInUser(anonClient, email, password))
+    );
   }
 
   const [userA, userB] = await Promise.all([

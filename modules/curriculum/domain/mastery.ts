@@ -15,6 +15,18 @@ export type AttemptHistory = {
 };
 
 /**
+ * Returns the time-decay weight for an attempt based on age in days.
+ * < 7 days  → 1.0 (recent)
+ * 7–30 days → 0.7 (medium decay)
+ * > 30 days → 0.4 (strong decay)
+ */
+function getAttemptWeight(daysDiff: number): number {
+  if (daysDiff < 7) return 1.0;
+  if (daysDiff <= 30) return 0.7;
+  return 0.4;
+}
+
+/**
  * Time-decay weighted mastery score.
  * Recent attempts (< 7 days)  weight = 1.0
  * Older attempts  (7-30 days) weight = 0.7
@@ -32,7 +44,7 @@ export function calculateMasteryScore(history: AttemptHistory[]): number {
   for (const attempt of history) {
     const daysDiff =
       (now.getTime() - attempt.completedAt.getTime()) / (1000 * 60 * 60 * 24);
-    const weight = daysDiff < 7 ? 1.0 : daysDiff <= 30 ? 0.7 : 0.4;
+    const weight = getAttemptWeight(daysDiff);
 
     weightedTotal += weight;
     if (attempt.result === "correct") weightedCorrect += weight;
