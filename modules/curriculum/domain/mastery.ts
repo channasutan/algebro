@@ -21,7 +21,7 @@ export type AttemptHistory = {
  * > 30 days → 0.4 (strong decay)
  */
 function getAttemptWeight(daysDiff: number): number {
-  if (daysDiff < 7) return 1.0;
+  if (daysDiff < 7) return 1;
   if (daysDiff <= 30) return 0.7;
   return 0.4;
 }
