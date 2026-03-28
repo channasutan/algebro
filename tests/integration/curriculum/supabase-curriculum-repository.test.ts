@@ -27,12 +27,10 @@ function makeAuthenticatedClient(accessToken: string): SupabaseClient {
   });
 }
 
-// Helper to check if test environment is ready (Finding B)
 function isTestEnvReady(): boolean {
   return !!adminClient && !!TEST_USER_A && !!TEST_USER_B;
 }
 
-// Helper to create temporary topic for tests (Finding A)
 async function createTempTopic(suffix: string): Promise<string> {
   const { data: topic } = await adminClient
     .from("topics")
@@ -41,6 +39,21 @@ async function createTempTopic(suffix: string): Promise<string> {
     .single();
   return topic!.id;
 }
+
+// ─── shared seed helper ───────────────────────────────────────────────────────
+// Seeds USER_A with two topic rows (scores 0.8 and 0.2) and USER_B with one row.
+// Returns the temporary second topicId so callers can clean it up.
+async function seedTwoTopics(
+  repo: ReturnType<typeof createServiceRoleCurriculumRepository>,
+  primaryTopicId: string
+): Promise<string> {
+  const topicId2 = await createTempTopic(String(Date.now()));
+  await repo.upsertTopicProgress(TEST_USER_A, primaryTopicId, 0.8);
+  await repo.upsertTopicProgress(TEST_USER_A, topicId2, 0.2);
+  await repo.upsertTopicProgress(TEST_USER_B, primaryTopicId, 0.5);
+  return topicId2;
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 describe("Supabase Curriculum Repository Integration", () => {
   const isRealDB =
@@ -135,11 +148,8 @@ describe("Supabase Curriculum Repository Integration", () => {
 
     it("returns correct TopicProgress for existing row", async () => {
       const repo = createServiceRoleCurriculumRepository();
-      
       await repo.upsertTopicProgress(TEST_USER_A, topicId, 0.5);
-      
       const result = await repo.getTopicProgress(TEST_USER_A, topicId);
-      
       expect(result).not.toBeNull();
       expect(result?.userId).toBe(TEST_USER_A);
       expect(result?.topicId).toBe(topicId);
@@ -151,37 +161,28 @@ describe("Supabase Curriculum Repository Integration", () => {
   describe("upsertTopicProgress", () => {
     it("idempotency: calling twice with same data -> only 1 row in DB", async () => {
       const repo = createServiceRoleCurriculumRepository();
-      
       await repo.upsertTopicProgress(TEST_USER_A, topicId, 0.6);
       await repo.upsertTopicProgress(TEST_USER_A, topicId, 0.6);
-      
       const { data } = await adminClient
         .from("topic_progress")
         .select("id")
         .eq("user_id", TEST_USER_A)
         .eq("topic_id", topicId);
-        
       expect(data).toHaveLength(1);
     });
 
     it("update: calling with different score -> row updated to latest score, last_practiced_at updated", async () => {
       const repo = createServiceRoleCurriculumRepository();
-      
       await repo.upsertTopicProgress(TEST_USER_A, topicId, 0.4);
-      
       await new Promise(resolve => setTimeout(resolve, 100));
-      
       await repo.upsertTopicProgress(TEST_USER_A, topicId, 0.8);
       const second = await repo.getTopicProgress(TEST_USER_A, topicId);
-      
       expect(second?.masteryScore).toBe(0.8);
-      
       const { data } = await adminClient
         .from("topic_progress")
         .select("id")
         .eq("user_id", TEST_USER_A)
         .eq("topic_id", topicId);
-        
       expect(data).toHaveLength(1);
     });
   });
@@ -189,35 +190,24 @@ describe("Supabase Curriculum Repository Integration", () => {
   describe("getTopicProgressByUser", () => {
     it("returns only rows for the given userId (not other users' rows)", async () => {
       const repo = createServiceRoleCurriculumRepository();
-      
-      const topicId2 = await createTempTopic("3");
-
-      await repo.upsertTopicProgress(TEST_USER_A, topicId, 0.8);
-      await repo.upsertTopicProgress(TEST_USER_A, topicId2, 0.2);
-      await repo.upsertTopicProgress(TEST_USER_B, topicId, 0.5);
+      const topicId2 = await seedTwoTopics(repo, topicId);
 
       const rowsA = await repo.getTopicProgressByUser(TEST_USER_A);
-      
       expect(rowsA).toHaveLength(2);
       expect(rowsA.every((r: TopicProgress) => r.userId === TEST_USER_A)).toBe(true);
-      
+
       await adminClient.from("topics").delete().eq("id", topicId2);
     });
 
     it("returns rows ordered by mastery_score ASC", async () => {
       const repo = createServiceRoleCurriculumRepository();
-      
-      const topicId2 = await createTempTopic("4");
-
-      await repo.upsertTopicProgress(TEST_USER_A, topicId, 0.8);
-      await repo.upsertTopicProgress(TEST_USER_A, topicId2, 0.2);
+      const topicId2 = await seedTwoTopics(repo, topicId);
 
       const rowsA = await repo.getTopicProgressByUser(TEST_USER_A);
-      
       expect(rowsA).toHaveLength(2);
       expect(rowsA[0].masteryScore).toBe(0.2);
       expect(rowsA[1].masteryScore).toBe(0.8);
-      
+
       await adminClient.from("topics").delete().eq("id", topicId2);
     });
   });
@@ -233,17 +223,13 @@ describe("Supabase Curriculum Repository Integration", () => {
       });
 
       const userARepo = createSupabaseCurriculumRepository();
-      
       const myRow = await userARepo.getTopicProgress(TEST_USER_A, topicId);
       expect(myRow).not.toBeNull();
       expect(myRow?.masteryScore).toBe(0.9);
-      
       const theirRow = await userARepo.getTopicProgress(TEST_USER_B, topicId);
       expect(theirRow).toBeNull();
-      
       const allMyRows = await userARepo.getTopicProgressByUser(TEST_USER_A);
       expect(allMyRows).toHaveLength(1);
-      
       const allTheirRows = await userARepo.getTopicProgressByUser(TEST_USER_B);
       expect(allTheirRows).toHaveLength(0);
     });
