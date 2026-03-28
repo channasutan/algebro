@@ -19,6 +19,26 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin-client";
 
+const TOPIC_PROGRESS_SELECT = "id, user_id, topic_id, mastery_score, last_practiced_at" as const;
+
+type TopicProgressRow = {
+  id: string;
+  user_id: string;
+  topic_id: string;
+  mastery_score: number;
+  last_practiced_at: string | null;
+};
+
+function mapRow(row: TopicProgressRow): TopicProgress {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    topicId: row.topic_id,
+    masteryScore: row.mastery_score,
+    lastPracticedAt: row.last_practiced_at ? new Date(row.last_practiced_at) : null,
+  };
+}
+
 export function buildCurriculumRepository(client: SupabaseClient): CurriculumRepository {
   return createRepositoryFromClientFactory(() => Promise.resolve(client));
 }
@@ -35,36 +55,30 @@ function createRepositoryFromClientFactory(
   getClient: () => SupabaseClient | Promise<SupabaseClient>
 ): CurriculumRepository {
   return {
-    async getTopicProgress(_userId: string, _topicId: string): Promise<TopicProgress | null> {
+    async getTopicProgress(userId: string, topicId: string): Promise<TopicProgress | null> {
       const client = await getClient();
       const { data, error } = await client
         .from("topic_progress")
-        .select("id, user_id, topic_id, mastery_score, last_practiced_at")
-        .eq("user_id", _userId)
-        .eq("topic_id", _topicId)
+        .select(TOPIC_PROGRESS_SELECT)
+        .eq("user_id", userId)
+        .eq("topic_id", topicId)
         .maybeSingle();
 
       if (error) throw error;
       if (!data) return null;
 
-      return {
-        id: data.id,
-        userId: data.user_id,
-        topicId: data.topic_id,
-        masteryScore: data.mastery_score,
-        lastPracticedAt: data.last_practiced_at ? new Date(data.last_practiced_at) : null,
-      };
+      return mapRow(data as TopicProgressRow);
     },
 
-    async upsertTopicProgress(_userId: string, _topicId: string, _masteryScore: number): Promise<void> {
+    async upsertTopicProgress(userId: string, topicId: string, masteryScore: number): Promise<void> {
       const client = await getClient();
       const { error } = await client
         .from("topic_progress")
         .upsert(
           {
-            user_id: _userId,
-            topic_id: _topicId,
-            mastery_score: _masteryScore,
+            user_id: userId,
+            topic_id: topicId,
+            mastery_score: masteryScore,
             last_practiced_at: new Date().toISOString(),
           },
           { onConflict: "user_id,topic_id" }
@@ -73,23 +87,17 @@ function createRepositoryFromClientFactory(
       if (error) throw error;
     },
 
-    async getTopicProgressByUser(_userId: string): Promise<TopicProgress[]> {
+    async getTopicProgressByUser(userId: string): Promise<TopicProgress[]> {
       const client = await getClient();
       const { data, error } = await client
         .from("topic_progress")
-        .select("id, user_id, topic_id, mastery_score, last_practiced_at")
-        .eq("user_id", _userId)
+        .select(TOPIC_PROGRESS_SELECT)
+        .eq("user_id", userId)
         .order("mastery_score", { ascending: true });
 
       if (error) throw error;
 
-      return (data ?? []).map((row) => ({
-        id: row.id,
-        userId: row.user_id,
-        topicId: row.topic_id,
-        masteryScore: row.mastery_score,
-        lastPracticedAt: row.last_practiced_at ? new Date(row.last_practiced_at) : null,
-      }));
+      return (data ?? []).map((row) => mapRow(row as TopicProgressRow));
     },
   };
 }
