@@ -5,7 +5,6 @@ import type { EventHandler } from "@/events/event-types";
 import type { CurriculumRepository } from "../repositories/supabase-curriculum-repository";
 import { updateMastery } from "../services/update-mastery";
 import { createServiceLogger } from "@/lib/observability";
-import { createSupabasePracticeRepository } from "@/modules/practice/repositories/supabase-practice-repository";
 import type { PracticeRepository } from "@/modules/practice/repositories/practice-repository";
 
 async function processMasteryUpdate(
@@ -13,6 +12,11 @@ async function processMasteryUpdate(
   practiceRepo: PracticeRepository,
   curriculumRepo: CurriculumRepository
 ): Promise<void> {
+  // Skip curriculum mastery update when no topic is associated with this attempt
+  if (!event.payload.topic_id) {
+    return;
+  }
+
   const attempt = await practiceRepo.getAttempt(event.payload.attempt_id);
   if (!attempt) {
     throw new Error(`Attempt ${event.payload.attempt_id} not found`);
@@ -43,15 +47,15 @@ async function processMasteryUpdate(
 }
 
 export function handleAttemptCompleted(
-  repo: CurriculumRepository
+  curriculumRepo: CurriculumRepository,
+  practiceRepo: PracticeRepository
 ): EventHandler {
   return async (event) => {
     const typedEvent = event as AttemptCompletedEvent;
     const log = createServiceLogger(typedEvent.event_id);
 
     try {
-      const practiceRepo = createSupabasePracticeRepository();
-      await processMasteryUpdate(typedEvent, practiceRepo, repo);
+      await processMasteryUpdate(typedEvent, practiceRepo, curriculumRepo);
     } catch (error) {
       log.error({
         event: "curriculum.event_failure",

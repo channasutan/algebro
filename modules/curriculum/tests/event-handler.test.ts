@@ -2,6 +2,7 @@ import { vi, describe, it, expect, beforeEach } from "vitest";
 import { handleAttemptCompleted } from "../events/on-attempt-completed";
 import { updateMastery } from "../services/update-mastery";
 import type { CurriculumRepository } from "../repositories/supabase-curriculum-repository";
+import type { PracticeRepository } from "@/modules/practice/repositories/practice-repository";
 import type { AttemptCompletedEvent } from "@/events/attempt-events";
 
 // ── Mock Observability ──────────────────────────────────────────────────────
@@ -20,9 +21,17 @@ vi.mock("../services/update-mastery", () => ({
 
 const mockUpdateMastery = vi.mocked(updateMastery);
 
-// ── Mock Practice Repository ────────────────────────────────────────────────
-vi.mock("@/modules/practice/repositories/supabase-practice-repository", () => ({
-  createSupabasePracticeRepository: vi.fn(() => ({
+// ── Test Setup ──────────────────────────────────────────────────────────────
+function makeMockRepo(): CurriculumRepository {
+  return {
+    getTopicProgress: vi.fn(),
+    upsertTopicProgress: vi.fn(),
+    getTopicProgressByUser: vi.fn(),
+  };
+}
+
+function makeMockPracticeRepo(): PracticeRepository {
+  return {
     getAttempt: vi.fn().mockResolvedValue({
       id: "att-1",
       userId: "user-1",
@@ -33,15 +42,13 @@ vi.mock("@/modules/practice/repositories/supabase-practice-repository", () => ({
       id: "sess-1",
       topicId: "topic-1",
     }),
-  })),
-}));
-
-// ── Test Setup ──────────────────────────────────────────────────────────────
-function makeMockRepo(): CurriculumRepository {
-  return {
-    getTopicProgress: vi.fn(),
-    upsertTopicProgress: vi.fn(),
-    getTopicProgressByUser: vi.fn(),
+    createSession: vi.fn(),
+    createAttempt: vi.fn(),
+    updateAttempt: vi.fn(),
+    completeAttempt: vi.fn(),
+    addStep: vi.fn(),
+    getSteps: vi.fn(),
+    updateStep: vi.fn(),
   };
 }
 
@@ -66,8 +73,9 @@ describe("handleAttemptCompleted", () => {
   });
 
   it("calls updateMastery with correct args", async () => {
-    const repo = makeMockRepo();
-    const handler = handleAttemptCompleted(repo);
+    const curriculumRepo = makeMockRepo();
+    const practiceRepo = makeMockPracticeRepo();
+    const handler = handleAttemptCompleted(curriculumRepo, practiceRepo);
     const event = makeMockEvent();
 
     await handler(event);
@@ -80,22 +88,24 @@ describe("handleAttemptCompleted", () => {
         attemptId: "att-1",
         completedAt: new Date("2026-03-28T00:00:00.000Z"),
       }),
-      repo
+      curriculumRepo
     );
   });
 
   it("does not throw when updateMastery rejects", async () => {
     mockUpdateMastery.mockRejectedValueOnce(new Error("Simulated failure"));
-    const repo = makeMockRepo();
-    const handler = handleAttemptCompleted(repo);
+    const curriculumRepo = makeMockRepo();
+    const practiceRepo = makeMockPracticeRepo();
+    const handler = handleAttemptCompleted(curriculumRepo, practiceRepo);
     const event = makeMockEvent();
 
     await expect(handler(event)).resolves.not.toThrow();
   });
 
   it("does not mutate event.payload", async () => {
-    const repo = makeMockRepo();
-    const handler = handleAttemptCompleted(repo);
+    const curriculumRepo = makeMockRepo();
+    const practiceRepo = makeMockPracticeRepo();
+    const handler = handleAttemptCompleted(curriculumRepo, practiceRepo);
     const event = makeMockEvent();
 
     const originalPayloadString = JSON.stringify(event.payload);
@@ -106,8 +116,9 @@ describe("handleAttemptCompleted", () => {
   });
 
   it("idempotency: calling handler 3x calls updateMastery 3x", async () => {
-    const repo = makeMockRepo();
-    const handler = handleAttemptCompleted(repo);
+    const curriculumRepo = makeMockRepo();
+    const practiceRepo = makeMockPracticeRepo();
+    const handler = handleAttemptCompleted(curriculumRepo, practiceRepo);
     const event = makeMockEvent();
 
     await handler(event);
