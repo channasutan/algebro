@@ -46,24 +46,24 @@ export async function completeAttemptWithRepository(
           payload: {
             attempt_id: attemptId,
             user_id: userId,
-            topic_id: topicId ?? null,
+            topic_id: topicId ?? "",
             problem_id: attempt.problemId,
             completed_at: completedAt,
           } satisfies AttemptCompletedPayload,
         })
       )
       .catch((err) => {
-      log.warn({
-        event: "practice.attempt",
-        meta: {
-          type: "domain",
-          userId,
-          phase: "infra",
-          outcome: "failure",
-          attemptId,
-          error: err instanceof Error ? err.message : String(err)
-        }
-      });
+        log.warn({
+          event: "practice.attempt",
+          meta: {
+            type: "domain",
+            userId,
+            phase: "infra",
+            outcome: "failure",
+            attemptId,
+            error: err instanceof Error ? err.message : String(err)
+          }
+        });
       });
 
     log.info({

@@ -23,7 +23,16 @@ const mockUpdateMastery = vi.mocked(updateMastery);
 // ── Mock Practice Repository ────────────────────────────────────────────────
 vi.mock("@/modules/practice/repositories/supabase-practice-repository", () => ({
   createSupabasePracticeRepository: vi.fn(() => ({
-    getAttempt: vi.fn().mockResolvedValue({ isCorrect: true }),
+    getAttempt: vi.fn().mockResolvedValue({
+      id: "att-1",
+      userId: "user-1",
+      sessionId: "sess-1",
+      isCorrect: true,
+    }),
+    getSession: vi.fn().mockResolvedValue({
+      id: "sess-1",
+      topicId: "topic-1",
+    }),
   })),
 }));
 
@@ -88,8 +97,7 @@ describe("handleAttemptCompleted", () => {
     const repo = makeMockRepo();
     const handler = handleAttemptCompleted(repo);
     const event = makeMockEvent();
-    
-    // clone to compare later
+
     const originalPayloadString = JSON.stringify(event.payload);
 
     await handler(event);
