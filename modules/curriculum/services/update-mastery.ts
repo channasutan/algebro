@@ -21,7 +21,8 @@ export async function updateMastery(
 
   // 3. Calculate single-attempt score, then blend with history via EMA.
   //    ALPHA = 0.3 means new attempt weighs 30%, accumulated history weighs 70%.
-  //    TODO Phase 7: replace EMA with calculateMasteryScore(fullHistory)
+  //    FIXME(phase-7): replace EMA with calculateMasteryScore(fullHistory)
+  //    Tracked: https://github.com/channasutan/algebro/issues/61
   const singleAttemptScore = calculateMasteryScore(history);
   const ALPHA = 0.3;
   const masteryScore =

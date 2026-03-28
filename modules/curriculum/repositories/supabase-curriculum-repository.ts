@@ -1,10 +1,10 @@
-import type { CurriculumRepository, TopicProgress } from "./curriculum-repository";
-
 // Re-export interface types for backwards compatibility
-export type { CurriculumRepository, TopicProgress };
+export type { CurriculumRepository, TopicProgress } from "./curriculum-repository";
+
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin-client";
+import type { CurriculumRepository, TopicProgress } from "./curriculum-repository";
 
 type TopicProgressRow = {
   id: string;
