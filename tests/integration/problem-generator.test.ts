@@ -48,12 +48,12 @@ describe("Problem Generator Integration", () => {
           c: { type: "int", min: 10, max: 20 },
         },
         base_difficulty: 2,
-      })
+      } as Record<string, unknown>)
       .select()
       .single();
 
     if (error) throw error;
-    testTemplateId = template.id;
+    testTemplateId = (template as { id: string }).id;
   });
 
   afterAll(async () => {
@@ -176,7 +176,6 @@ describe("Problem Generator Integration", () => {
   });
 
   describe("Parameter randomization determinism", () => {
-    // Test helpers to reduce duplication
     const makeInput = (seed: string): GenerateProblemInput => ({
       templateId: testTemplateId,
       topicId: "integration-test-topic",
@@ -201,7 +200,6 @@ describe("Problem Generator Integration", () => {
       const result1 = await generateProblem(repo, makeInput("seed-a"), context);
       const result2 = await generateProblem(repo, makeInput("seed-b"), context);
 
-      // Very unlikely to be identical with different seeds
       expect(
         parametersAreDifferent(result1.problem?.parameters, result2.problem?.parameters)
       ).toBe(true);
