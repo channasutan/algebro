@@ -19,8 +19,6 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin-client";
 
-const TOPIC_PROGRESS_SELECT = "id, user_id, topic_id, mastery_score, last_practiced_at" as const;
-
 type TopicProgressRow = {
   id: string;
   user_id: string;
@@ -37,6 +35,29 @@ function mapRow(row: TopicProgressRow): TopicProgress {
     masteryScore: row.mastery_score,
     lastPracticedAt: row.last_practiced_at ? new Date(row.last_practiced_at) : null,
   };
+}
+
+const TOPIC_PROGRESS_SELECT = "id, user_id, topic_id, mastery_score, last_practiced_at" as const;
+
+async function fetchTopicProgressRows(
+  client: SupabaseClient,
+  userId: string,
+  topicId?: string
+): Promise<TopicProgressRow[]> {
+  let query = client
+    .from("topic_progress")
+    .select(TOPIC_PROGRESS_SELECT)
+    .eq("user_id", userId);
+
+  if (topicId !== undefined) {
+    query = query.eq("topic_id", topicId);
+  } else {
+    query = query.order("mastery_score", { ascending: true });
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []) as TopicProgressRow[];
 }
 
 export function buildCurriculumRepository(client: SupabaseClient): CurriculumRepository {
@@ -57,17 +78,8 @@ function createRepositoryFromClientFactory(
   return {
     async getTopicProgress(userId: string, topicId: string): Promise<TopicProgress | null> {
       const client = await getClient();
-      const { data, error } = await client
-        .from("topic_progress")
-        .select(TOPIC_PROGRESS_SELECT)
-        .eq("user_id", userId)
-        .eq("topic_id", topicId)
-        .maybeSingle();
-
-      if (error) throw error;
-      if (!data) return null;
-
-      return mapRow(data as TopicProgressRow);
+      const rows = await fetchTopicProgressRows(client, userId, topicId);
+      return rows.length > 0 ? mapRow(rows[0]) : null;
     },
 
     async upsertTopicProgress(userId: string, topicId: string, masteryScore: number): Promise<void> {
@@ -89,15 +101,8 @@ function createRepositoryFromClientFactory(
 
     async getTopicProgressByUser(userId: string): Promise<TopicProgress[]> {
       const client = await getClient();
-      const { data, error } = await client
-        .from("topic_progress")
-        .select(TOPIC_PROGRESS_SELECT)
-        .eq("user_id", userId)
-        .order("mastery_score", { ascending: true });
-
-      if (error) throw error;
-
-      return (data ?? []).map((row) => mapRow(row as TopicProgressRow));
+      const rows = await fetchTopicProgressRows(client, userId);
+      return rows.map(mapRow);
     },
   };
 }
