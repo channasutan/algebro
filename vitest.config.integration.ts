@@ -11,11 +11,13 @@ loadDotenv({ path: path.resolve(__dirname, ".env.test"), override: false });
 export default defineConfig({
   test: {
     environment: "node",
-    include: ["supabase/tests/**/*.test.ts"],
+    include: ["supabase/tests/**/*.test.ts", "tests/integration/**/*.test.ts"],
     testTimeout: 30_000,
     env: {
       SUPABASE_URL: process.env.SUPABASE_URL ?? "",
+      NEXT_PUBLIC_SUPABASE_URL: process.env.SUPABASE_URL ?? "",
       SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ?? "",
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ?? "",
       SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
       TEST_USER_A_EMAIL: process.env.TEST_USER_A_EMAIL ?? "",
       TEST_USER_A_PASSWORD: process.env.TEST_USER_A_PASSWORD ?? "",
@@ -26,8 +28,8 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "."),
-      "server-only": "server-only",
-      "client-only": "client-only",
+      "server-only": path.resolve(__dirname, "tests/mocks/server-only.ts"),
+      "client-only": path.resolve(__dirname, "tests/mocks/client-only.ts"),
     },
   },
 });

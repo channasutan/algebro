@@ -4,6 +4,9 @@ import { eventBus } from "@/events/event-bus";
 import { AUTH_USER_REGISTERED } from "@/events/auth-events";
 import { handleAuthUserRegistered } from "@/modules/user-profiles/events/on-auth-user-registered";
 import { createServiceRoleProfileRepository } from "@/modules/user-profiles/repositories/supabase-profile-repository";
+import { ATTEMPT_COMPLETED } from "@/events/attempt-events";
+import { handleAttemptCompleted } from "@/modules/curriculum/events/on-attempt-completed";
+import { createServiceRoleCurriculumRepository } from "@/modules/curriculum/repositories/supabase-curriculum-repository";
 
 import {
   MATERIAL_PROCESSING_JOB,
@@ -40,6 +43,11 @@ function registerUserProfilesModule(): void {
   );
 }
 
+function registerCurriculumModule(): void {
+  const curriculumRepo = createServiceRoleCurriculumRepository();
+  eventBus.subscribe(ATTEMPT_COMPLETED, handleAttemptCompleted(curriculumRepo));
+}
+
 function registerOptionalJobs(): void {
   // Additional Phase 2 job wiring stays opt-in and can be appended here later.
 }
@@ -67,6 +75,7 @@ export function ensureModulesBootstrapped(): Promise<void> {
     registerSharedInfrastructure();
     registerAuthenticationModule();
     registerUserProfilesModule();
+    registerCurriculumModule();
     registerOptionalJobs();
 
     bootstrapped = true;

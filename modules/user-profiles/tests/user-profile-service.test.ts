@@ -52,7 +52,7 @@ describe("User Profiles Service Logic", () => {
       const existingProfile = { userId: "user-1", email: "test@ex.com", displayName: null, avatarUrl: null, timezone: "UTC", updatedAt: "date" };
       mockRepo.findById.mockResolvedValue(existingProfile);
 
-      const result = await ensureProfileExists(mockRepo, { userId: "user-1", email: "test@ex.com" }, context);
+      const result = await ensureProfileExists(mockRepo, { userId: "user-1", email: "test@ex.com" });
 
       expect(mockRepo.findById).toHaveBeenCalledWith("user-1");
       expect(mockRepo.insertProfile).not.toHaveBeenCalled();
@@ -63,11 +63,11 @@ describe("User Profiles Service Logic", () => {
       mockRepo.findById.mockResolvedValue(null);
 
       await expect(
-        ensureProfileExists(mockRepo, { userId: "user-1", email: "" }, context)
+        ensureProfileExists(mockRepo, { userId: "user-1", email: "" })
       ).rejects.toThrow(/\[user-profiles\] Cannot create profile without email/);
 
       await expect(
-        ensureProfileExists(mockRepo, { userId: "user-1", email: "   " }, context)
+        ensureProfileExists(mockRepo, { userId: "user-1", email: "   " })
       ).rejects.toThrow(/\[user-profiles\] Cannot create profile without email/);
     });
 
@@ -77,7 +77,7 @@ describe("User Profiles Service Logic", () => {
       const newProfile = { userId: "user-1", email: "test@ex.com", displayName: null, avatarUrl: null, timezone: "UTC", updatedAt: "date" };
       mockRepo.insertProfile.mockResolvedValue(newProfile);
 
-      const result = await ensureProfileExists(mockRepo, { userId: "user-1", email: "test@ex.com" }, context);
+      const result = await ensureProfileExists(mockRepo, { userId: "user-1", email: "test@ex.com" });
 
       expect(mockRepo.insertProfile).toHaveBeenCalledWith({
         id: "user-1",
@@ -97,7 +97,7 @@ describe("User Profiles Service Logic", () => {
       mockRepo.findById.mockResolvedValue(null);
       mockRepo.insertProfile.mockResolvedValue(null as unknown as UserProfile);
 
-      const promise = ensureProfileExists(mockRepo, { userId: "user-1", email: "test@ex.com" }, context);
+      const promise = ensureProfileExists(mockRepo, { userId: "user-1", email: "test@ex.com" });
       
       await expect(promise).rejects.toBeInstanceOf(ProfileCreationError);
     });

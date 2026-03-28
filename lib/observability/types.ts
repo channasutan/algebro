@@ -8,7 +8,7 @@ export type ServiceContext = {
 
 export type Phase = "insert" | "retry" | "read_after_insert" | "infra" | "start" | "progress" | "complete" | "validation";
 
-export type LogDomain = "user-profiles" | "system" | "practice";
+export type LogDomain = "user-profiles" | "system" | "practice" | "curriculum";
 
 export type EventName = `${LogDomain}.${string}` | "unknown_event";
  

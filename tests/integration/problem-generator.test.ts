@@ -48,12 +48,12 @@ describe("Problem Generator Integration", () => {
           c: { type: "int", min: 10, max: 20 },
         },
         base_difficulty: 2,
-      })
+      } as any)
       .select()
       .single();
 
     if (error) throw error;
-    testTemplateId = template.id;
+    testTemplateId = (template as any).id;
   });
 
   afterAll(async () => {
