@@ -9,13 +9,17 @@ import {
   assertMasteryScore,
 } from "../../../modules/curriculum/domain/mastery-invariants";
 
+// Module-scoped counter produces unique, deterministic IDs without relying
+// on Math.random() — safe and predictable for test isolation.
+let attemptCounter = 0;
+
 function makeAttempt(
   result: "correct" | "incorrect",
   daysAgo: number
 ): AttemptHistory {
   const completedAt = new Date();
   completedAt.setDate(completedAt.getDate() - daysAgo);
-  return { attemptId: `attempt-${Math.random()}`, result, completedAt };
+  return { attemptId: `attempt-${++attemptCounter}`, result, completedAt };
 }
 
 describe("Mastery Domain", () => {
@@ -107,8 +111,8 @@ describe("Mastery Domain", () => {
       expect(validateMasteryScore(1.1)).toBe(false);
     });
 
-    it("false for NaN", () => {
-      expect(validateMasteryScore(NaN)).toBe(false);
+    it("false for Number.NaN", () => {
+      expect(validateMasteryScore(Number.NaN)).toBe(false);
     });
   });
 

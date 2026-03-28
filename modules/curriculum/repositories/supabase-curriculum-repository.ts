@@ -49,10 +49,10 @@ async function fetchTopicProgressRows(
     .select(TOPIC_PROGRESS_SELECT)
     .eq("user_id", userId);
 
-  if (topicId !== undefined) {
-    query = query.eq("topic_id", topicId);
-  } else {
+  if (topicId === undefined) {
     query = query.order("mastery_score", { ascending: true });
+  } else {
+    query = query.eq("topic_id", topicId);
   }
 
   const { data, error } = await query;
