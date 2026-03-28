@@ -1,7 +1,7 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { handleAttemptCompleted } from "../events/on-attempt-completed";
 import { updateMastery } from "../services/update-mastery";
-import type { CurriculumRepository } from "../repositories/supabase-curriculum-repository";
+import type { CurriculumRepository } from "../repositories/curriculum-repository";
 import type { PracticeRepository } from "@/modules/practice/repositories/practice-repository";
 import type { AttemptCompletedEvent } from "@/events/attempt-events";
 

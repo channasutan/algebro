@@ -1,20 +1,7 @@
-// Repository interface — implemented by integration layer (supabase)
-// Services only depend on this interface, never on lib/supabase/* directly
+import type { CurriculumRepository, TopicProgress } from "./curriculum-repository";
 
-export interface TopicProgress {
-  id: string;
-  userId: string;
-  topicId: string;
-  masteryScore: number;
-  lastPracticedAt: Date | null;
-}
-
-export interface CurriculumRepository {
-  getTopicProgress(userId: string, topicId: string): Promise<TopicProgress | null>;
-  upsertTopicProgress(userId: string, topicId: string, masteryScore: number): Promise<void>;
-  getTopicProgressByUser(userId: string): Promise<TopicProgress[]>;
-}
-
+// Re-export interface types for backwards compatibility
+export type { CurriculumRepository, TopicProgress };
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin-client";

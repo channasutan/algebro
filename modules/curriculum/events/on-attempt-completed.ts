@@ -2,7 +2,7 @@ import "server-only";
 
 import type { AttemptCompletedEvent } from "@/events/attempt-events";
 import type { EventHandler } from "@/events/event-types";
-import type { CurriculumRepository } from "../repositories/supabase-curriculum-repository";
+import type { CurriculumRepository } from "../repositories/curriculum-repository";
 import { updateMastery } from "../services/update-mastery";
 import { createServiceLogger } from "@/lib/observability";
 import type { PracticeRepository } from "@/modules/practice/repositories/practice-repository";
