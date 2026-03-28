@@ -15,35 +15,45 @@ export function handleAttemptCompleted(
     const requestId = typedEvent.event_id;
     const log = createServiceLogger(requestId);
 
-    // Skip curriculum mastery update when no topic is associated with this attempt
-    if (!typedEvent.payload.topic_id) {
-      log.info({
-        event: "curriculum.skip_mastery",
-        meta: {
-          type: "domain",
-          phase: "start",
-          userId: typedEvent.payload.user_id,
-          attemptId: typedEvent.payload.attempt_id,
-          reason: "no_topic_id",
-        },
-      });
-      return;
-    }
-
     try {
       const practiceRepo = createSupabasePracticeRepository();
+
+      // Fetch canonical attempt row — source of truth for userId and result
       const attempt = await practiceRepo.getAttempt(typedEvent.payload.attempt_id);
-      
       if (!attempt) {
         throw new Error(`Attempt ${typedEvent.payload.attempt_id} not found`);
       }
 
+      // Fetch the associated session to get the DB-verified topicId
+      const session = await practiceRepo.getSession(attempt.sessionId);
+      if (!session) {
+        throw new Error(`Session ${attempt.sessionId} not found`);
+      }
+
+      // Skip curriculum mastery update when no topic is associated with this session
+      if (!session.topicId) {
+        log.info({
+          event: "curriculum.skip_mastery",
+          meta: {
+            type: "domain",
+            phase: "start",
+            userId: attempt.userId,
+            attemptId: attempt.id,
+            reason: "no_topic_id",
+          },
+        });
+        return;
+      }
+
+      // Derive userId and topicId strictly from persisted DB records —
+      // never from caller-supplied event payload fields — to prevent
+      // silent data corruption via stale or tampered IDs.
       await updateMastery(
         {
-          userId: typedEvent.payload.user_id,
-          topicId: typedEvent.payload.topic_id,
+          userId: attempt.userId,
+          topicId: session.topicId,
           attemptResult: attempt.isCorrect ? "correct" : "incorrect",
-          attemptId: typedEvent.payload.attempt_id,
+          attemptId: attempt.id,
           completedAt: new Date(typedEvent.payload.completed_at),
         },
         repo
