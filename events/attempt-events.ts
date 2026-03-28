@@ -6,7 +6,7 @@ export type AttemptCompletedPayload = {
   attempt_id: string;
   user_id: string;
   problem_id: string;
-  topic_id: string;
+  topic_id: string | null;
   completed_at: string;
 };
 

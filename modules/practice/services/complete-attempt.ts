@@ -46,7 +46,7 @@ export async function completeAttemptWithRepository(
           payload: {
             attempt_id: attemptId,
             user_id: userId,
-            topic_id: topicId ?? "",
+            topic_id: topicId ?? null,
             problem_id: attempt.problemId,
             completed_at: completedAt,
           } satisfies AttemptCompletedPayload,

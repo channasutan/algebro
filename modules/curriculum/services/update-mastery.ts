@@ -8,21 +8,20 @@ export async function updateMastery(
 ): Promise<UpdateMasteryOutput> {
   const { userId, topicId, attemptResult } = input;
 
-  // 1. Get current progress
+  // 1. Get current progress for previousScore reporting only
   const current = await repo.getTopicProgress(userId, topicId);
   const previousScore = current?.masteryScore ?? 0;
 
-  // 2. Build simulated attempt history (Phase 6 simplified)
+  // 2. Build attempt history from this attempt only.
   //    Phase 7+ will query full attempt history from Practice Engine
-  const simulatedHistory: AttemptHistory[] = [
-    ...(current
-      ? [{ attemptId: "prev", result: "correct" as const, completedAt: new Date(Date.now() - 1000) }]
-      : []),
+  //    and pass the real array here. No synthetic attempts are injected
+  //    to avoid corrupting mastery trends.
+  const history: AttemptHistory[] = [
     { attemptId: input.attemptId, result: attemptResult, completedAt: input.completedAt },
   ];
 
   // 3. Calculate new mastery score via domain pure function (time-decay weighted)
-  const masteryScore = calculateMasteryScore(simulatedHistory);
+  const masteryScore = calculateMasteryScore(history);
 
   // 4. Persist via repository — service-role write (bypasses RLS)
   await repo.upsertTopicProgress(userId, topicId, masteryScore);

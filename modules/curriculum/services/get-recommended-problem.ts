@@ -1,6 +1,6 @@
 import { generateProblem } from "@/modules/problem-generator";
 import type { ProblemRepository } from "@/modules/problem-generator/repositories/problem-repository";
-import type { ServiceContext } from "@/lib/observability/types";
+import type { ServiceContext } from "@/lib/observability";
 import type { CurriculumRepository } from "../repositories/supabase-curriculum-repository";
 import type {
   GetRecommendedProblemInput,
@@ -8,7 +8,7 @@ import type {
 } from "../contracts/get-recommended-problem";
 
 // Fallback templateId for beginner/first-time users.
-// Phase 7+: derive templateId dynamically from topic metadata.
+// Phase 7+: derive templateId dynamically from topic metadata (lookup by name or slug).
 const FALLBACK_TEMPLATE_ID = "default-beginner-template";
 
 export async function getRecommendedProblem(
@@ -26,12 +26,13 @@ export async function getRecommendedProblem(
   const topicId = allProgress?.[0]?.topicId ?? undefined;
 
   // 3. Delegate to Problem Generator public API — never query problems table directly
+  //    Phase 7+: derive difficultyLevel from mastery score (e.g. Math.ceil((1 - lowestMastery) * 5))
   const result = await generateProblem(
     problemRepo,
     {
       templateId: FALLBACK_TEMPLATE_ID,
       topicId,
-      difficultyLevel: allProgress.length === 0 ? 1 : 1,
+      difficultyLevel: 1,
     },
     context
   );
@@ -44,9 +45,6 @@ export async function getRecommendedProblem(
   }
 
   // 5. Map GeneratedProblem fields to contract output
-  // GeneratedProblem.id → problemId
-  // GeneratedProblem.topicId → topicId (nullable — fallback to empty string if null)
-  // GeneratedProblem.difficultyLevel → difficulty
   return {
     problemId: result.problem.id,
     topicId: result.problem.topicId ?? "",

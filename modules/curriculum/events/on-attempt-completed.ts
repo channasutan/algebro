@@ -15,6 +15,21 @@ export function handleAttemptCompleted(
     const requestId = typedEvent.event_id;
     const log = createServiceLogger(requestId);
 
+    // Skip curriculum mastery update when no topic is associated with this attempt
+    if (!typedEvent.payload.topic_id) {
+      log.info({
+        event: "curriculum.skip_mastery",
+        meta: {
+          type: "domain",
+          phase: "start",
+          userId: typedEvent.payload.user_id,
+          attemptId: typedEvent.payload.attempt_id,
+          reason: "no_topic_id",
+        },
+      });
+      return;
+    }
+
     try {
       const practiceRepo = createSupabasePracticeRepository();
       const attempt = await practiceRepo.getAttempt(typedEvent.payload.attempt_id);
