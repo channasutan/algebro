@@ -135,7 +135,7 @@ describe("completeAttemptWithRepository", () => {
     );
   });
 
-  it("eventBus.publish is NOT called when repo.completeAttempt throws", async () => {
+  it("logs error and does not publish when repo.completeAttempt throws", async () => {
     const mockRepo = makeMockRepo(null);
 
     await expect(
@@ -147,6 +147,7 @@ describe("completeAttemptWithRepository", () => {
     ).rejects.toThrow("db error");
 
     expect(vi.mocked(eventBus.publish)).not.toHaveBeenCalled();
+    expect(logger.error).toHaveBeenCalledTimes(1);
   });
 
   it("preserves best-effort behavior when event publishing fails", async () => {
@@ -161,19 +162,5 @@ describe("completeAttemptWithRepository", () => {
 
     expect(mockRepo.completeAttempt).toHaveBeenCalledTimes(1);
     expect(result).toEqual(makeAttempt());
-  });
-
-  it("logs and rethrows when repository completion fails", async () => {
-    const mockRepo = makeMockRepo(null);
-
-    await expect(
-      completeAttemptWithRepository(
-        mockRepo as never,
-        makeInput({ attemptId: "att-4" }),
-        { requestId: "req-1" }
-      )
-    ).rejects.toThrow("db error");
-
-    expect(logger.error).toHaveBeenCalledTimes(1);
   });
 });
