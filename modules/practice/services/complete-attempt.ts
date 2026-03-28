@@ -4,6 +4,7 @@ import { createServiceLogger, type ServiceContext } from "@/lib/observability";
 import { Attempt } from "../domain/practice";
 import { PracticeRepository } from "../repositories/practice-repository";
 import { createSupabasePracticeRepository } from "../repositories/supabase-practice-repository";
+import { ATTEMPT_COMPLETED, type AttemptCompletedPayload } from "@/events/attempt-events";
 
 export type CompleteAttemptInput = {
   attemptId: string;
@@ -41,28 +42,28 @@ export async function completeAttemptWithRepository(
     eventBus
       .publish(
         createDomainEvent({
-          eventType: "attempt_completed",
+          eventType: ATTEMPT_COMPLETED,
           payload: {
             attempt_id: attemptId,
             user_id: userId,
-            topic_id: topicId,
-            is_correct: isCorrect,
-            completed_at: completedAt
-          }
+            topic_id: topicId ?? null,
+            problem_id: attempt.problemId,
+            completed_at: completedAt,
+          } satisfies AttemptCompletedPayload,
         })
       )
       .catch((err) => {
-      log.warn({
-        event: "practice.attempt",
-        meta: {
-          type: "domain",
-          userId,
-          phase: "infra",
-          outcome: "failure",
-          attemptId,
-          error: err instanceof Error ? err.message : String(err)
-        }
-      });
+        log.warn({
+          event: "practice.attempt",
+          meta: {
+            type: "domain",
+            userId,
+            phase: "infra",
+            outcome: "failure",
+            attemptId,
+            error: err instanceof Error ? err.message : String(err)
+          }
+        });
       });
 
     log.info({

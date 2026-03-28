@@ -9,6 +9,7 @@ import type {
 
 // Fallback templateId for beginner/first-time users.
 // Phase 7+: derive templateId dynamically from topic metadata (lookup by name or slug).
+// Requires: seed row in problem_templates with id = 'default-beginner-template'
 const FALLBACK_TEMPLATE_ID = "default-beginner-template";
 
 export async function getRecommendedProblem(
@@ -23,7 +24,7 @@ export async function getRecommendedProblem(
   const allProgress = await repo.getTopicProgressByUser(userId);
 
   // 2. Pick topicId: lowest mastery, or undefined for first-time user
-  const topicId = allProgress?.[0]?.topicId ?? undefined;
+  const topicId = allProgress?.[0]?.topicId;
 
   // 3. Delegate to Problem Generator public API — never query problems table directly
   //    Phase 7+: derive difficultyLevel from mastery score (e.g. Math.ceil((1 - lowestMastery) * 5))

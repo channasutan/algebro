@@ -21,48 +21,26 @@ vi.mock("@/events/event-bus", () => ({
 import { eventBus } from "@/events/event-bus";
 import { completeAttemptWithRepository } from "../services/complete-attempt";
 
-// Base attempt shape with sensible defaults
-const baseAttempt = {
-  id: "att-1",
-  sessionId: "sess-1",
-  problemId: "prob-1",
-  userId: "usr-1",
-  startedAt: "2026-01-01T00:00:00.000Z",
-  completedAt: "2026-01-01T00:05:00.000Z",
-  isCorrect: true,
-  createdAt: "2026-01-01T00:00:00.000Z"
-};
-
-type AttemptShape = typeof baseAttempt;
-
-// Builder for updatedAttempt objects
-function makeUpdatedAttempt(overrides?: Partial<AttemptShape>): AttemptShape {
-  return { ...baseAttempt, ...overrides };
-}
-
-// Builder for mock repository with successful completion
-function makeAttemptRepo(attempt?: AttemptShape) {
-  const finalAttempt = attempt ?? baseAttempt;
-  return {
-    completeAttempt: vi.fn().mockResolvedValue(finalAttempt)
-  };
-}
-
-// Builder for mock repository that fails
-function makeFailingRepo() {
-  return {
-    completeAttempt: vi.fn().mockRejectedValue(new Error("db error"))
-  };
-}
-
 describe("completeAttemptWithRepository", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("completes an attempt and returns updated attempt", async () => {
-    const updatedAttempt = makeUpdatedAttempt();
-    const mockRepo = makeAttemptRepo(updatedAttempt);
+    const updatedAttempt = {
+      id: "att-1",
+      sessionId: "sess-1",
+      problemId: "prob-1",
+      userId: "usr-1",
+      startedAt: "2026-01-01T00:00:00.000Z",
+      completedAt: "2026-01-01T00:05:00.000Z",
+      isCorrect: true,
+      createdAt: "2026-01-01T00:00:00.000Z"
+    };
+
+    const mockRepo = {
+      completeAttempt: vi.fn().mockResolvedValue(updatedAttempt)
+    };
 
     const result = await completeAttemptWithRepository(
       mockRepo as never,
@@ -82,8 +60,20 @@ describe("completeAttemptWithRepository", () => {
   });
 
   it("publishes attempt_completed with exact payload keys", async () => {
-    const updatedAttempt = makeUpdatedAttempt({ problemId: "prob-42", isCorrect: false });
-    const mockRepo = makeAttemptRepo(updatedAttempt);
+    const updatedAttempt = {
+      id: "att-1",
+      sessionId: "sess-1",
+      problemId: "prob-42",
+      userId: "usr-1",
+      startedAt: "2026-01-01T00:00:00.000Z",
+      completedAt: "2026-01-01T00:05:00.000Z",
+      isCorrect: false,
+      createdAt: "2026-01-01T00:00:00.000Z"
+    };
+
+    const mockRepo = {
+      completeAttempt: vi.fn().mockResolvedValue(updatedAttempt)
+    };
 
     await completeAttemptWithRepository(
       mockRepo as never,
@@ -104,8 +94,20 @@ describe("completeAttemptWithRepository", () => {
   });
 
   it("topic_id falls back to empty string when topicId is null", async () => {
-    const updatedAttempt = makeUpdatedAttempt({ id: "att-2", completedAt: null });
-    const mockRepo = makeAttemptRepo(updatedAttempt);
+    const updatedAttempt = {
+      id: "att-2",
+      sessionId: "sess-1",
+      problemId: "prob-1",
+      userId: "usr-1",
+      startedAt: "2026-01-01T00:00:00.000Z",
+      completedAt: null,
+      isCorrect: true,
+      createdAt: "2026-01-01T00:00:00.000Z"
+    };
+
+    const mockRepo = {
+      completeAttempt: vi.fn().mockResolvedValue(updatedAttempt)
+    };
 
     await completeAttemptWithRepository(
       mockRepo as never,
@@ -114,12 +116,24 @@ describe("completeAttemptWithRepository", () => {
     );
 
     const emitted = vi.mocked(eventBus.publish).mock.calls[0][0];
-    expect(emitted.payload.topic_id).toBe("");
+    expect(emitted.payload.topic_id).toBeNull();
   });
 
   it("completed_at in payload is ISO-8601 string", async () => {
-    const updatedAttempt = makeUpdatedAttempt({ id: "att-3", completedAt: null });
-    const mockRepo = makeAttemptRepo(updatedAttempt);
+    const updatedAttempt = {
+      id: "att-3",
+      sessionId: "sess-1",
+      problemId: "prob-1",
+      userId: "usr-1",
+      startedAt: "2026-01-01T00:00:00.000Z",
+      completedAt: null,
+      isCorrect: true,
+      createdAt: "2026-01-01T00:00:00.000Z"
+    };
+
+    const mockRepo = {
+      completeAttempt: vi.fn().mockResolvedValue(updatedAttempt)
+    };
 
     await completeAttemptWithRepository(
       mockRepo as never,
@@ -134,7 +148,9 @@ describe("completeAttemptWithRepository", () => {
   });
 
   it("eventBus.publish is NOT called when repo.completeAttempt throws", async () => {
-    const mockRepo = makeFailingRepo();
+    const mockRepo = {
+      completeAttempt: vi.fn().mockRejectedValue(new Error("db error"))
+    };
 
     await expect(
       completeAttemptWithRepository(
@@ -148,8 +164,20 @@ describe("completeAttemptWithRepository", () => {
   });
 
   it("preserves best-effort behavior when event publishing fails", async () => {
-    const updatedAttempt = makeUpdatedAttempt();
-    const mockRepo = makeAttemptRepo(updatedAttempt);
+    const updatedAttempt = {
+      id: "att-1",
+      sessionId: "sess-1",
+      problemId: "prob-1",
+      userId: "usr-1",
+      startedAt: "2026-01-01T00:00:00.000Z",
+      completedAt: "2026-01-01T00:05:00.000Z",
+      isCorrect: true,
+      createdAt: "2026-01-01T00:00:00.000Z"
+    };
+
+    const mockRepo = {
+      completeAttempt: vi.fn().mockResolvedValue(updatedAttempt)
+    };
 
     vi.mocked(eventBus.publish).mockRejectedValueOnce(new Error("event failure"));
 
@@ -164,7 +192,9 @@ describe("completeAttemptWithRepository", () => {
   });
 
   it("logs and rethrows when repository completion fails", async () => {
-    const mockRepo = makeFailingRepo();
+    const mockRepo = {
+      completeAttempt: vi.fn().mockRejectedValue(new Error("db error"))
+    };
 
     await expect(
       completeAttemptWithRepository(
