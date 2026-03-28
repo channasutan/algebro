@@ -46,6 +46,8 @@ describe("Supabase Curriculum Repository Integration", () => {
   let topicId: string;
 
   beforeAll(async () => {
+    if (!isRealDB) return;
+
     adminClient = getSupabaseAdminClient();
     anonClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
