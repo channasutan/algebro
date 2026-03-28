@@ -47,6 +47,13 @@ function makeTopicProgress(overrides?: Partial<TopicProgress>): TopicProgress {
 
 const mockContext = { requestId: "test-req-1" };
 
+// Helper to reduce duplication in tests with existing score
+function makeRepoWithExistingScore(masteryScore: number): CurriculumRepository {
+  return makeMockRepo({
+    getTopicProgress: vi.fn().mockResolvedValue(makeTopicProgress({ masteryScore })),
+  });
+}
+
 // ── updateMastery ───────────────────────────────────────────────────────────
 describe("updateMastery", () => {
   it("user dengan 0 history → previousScore = 0", async () => {
@@ -59,10 +66,7 @@ describe("updateMastery", () => {
   });
 
   it("user dengan existing score → previousScore = existing masteryScore", async () => {
-    const existing = makeTopicProgress({ masteryScore: 0.6 });
-    const repo = makeMockRepo({
-      getTopicProgress: vi.fn().mockResolvedValue(existing),
-    });
+    const repo = makeRepoWithExistingScore(0.6);
     const result = await updateMastery(
       { userId: "u1", topicId: "t1", attemptResult: "correct", attemptId: "a1", completedAt: new Date() },
       repo
@@ -80,10 +84,7 @@ describe("updateMastery", () => {
   });
 
   it("attempt 'incorrect' → masteryScore <= previousScore when existing score present", async () => {
-    const existing = makeTopicProgress({ masteryScore: 0.8 });
-    const repo = makeMockRepo({
-      getTopicProgress: vi.fn().mockResolvedValue(existing),
-    });
+    const repo = makeRepoWithExistingScore(0.8);
     const result = await updateMastery(
       { userId: "u1", topicId: "t1", attemptResult: "incorrect", attemptId: "a1", completedAt: new Date() },
       repo

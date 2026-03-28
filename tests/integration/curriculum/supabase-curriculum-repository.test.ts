@@ -27,6 +27,21 @@ function makeAuthenticatedClient(accessToken: string): SupabaseClient {
   });
 }
 
+// Helper to check if test environment is ready (Finding B)
+function isTestEnvReady(): boolean {
+  return !!adminClient && !!TEST_USER_A && !!TEST_USER_B;
+}
+
+// Helper to create temporary topic for tests (Finding A)
+async function createTempTopic(suffix: string): Promise<string> {
+  const { data: topic } = await adminClient
+    .from("topics")
+    .insert({ name: `__repo_test_topic_${suffix}__${Date.now()}` })
+    .select("id")
+    .single();
+  return topic!.id;
+}
+
 describe("Supabase Curriculum Repository Integration", () => {
   const isRealDB =
     !!SUPABASE_URL &&
@@ -106,7 +121,7 @@ describe("Supabase Curriculum Repository Integration", () => {
 
   beforeEach(async () => {
     vi.restoreAllMocks();
-    if (adminClient && TEST_USER_A && TEST_USER_B) {
+    if (isTestEnvReady()) {
       await adminClient.from("topic_progress").delete().in("user_id", [TEST_USER_A, TEST_USER_B]);
     }
   });
@@ -175,13 +190,7 @@ describe("Supabase Curriculum Repository Integration", () => {
     it("returns only rows for the given userId (not other users' rows)", async () => {
       const repo = createServiceRoleCurriculumRepository();
       
-      let topicId2 = "";
-      const { data: topic } = await adminClient
-        .from("topics")
-        .insert({ name: "__repo_test_topic_3__" + Date.now() })
-        .select("id")
-        .single();
-      topicId2 = topic!.id;
+      const topicId2 = await createTempTopic("3");
 
       await repo.upsertTopicProgress(TEST_USER_A, topicId, 0.8);
       await repo.upsertTopicProgress(TEST_USER_A, topicId2, 0.2);
@@ -198,13 +207,7 @@ describe("Supabase Curriculum Repository Integration", () => {
     it("returns rows ordered by mastery_score ASC", async () => {
       const repo = createServiceRoleCurriculumRepository();
       
-      let topicId2 = "";
-      const { data: topic } = await adminClient
-        .from("topics")
-        .insert({ name: "__repo_test_topic_4__" + Date.now() })
-        .select("id")
-        .single();
-      topicId2 = topic!.id;
+      const topicId2 = await createTempTopic("4");
 
       await repo.upsertTopicProgress(TEST_USER_A, topicId, 0.8);
       await repo.upsertTopicProgress(TEST_USER_A, topicId2, 0.2);
