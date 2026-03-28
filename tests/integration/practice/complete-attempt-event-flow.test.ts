@@ -7,7 +7,7 @@ vi.mock("@/modules/curriculum/services/update-mastery", () => ({
   updateMastery: vi.fn().mockResolvedValue({ masteryScore: 0.5, previousScore: 0.3 }),
 }));
 
-// Mock supabase practice repo used by handler to fetch attempt
+// Mock supabase practice repo used by handler to fetch attempt + session
 vi.mock("@/modules/practice/repositories/supabase-practice-repository", () => ({
   createSupabasePracticeRepository: vi.fn(() => ({
     getAttempt: vi.fn().mockResolvedValue({
@@ -19,6 +19,10 @@ vi.mock("@/modules/practice/repositories/supabase-practice-repository", () => ({
       completedAt: "2026-01-15T10:05:00.000Z",
       isCorrect: true,
       createdAt: "2026-01-15T10:00:00.000Z",
+    }),
+    getSession: vi.fn().mockResolvedValue({
+      id: "sess-1",
+      topicId: "topic-algebra",
     }),
     completeAttempt: vi.fn(),
   })),
