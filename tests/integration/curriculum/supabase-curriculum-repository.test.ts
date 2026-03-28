@@ -9,6 +9,7 @@ import * as ServerClientAuth from "@/lib/supabase/server-client";
 import {
   createSupabaseCurriculumRepository,
   createServiceRoleCurriculumRepository,
+  type TopicProgress,
 } from "@/modules/curriculum/repositories/supabase-curriculum-repository";
 
 const SUPABASE_URL = process.env.SUPABASE_URL ?? "";
@@ -39,21 +40,16 @@ describe("Supabase Curriculum Repository Integration", () => {
   }
 
   let adminClient: SupabaseClient;
-  let anonClient: ReturnType<typeof createClient>;
 
   let TEST_USER_A: string;
   let userAAccessToken: string;
 
   let TEST_USER_B: string;
-  let userBAccessToken: string;
 
   let topicId: string;
 
   beforeAll(async () => {
     adminClient = getSupabaseAdminClient();
-    anonClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    });
 
     async function getOrCreateUser(email: string, password: string) {
       const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -81,7 +77,6 @@ describe("Supabase Curriculum Repository Integration", () => {
     TEST_USER_A = a.id;
     userAAccessToken = a.accessToken;
     TEST_USER_B = b.id;
-    userBAccessToken = b.accessToken;
 
     const { data: topic } = await adminClient
       .from("topics")
@@ -158,7 +153,6 @@ describe("Supabase Curriculum Repository Integration", () => {
       const repo = createServiceRoleCurriculumRepository();
       
       await repo.upsertTopicProgress(TEST_USER_A, topicId, 0.4);
-      const first = await repo.getTopicProgress(TEST_USER_A, topicId);
       
       await new Promise(resolve => setTimeout(resolve, 100));
       
@@ -196,7 +190,7 @@ describe("Supabase Curriculum Repository Integration", () => {
       const rowsA = await repo.getTopicProgressByUser(TEST_USER_A);
       
       expect(rowsA).toHaveLength(2);
-      expect(rowsA.every((r: any) => r.userId === TEST_USER_A)).toBe(true);
+      expect(rowsA.every((r: TopicProgress) => r.userId === TEST_USER_A)).toBe(true);
       
       await adminClient.from("topics").delete().eq("id", topicId2);
     });

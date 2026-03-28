@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import {
   calculateMasteryScore,
   isMasteryImproved,
-  clampMasteryScore,
   type AttemptHistory,
 } from "../../../modules/curriculum/domain/mastery";
 import {

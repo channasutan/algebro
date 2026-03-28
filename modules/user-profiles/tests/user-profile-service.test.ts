@@ -34,7 +34,6 @@ vi.mock("@/events/event-bus", () => ({
 
 describe("User Profiles Service Logic", () => {
   let mockRepo: Mocked<ProfileRepository>;
-  const context = { requestId: "test-req" };
 
   beforeEach(() => {
     vi.clearAllMocks();
