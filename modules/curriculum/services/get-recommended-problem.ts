@@ -1,7 +1,7 @@
 import { generateProblem } from "@/modules/problem-generator";
 import type { ProblemRepository } from "@/modules/problem-generator/repositories/problem-repository";
 import type { ServiceContext } from "@/lib/observability";
-import type { CurriculumRepository } from "../repositories/supabase-curriculum-repository";
+import type { CurriculumRepository } from "../repositories/curriculum-repository";
 import type {
   GetRecommendedProblemInput,
   GetRecommendedProblemOutput,

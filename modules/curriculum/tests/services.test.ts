@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { updateMastery } from "../services/update-mastery";
 import { getRecommendedProblem } from "../services/get-recommended-problem";
 import { calculateMasteryScore } from "../services/calculate-mastery-score";
-import type { CurriculumRepository, TopicProgress } from "../repositories/supabase-curriculum-repository";
+import type { CurriculumRepository, TopicProgress } from "../repositories/curriculum-repository";
 import type { ProblemRepository } from "@/modules/problem-generator/repositories/problem-repository";
 import type { AttemptHistory } from "../domain/mastery";
 
