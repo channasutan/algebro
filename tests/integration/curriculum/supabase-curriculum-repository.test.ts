@@ -27,7 +27,11 @@ function makeAuthenticatedClient(accessToken: string): SupabaseClient {
 }
 
 describe("Supabase Curriculum Repository Integration", () => {
-  const isRealDB = SUPABASE_URL !== "https://test.supabase.co" && !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const isRealDB =
+    !!SUPABASE_URL &&
+    SUPABASE_URL !== "https://test.supabase.co" &&
+    !!process.env.SUPABASE_ANON_KEY &&
+    !!process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!isRealDB) {
     it.skip("skipped: no real Supabase URL configured");
@@ -46,8 +50,6 @@ describe("Supabase Curriculum Repository Integration", () => {
   let topicId: string;
 
   beforeAll(async () => {
-    if (!isRealDB) return;
-
     adminClient = getSupabaseAdminClient();
     anonClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
@@ -158,7 +160,6 @@ describe("Supabase Curriculum Repository Integration", () => {
       await repo.upsertTopicProgress(TEST_USER_A, topicId, 0.4);
       const first = await repo.getTopicProgress(TEST_USER_A, topicId);
       
-      // Delay to ensure last_practiced_at timestamp differs
       await new Promise(resolve => setTimeout(resolve, 100));
       
       await repo.upsertTopicProgress(TEST_USER_A, topicId, 0.8);
@@ -172,7 +173,7 @@ describe("Supabase Curriculum Repository Integration", () => {
         .eq("user_id", TEST_USER_A)
         .eq("topic_id", topicId);
         
-      expect(data).toHaveLength(1); // Still exactly one row
+      expect(data).toHaveLength(1);
     });
   });
 
