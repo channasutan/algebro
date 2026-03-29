@@ -5,6 +5,7 @@ import { startSession, createAttempt, submitStep } from "@/modules/practice";
 import { getCurrentSession } from "@/modules/authentication";
 import { createServiceLogger, getRequestId } from "@/lib/observability";
 import type { StartPracticeResult, SubmitStepResult } from "@/modules/practice/contracts/practice";
+import { getNextProblem } from "@/modules/practice/services/get-next-problem";
 
 export async function startPracticeFlowAction(topicId: string | null): Promise<StartPracticeResult> {
   await ensureModulesBootstrapped();
@@ -24,8 +25,9 @@ export async function startPracticeFlowAction(topicId: string | null): Promise<S
   // Create session
   const practiceSession = await startSession({ userId, topicId }, context);
 
-  // Hardcode problem ID for Phase 3 (single problem type)
-  const problemId = "11111111-1111-1111-1111-111111111111";
+  // Resolve next problem via curriculum-first strategy
+  const nextProblem = await getNextProblem({ userId, topicId }, context);
+  const problemId = nextProblem.problemId;
 
   // Create attempt internally (not exposed to UI)
   const attempt = await createAttempt({
