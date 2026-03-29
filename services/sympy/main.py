@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import re
 from typing import Any
 
@@ -11,6 +12,8 @@ from sympy.parsing.sympy_parser import (
     parse_expr,
     standard_transformations,
 )
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -105,4 +108,5 @@ def evaluate(req: EvaluateRequest) -> EvaluateResponse:
     except HTTPException:
         raise
     except Exception as error:
-        raise HTTPException(status_code=500, detail=str(error)) from error
+        logger.exception("Unexpected internal error")
+        raise HTTPException(status_code=500, detail="Internal server error") from error

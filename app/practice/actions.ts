@@ -1,11 +1,10 @@
 "use server";
 
 import { ensureModulesBootstrapped } from "@/modules/bootstrap";
-import { startSession, createAttempt, submitStep } from "@/modules/practice";
+import { startSession, createAttempt, submitStep, getNextProblem } from "@/modules/practice";
 import { getCurrentSession } from "@/modules/authentication";
 import { createServiceLogger, getRequestId } from "@/lib/observability";
 import type { StartPracticeResult, SubmitStepResult } from "@/modules/practice/contracts/practice";
-import { getNextProblem } from "@/modules/practice/services/get-next-problem";
 
 export async function startPracticeFlowAction(topicId: string | null): Promise<StartPracticeResult> {
   await ensureModulesBootstrapped();

@@ -8,7 +8,7 @@ import type { GeneratedProblem } from "../domain/generated-problem";
 import type { ProblemPoolEntry } from "../domain/problem-pool-entry";
 import type { ProblemRepository } from "./problem-repository";
 
-const UUID_V4_PATTERN =
+const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export class InvalidTemplateReferenceError extends Error {
@@ -32,8 +32,13 @@ export function createRepositoryFromClient(
   const getTemplate = async (
     templateId: string
   ): Promise<ProblemTemplate | null> => {
+    // If input matches UUID pattern → filter by id, else → filter by name
+    const filters = UUID_PATTERN.test(templateId)
+      ? { id: templateId }
+      : { name: templateId };
+
     const data = await dbSelect<Record<string, unknown> | null>(client, "problem_templates", {
-      filters: { name: templateId },
+      filters,
       maybeSingle: true,
       context: "problem-generator.getTemplate",
     });
@@ -53,7 +58,7 @@ export function createRepositoryFromClient(
   const saveProblem = async (
     problem: GeneratedProblem
   ): Promise<GeneratedProblem> => {
-    if (problem.templateId && !UUID_V4_PATTERN.test(problem.templateId)) {
+    if (problem.templateId && !UUID_PATTERN.test(problem.templateId)) {
       throw new InvalidTemplateReferenceError(problem.templateId);
     }
 

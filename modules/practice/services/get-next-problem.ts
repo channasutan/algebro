@@ -13,7 +13,7 @@ export type GetNextProblemInput = {
 
 export type GetNextProblemResult = {
   problemId: string;
-  topicId: string;
+  topicId: string | null;
 };
 
 export async function getNextProblem(
@@ -72,7 +72,7 @@ export async function getNextProblem(
 
     return {
       problemId: generated.problem.id,
-      topicId: generated.problem.topicId ?? input.topicId ?? ""
+      topicId: generated.problem.topicId ?? input.topicId ?? null
     };
   }
 }

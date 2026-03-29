@@ -19,6 +19,11 @@ export {
   type CompleteAttemptInput
 } from "./services/complete-attempt";
 export { 
+  getNextProblem,
+  type GetNextProblemInput,
+  type GetNextProblemResult
+} from "./services/get-next-problem";
+export { 
   type PracticeSession, 
   type Attempt, 
   type SolutionStep 
