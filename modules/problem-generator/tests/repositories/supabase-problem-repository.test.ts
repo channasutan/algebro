@@ -2,6 +2,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createRepositoryFromClient } from "../../repositories/supabase-problem-repository";
 import type { GeneratedProblem, ProblemPoolEntry } from "../../domain";
 
+const TEMPLATE_UUID = "11111111-1111-4111-8111-111111111111";
+
 // Mock Supabase client - creates a chainable mock that matches supabase-js query builder behavior
 // Uses Proxy to handle await without storing 'then' property (SonarCloud friendly)
 const makeMockChain = () => {
@@ -57,7 +59,7 @@ describe("SupabaseProblemRepository", () => {
   describe("getTemplate", () => {
     it("returns template when found", async () => {
       const mockData = {
-        id: "template-1",
+        id: TEMPLATE_UUID,
         name: "Linear Equation",
         template_latex: "$a*x + $b = $c",
         parameter_schema: { a: { type: "int", min: 1, max: 10 } },
@@ -71,7 +73,7 @@ describe("SupabaseProblemRepository", () => {
       const result = await repo.getTemplate("template-1");
 
       expect(result).not.toBeNull();
-      expect(result?.id).toBe("template-1");
+      expect(result?.id).toBe(TEMPLATE_UUID);
       expect(result?.name).toBe("Linear Equation");
       expect(result?.parameterSchema).toEqual({ a: { type: "int", min: 1, max: 10 } });
       expect(result?.baseDifficulty).toBe(2);
@@ -91,7 +93,7 @@ describe("SupabaseProblemRepository", () => {
     it("returns array of templates", async () => {
       const mockData = [
         {
-          id: "template-1",
+          id: TEMPLATE_UUID,
           name: "Equation A",
           template_latex: "2x = 4",
           parameter_schema: null,
@@ -99,7 +101,7 @@ describe("SupabaseProblemRepository", () => {
           created_at: "2024-01-01T00:00:00Z",
         },
         {
-          id: "template-2",
+          id: "22222222-2222-4222-8222-222222222222",
           name: "Equation B",
           template_latex: "3x + $a = 10",
           parameter_schema: { a: { type: "int", min: 1, max: 5 } },
@@ -123,7 +125,7 @@ describe("SupabaseProblemRepository", () => {
     it("saves problem and returns with id", async () => {
       const problem: GeneratedProblem = {
         id: "", // Will be assigned by DB
-        templateId: "template-1",
+        templateId: TEMPLATE_UUID,
         topicId: null,
         difficultyLevel: 3,
         problemLatex: "2x + 4 = 10",
@@ -135,7 +137,7 @@ describe("SupabaseProblemRepository", () => {
 
       const mockData = {
         id: "problem-1",
-        template_id: "template-1",
+        template_id: TEMPLATE_UUID,
         topic_id: null,
         difficulty_level: 3,
         problem_latex: "2x + 4 = 10",
@@ -153,6 +155,27 @@ describe("SupabaseProblemRepository", () => {
       expect(result.id).toBe("problem-1");
       expect(result.isValidated).toBe(true);
       expect(result.parameters).toEqual({ a: 2, b: 4, c: 10 });
+    });
+
+    it("throws clear error when templateId is not a UUID", async () => {
+      const problem: GeneratedProblem = {
+        id: "",
+        templateId: "default-beginner-template",
+        topicId: null,
+        difficultyLevel: 1,
+        problemLatex: "x = 2",
+        solutionLatex: "2",
+        parameters: null,
+        isValidated: true,
+        createdAt: "",
+      };
+
+      const repo = createRepositoryFromClient(mockClient);
+
+      await expect(repo.saveProblem(problem)).rejects.toThrow(
+        "invalid template reference: expected UUID template id"
+      );
+      expect(mockFrom).not.toHaveBeenCalledWith("problems");
     });
   });
 

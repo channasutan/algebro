@@ -10,13 +10,14 @@ import { createServiceLogger, type ServiceContext } from "@/lib/observability";
  */
 function buildProblemRecord(
   input: GenerateProblemInput,
+  templateId: string,
   rendered: string,
   parameters: Record<string, number>,
   solutionRaw: unknown
 ) {
   return {
     id: "",
-    templateId: input.templateId,
+    templateId,
     topicId: input.topicId ?? null,
     difficultyLevel: input.difficultyLevel,
     problemLatex: rendered,
@@ -105,7 +106,7 @@ export async function generateProblem(
 
   // 5. Save the problem
   const saved = await repo.saveProblem(
-    buildProblemRecord(input, rendered, parameters, validation.solutionRaw)
+    buildProblemRecord(input, template.id, rendered, parameters, validation.solutionRaw)
   );
 
   log.info({

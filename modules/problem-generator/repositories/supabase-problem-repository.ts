@@ -8,6 +8,19 @@ import type { GeneratedProblem } from "../domain/generated-problem";
 import type { ProblemPoolEntry } from "../domain/problem-pool-entry";
 import type { ProblemRepository } from "./problem-repository";
 
+const UUID_V4_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export class InvalidTemplateReferenceError extends Error {
+  constructor(templateId: string) {
+    super(
+      `[problem-generator.saveProblem] invalid template reference: expected UUID template id, received "${templateId}"`
+    );
+    this.name = "InvalidTemplateReferenceError";
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
 export async function createSupabaseProblemRepository(): Promise<ProblemRepository> {
   const client = await getSupabaseServerClient();
   return createRepositoryFromClient(client);
@@ -20,7 +33,7 @@ export function createRepositoryFromClient(
     templateId: string
   ): Promise<ProblemTemplate | null> => {
     const data = await dbSelect<Record<string, unknown> | null>(client, "problem_templates", {
-      filters: { id: templateId },
+      filters: { name: templateId },
       maybeSingle: true,
       context: "problem-generator.getTemplate",
     });
@@ -40,6 +53,10 @@ export function createRepositoryFromClient(
   const saveProblem = async (
     problem: GeneratedProblem
   ): Promise<GeneratedProblem> => {
+    if (problem.templateId && !UUID_V4_PATTERN.test(problem.templateId)) {
+      throw new InvalidTemplateReferenceError(problem.templateId);
+    }
+
     const data = await dbInsert<Record<string, unknown>>(client, "problems", {
       template_id: problem.templateId,
       topic_id: problem.topicId,
