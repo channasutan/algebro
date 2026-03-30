@@ -8,12 +8,13 @@ import { uploadMaterial } from '@/modules/material-processing/services/material-
 import { ensureModulesBootstrapped } from '@/modules/bootstrap'
 import { getPublicEnv } from '@/config/env.server-entry'
 
-const ACCEPTED_MIME_TYPES = ['application/pdf', 'text/plain'] as const
+const ACCEPTED_MIME_TYPES_TUPLE = ['application/pdf', 'text/plain'] as const
+const ACCEPTED_MIME_TYPES = new Set<string>(ACCEPTED_MIME_TYPES_TUPLE)
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10MB
 
 const uploadMaterialInputSchema = z.object({
   title: z.string().min(1).max(255),
-  mimeType: z.enum(ACCEPTED_MIME_TYPES),
+  mimeType: z.enum(ACCEPTED_MIME_TYPES_TUPLE),
   fileSizeBytes: z.number().max(MAX_FILE_SIZE_BYTES, 'File must be 10MB or less'),
 })
 

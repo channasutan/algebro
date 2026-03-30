@@ -73,7 +73,7 @@ function registerMaterialProcessingModule(): void {
   eventBus.subscribe(MATERIAL_PROCESSED, async (event) => {
     try {
       const payload = event.payload as MaterialProcessedPayload;
-      // TODO: wire to curriculumService.updateCurriculumFromMaterial() once available
+      // Curriculum wiring will be added in a follow-up once processMaterial() is implemented.
       console.info('[bootstrap] material_processed received, topics:', payload.topics);
     } catch (err) {
       console.error('[bootstrap] material_processed handler failed:', err);
