@@ -27,6 +27,10 @@ function makeAuthenticatedClient(accessToken: string): SupabaseClient {
   });
 }
 
+let adminClient: SupabaseClient;
+let TEST_USER_A: string;
+let TEST_USER_B: string;
+
 function isTestEnvReady(): boolean {
   return !!adminClient && !!TEST_USER_A && !!TEST_USER_B;
 }
@@ -67,13 +71,7 @@ describe("Supabase Curriculum Repository Integration", () => {
     return;
   }
 
-  let adminClient: SupabaseClient;
-
-  let TEST_USER_A: string;
   let userAAccessToken: string;
-
-  let TEST_USER_B: string;
-
   let topicId: string;
 
   beforeAll(async () => {
