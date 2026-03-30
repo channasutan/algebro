@@ -167,71 +167,116 @@ export async function processMaterial(
   materialId: string,
 ): Promise<void> {
   // Transition to 'processing'
-  await supabase
-    .from('materials')
-    .update({ status: 'processing' satisfies MaterialStatus })
-    .eq('id', materialId);
+  await setMaterialStatus(supabase, materialId, 'processing');
 
   try {
-    // Fetch material record to get file_url
-    const { data: materialRow, error: fetchError } = await supabase
-      .from('materials')
-      .select('id, file_url, user_id')
-      .eq('id', materialId)
-      .single();
-
-    if (fetchError || !materialRow) {
-      throw new Error(`Material not found: ${fetchError?.message ?? 'no data'}`);
-    }
-
-    // Fetch raw text from the file URL
+    const materialRow = await fetchMaterialRow(supabase, materialId);
     const rawText = await fetchTextFromUrl(materialRow.file_url as string);
-
-    // Extract topics via Gemini + Zod validation
     const extractedTopics = await extractTopicsWithAI(supabase, rawText);
-
-    // Persist material_topics rows
-    if (extractedTopics.length > 0) {
-      const topicRows = extractedTopics.map((t) => ({
-        material_id: materialId,
-        topic_id: t.topic_id,
-        confidence_score: t.confidence_score,
-      }));
-
-      const { error: topicInsertError } = await supabase
-        .from('material_topics')
-        .insert(topicRows);
-
-      if (topicInsertError) {
-        throw new Error(`Failed to insert material_topics: ${topicInsertError.message}`);
-      }
-    }
-
-    // Update status to 'processed'
-    await supabase
-      .from('materials')
-      .update({ status: 'processed' satisfies MaterialStatus })
-      .eq('id', materialId);
-
-    // Publish material_processed event
-    await eventBus.publish(
-      createDomainEvent({
-        eventType: 'material_processed',
-        payload: {
-          material_id: materialId,
-          topics: extractedTopics.map((t) => t.topic_id),
-        },
-      }),
-    );
+    await persistMaterialTopics(supabase, materialId, extractedTopics);
+    await setMaterialStatus(supabase, materialId, 'processed');
+    await publishProcessedEvent(eventBus, materialId, extractedTopics);
   } catch (error) {
     // Graceful failure: update status to 'failed', log, do NOT rethrow
     console.error('[processMaterial] Processing failed for material', materialId, error);
 
-    await supabase
-      .from('materials')
-      .update({ status: 'failed' satisfies MaterialStatus })
-      .eq('id', materialId);
+    await setMaterialStatus(supabase, materialId, 'failed');
   }
+}
+
+// ---------------------------------------------------------------------------
+// Private helpers for processMaterial
+// ---------------------------------------------------------------------------
+
+/**
+ * Sets the status of a material in the database.
+ */
+async function setMaterialStatus(
+  supabase: SupabaseClient,
+  materialId: string,
+  status: MaterialStatus,
+): Promise<void> {
+  await supabase
+    .from('materials')
+    .update({ status: status satisfies MaterialStatus })
+    .eq('id', materialId);
+}
+
+/**
+ * Fetches a material row from the database.
+ */
+async function fetchMaterialRow(
+  supabase: SupabaseClient,
+  materialId: string,
+): Promise<{ id: string; file_url: string; user_id: string }> {
+  const { data: materialRow, error: fetchError } = await supabase
+    .from('materials')
+    .select('id, file_url, user_id')
+    .eq('id', materialId)
+    .single();
+
+  if (fetchError || !materialRow) {
+    throw new Error(`Material not found: ${fetchError?.message ?? 'no data'}`);
+  }
+
+  return materialRow as { id: string; file_url: string; user_id: string };
+}
+
+/**
+ * Persists extracted topics to the material_topics table.
+ */
+async function persistMaterialTopics(
+  supabase: SupabaseClient,
+  materialId: string,
+  extractedTopics: ExtractedTopic[],
+): Promise<void> {
+  if (extractedTopics.length === 0) {
+    return;
+  }
+
+  const topicRows = extractedTopics.map((t) => ({
+    material_id: materialId,
+    topic_id: t.topic_id,
+    confidence_score: t.confidence_score,
+  }));
+
+  const { error: topicInsertError } = await supabase
+    .from('material_topics')
+    .insert(topicRows);
+
+  if (topicInsertError) {
+    throw new Error(`Failed to insert material_topics: ${topicInsertError.message}`);
+  }
+}
+
+/**
+ * Publishes the material_processed event.
+ */
+async function publishProcessedEvent(
+  eventBus: EventBus,
+  materialId: string,
+  extractedTopics: ExtractedTopic[],
+): Promise<void> {
+  await eventBus.publish(
+    createDomainEvent({
+      eventType: 'material_processed',
+      payload: {
+        material_id: materialId,
+        topics: extractedTopics.map((t) => t.topic_id),
+      },
+    }),
+  );
+}
+
+/**
+ * Fetches text content from a URL.
+ */
+async function fetchTextFromUrl(url: string): Promise<string> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch file from URL ${url}: HTTP ${response.status}`);
+  }
+  return response.text();
 }
 
 // ---------------------------------------------------------------------------
@@ -252,9 +297,6 @@ export async function extractTopicsWithAI(
   supabase: SupabaseClient,
   rawText: string,
 ): Promise<ExtractedTopic[]> {
-  let rawAITopics: RawAITopic[] = [];
-
-  // --- Gemini call ---
   try {
     const response = await geminiClient.generateContent({
       model: 'gemini-1.5-flash',
@@ -275,46 +317,73 @@ export async function extractTopicsWithAI(
       ],
     });
 
-    const candidateText =
-      (response.candidates?.[0] as Record<string, unknown> | undefined
-        )?.content as Record<string, unknown> | undefined;
+    const jsonText = parseGeminiResponse(response);
+    const rawAITopics = parseAndValidateAITopics(jsonText);
 
-    const parts = candidateText?.parts as Array<{ text?: string }> | undefined;
-    const responseText = parts?.[0]?.text ?? '';
-
-    // Strip markdown code fences if present (```json ... ```)
-    const jsonText = responseText
-      .replace(/^```(?:json)?\s*/i, '')
-      .replace(/\s*```$/, '')
-      .trim();
-
-    // --- JSON parse ---
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(jsonText);
-    } catch (parseError) {
-      console.error('[extractTopicsWithAI] JSON parse failed:', parseError, 'raw:', responseText);
+    if (!rawAITopics || rawAITopics.length === 0) {
       return [];
     }
 
-    // --- Zod validation ---
-    const validation = extractedTopicsSchema.safeParse(parsed);
-    if (!validation.success) {
-      console.error('[extractTopicsWithAI] Zod validation failed:', validation.error.format());
-      return [];
-    }
-
-    rawAITopics = validation.data;
+    return await mapTopicsToIds(supabase, rawAITopics);
   } catch (geminiError) {
     console.error('[extractTopicsWithAI] Gemini call failed:', geminiError);
     return [];
   }
+}
 
-  if (rawAITopics.length === 0) {
-    return [];
+// ---------------------------------------------------------------------------
+// Private helpers for extractTopicsWithAI
+// ---------------------------------------------------------------------------
+
+/**
+ * Extracts the text from the Gemini response candidate and strips markdown code fences.
+ */
+function parseGeminiResponse(response: unknown): string {
+  const responseRecord = response as Record<string, unknown>;
+  const candidates = responseRecord.candidates as Array<Record<string, unknown>> | undefined;
+  const candidateText = candidates?.[0]?.content as Record<string, unknown> | undefined;
+
+  const parts = candidateText?.parts as Array<{ text?: string }> | undefined;
+  const responseText = parts?.[0]?.text ?? '';
+
+  // Strip markdown code fences if present (```json ... ```)
+  return responseText
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/, '')
+    .trim();
+}
+
+/**
+ * Parses JSON and validates with Zod schema.
+ * Returns validated data or null on failure (logs errors internally).
+ */
+function parseAndValidateAITopics(jsonText: string): RawAITopic[] | null {
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(jsonText);
+  } catch (parseError) {
+    console.error('[extractTopicsWithAI] JSON parse failed:', parseError, 'raw:', jsonText);
+    return null;
   }
 
-  // --- Map topic_name → topic_id via `topics` table ---
+  const validation = extractedTopicsSchema.safeParse(parsed);
+  if (!validation.success) {
+    console.error('[extractTopicsWithAI] Zod validation failed:', validation.error.format());
+    return null;
+  }
+
+  return validation.data;
+}
+
+/**
+ * Maps topic names to topic IDs via the database.
+ * Returns ExtractedTopic[] (skips unmatched topics).
+ */
+async function mapTopicsToIds(
+  supabase: SupabaseClient,
+  rawAITopics: RawAITopic[],
+): Promise<ExtractedTopic[]> {
   const topicNames = rawAITopics.map((t) => t.topic_name);
 
   const { data: topicRows, error: topicFetchError } = await supabase
@@ -346,16 +415,4 @@ export async function extractTopicsWithAI(
   }
 
   return results;
-}
-
-// ---------------------------------------------------------------------------
-// Private helpers
-// ---------------------------------------------------------------------------
-
-async function fetchTextFromUrl(url: string): Promise<string> {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch file from URL ${url}: HTTP ${response.status}`);
-  }
-  return response.text();
 }
