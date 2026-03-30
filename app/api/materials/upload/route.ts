@@ -32,7 +32,7 @@ function isValidUploadInput(
  */
 function assertString(value: FormDataEntryValue | null): asserts value is string {
   if (typeof value !== 'string') {
-    throw new Error('Expected string');
+    throw new TypeError('Expected string');
   }
 }
 
@@ -42,7 +42,7 @@ function assertString(value: FormDataEntryValue | null): asserts value is string
  */
 function assertFile(value: FormDataEntryValue | null): asserts value is File {
   if (!(value instanceof File)) {
-    throw new Error('Expected File');
+    throw new TypeError('Expected File');
   }
 }
 
