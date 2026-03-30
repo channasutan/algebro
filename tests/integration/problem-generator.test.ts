@@ -48,7 +48,7 @@ describe("Problem Generator Integration", () => {
           c: { type: "int", min: 10, max: 20 },
         },
         base_difficulty: 2,
-      } as any)
+      } as { name: string; template_latex: string; parameter_schema: Record<string, unknown>; base_difficulty: number })
       .select()
       .single();
 
