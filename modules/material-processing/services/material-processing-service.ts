@@ -107,8 +107,6 @@ export async function uploadMaterial(
   }
 
   const material = materialRow as Material;
-
-  // Publish material_uploaded event
   await eventBus.publish(
     createDomainEvent({
       eventType: 'material_uploaded',
@@ -121,9 +119,8 @@ export async function uploadMaterial(
   );
 
   // Enqueue background job for processing
-  const { error: jobError } = await supabase
-    .from('jobs')
-    .insert({
+  try {
+    const { error: enqueueError } = await supabase.from('jobs').insert({
       type: 'material_processing',
       payload: { material_id: material.id },
       status: 'pending',
@@ -131,9 +128,17 @@ export async function uploadMaterial(
       max_attempts: 3,
     });
 
-  if (jobError) {
-    // Non-fatal: log but don't throw — upload already succeeded
-    console.error('[uploadMaterial] Failed to enqueue job:', jobError.message);
+    if (enqueueError) {
+      console.warn('[material-processing] Failed to enqueue material_processing job', {
+        materialId: material.id,
+        error: enqueueError.message,
+      });
+    }
+  } catch (error) {
+    console.warn('[material-processing] Failed to enqueue material_processing job', {
+      materialId: material.id,
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 
   return material;
