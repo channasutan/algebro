@@ -20,6 +20,7 @@ app = FastAPI()
 
 # Security: explicit whitelist of sympy names — no builtins, no __import__
 # This restricts parse_expr evaluation to sympy namespace only.
+# frozenset uses Python's built-in hash() for dict-key lookups only (non-cryptographic).
 _SYM磐_NAMES = frozenset(
     name for name in dir(sympy)
     if not name.startswith("_") and name.islower()
