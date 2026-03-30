@@ -40,7 +40,7 @@ export async function uploadMaterialAction(
     })
 
     if (!result.success) {
-      return { success: false, error: result.error.issues.message }
+      return { success: false, error: result.error.issues[0]?.message ?? 'Invalid input' }
     }
 
     const { title: validatedTitle, mimeType } = result.data
