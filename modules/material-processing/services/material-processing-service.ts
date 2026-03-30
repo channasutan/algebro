@@ -171,7 +171,7 @@ export async function processMaterial(
 
   try {
     const materialRow = await fetchMaterialRow(supabase, materialId);
-    const rawText = await fetchTextFromUrl(materialRow.file_url as string);
+    const rawText = await fetchTextFromUrl(materialRow.file_url);
     const extractedTopics = await extractTopicsWithAI(supabase, rawText);
     await persistMaterialTopics(supabase, materialId, extractedTopics);
     await setMaterialStatus(supabase, materialId, 'processed');
