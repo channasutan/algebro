@@ -186,3 +186,13 @@ export function createDomainEvent<TPayload extends DomainEventPayload>(
     payload: freezeEventPayload(input.payload)
   };
 }
+
+// ---------------------------------------------------------------------------
+// Material events — re-exported from dedicated module
+// ---------------------------------------------------------------------------
+export {
+  MATERIAL_UPLOADED,
+  MATERIAL_PROCESSED,
+  type MaterialUploadedPayload,
+  type MaterialProcessedPayload
+} from './material-events'
