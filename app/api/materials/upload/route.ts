@@ -10,6 +10,42 @@ const ACCEPTED_MIME_TYPES_TUPLE = ['application/pdf', 'text/plain'] as const
 const ACCEPTED_MIME_TYPES = new Set<string>(ACCEPTED_MIME_TYPES_TUPLE)
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10MB
 
+/**
+ * Type guard to validate upload input from FormData.
+ * Uses type narrowing to ensure TypeScript knows title is string and file is File
+ * after this check passes.
+ */
+function isValidUploadInput(
+  title: FormDataEntryValue | null,
+  file: FormDataEntryValue | null
+): file is File {
+  return (
+    typeof title === 'string' &&
+    title.trim().length > 0 &&
+    file instanceof File
+  );
+}
+
+/**
+ * Type assertion helper - tells TypeScript that title is definitely a string
+ * after the validation has passed.
+ */
+function assertString(value: FormDataEntryValue | null): asserts value is string {
+  if (typeof value !== 'string') {
+    throw new Error('Expected string');
+  }
+}
+
+/**
+ * Type assertion helper - tells TypeScript that file is definitely a File
+ * after the validation has passed.
+ */
+function assertFile(value: FormDataEntryValue | null): asserts value is File {
+  if (!(value instanceof File)) {
+    throw new Error('Expected File');
+  }
+}
+
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     // 1. Parse FormData
@@ -17,12 +53,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const title = formData.get('title')
     const file = formData.get('file')
 
-    if (!title || typeof title !== 'string' || !(file instanceof File)) {
+    if (!isValidUploadInput(title, file)) {
       return NextResponse.json(
         { error: 'title and file are required' },
         { status: 400 }
       )
     }
+
+    // TypeScript narrowing - assert title and file are valid types
+    assertString(title)
+    assertFile(file)
 
     // 2. Validate file type
     if (!ACCEPTED_MIME_TYPES.has(file.type)) {
