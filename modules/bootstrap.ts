@@ -15,12 +15,12 @@ import {
 } from "@/jobs/handlers/material-processing";
 import {
   MATERIAL_UPLOADED,
-  MATERIAL_PROCESSED
-} from "@/events/event-types";
+  MATERIAL_PROCESSED,
+} from "@/events/material-events";
 import type {
   MaterialUploadedPayload,
-  MaterialProcessedPayload
-} from "@/events/event-types";
+  MaterialProcessedPayload,
+} from "@/events/material-events";
 import {
   POPULATE_POOL_JOB,
   populatePoolHandler,
@@ -62,8 +62,8 @@ function registerMaterialProcessingModule(): void {
   eventBus.subscribe(MATERIAL_UPLOADED, async (event) => {
     try {
       const payload = event.payload as MaterialUploadedPayload;
-      // Job is already enqueued inside uploadMaterial() service —
-      // this subscriber is a safety net for events emitted outside the service
+      // Job is already enqueued inside uploadMaterial() service.
+      // This subscriber only logs out-of-band events; it does not enqueue processing.
       console.info('[bootstrap] material_uploaded received, material_id:', payload.material_id);
     } catch (err) {
       console.error('[bootstrap] material_uploaded handler failed:', err);

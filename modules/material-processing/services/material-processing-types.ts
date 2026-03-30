@@ -20,4 +20,18 @@ export type MaterialTopic = {
 }
 
 export type InsertMaterialParams = Omit<Material, 'id' | 'created_at' | 'status' | 'uploaded_at' | 'processed_at'>
+
 export type InsertMaterialTopicParams = Omit<MaterialTopic, 'id'>
+
+export type UploadMaterialParams = {
+  userId: string
+  title: string
+  fileBuffer: Buffer
+  mimeType: string
+  fileName: string
+}
+
+export type ExtractedTopic = {
+  topic_id: string
+  confidence_score: number
+}

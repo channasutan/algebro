@@ -58,11 +58,7 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(vitest@3.2.4(@types/node@25.4.0))
       dotenv:
-<<<<<<< HEAD
         specifier: ^16.6.1
-=======
-        specifier: ^16.5.0
->>>>>>> 9b46131 (feat(curriculum): wire attempt_completed event to update mastery)
         version: 16.6.1
       eslint:
         specifier: 9.39.4

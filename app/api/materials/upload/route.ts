@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { eventBus } from '@/events/event-bus'
 import { uploadMaterial } from '@/modules/material-processing/services/material-processing-service'
 import { ensureModulesBootstrapped } from '@/modules/bootstrap'
+import { getPublicEnv } from '@/config/env.server-entry'
 
 const ACCEPTED_MIME_TYPES = ['application/pdf', 'text/plain']
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10MB
@@ -40,9 +41,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // 4. Auth check
     const cookieStore = await cookies()
+    const { supabaseUrl, supabaseAnonKey } = getPublicEnv()
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      supabaseUrl,
+      supabaseAnonKey,
       {
         cookies: {
           getAll() { return cookieStore.getAll() },

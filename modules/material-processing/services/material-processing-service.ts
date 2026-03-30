@@ -5,34 +5,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { EventBus } from '@/events/event-bus';
 import { createDomainEvent } from '@/events/event-types';
 import { geminiClient } from '@/infrastructure/ai/gemini-client';
-
-// ---------------------------------------------------------------------------
-// Domain Types
-// ---------------------------------------------------------------------------
-
-export type MaterialStatus = 'uploaded' | 'processing' | 'processed' | 'failed';
-
-export type Material = {
-  id: string;
-  user_id: string;
-  title: string;
-  file_url: string;
-  status: MaterialStatus;
-  created_at: string;
-};
-
-export type UploadMaterialParams = {
-  userId: string;
-  title: string;
-  fileBuffer: Buffer;
-  mimeType: string;
-  fileName: string;
-};
-
-export type ExtractedTopic = {
-  topic_id: string;
-  confidence_score: number;
-};
+import type { Material, MaterialStatus, UploadMaterialParams, ExtractedTopic } from './material-processing-types';
 
 // ---------------------------------------------------------------------------
 // Internal Zod schema for AI output validation (Zod ^4.3.6)
@@ -96,6 +69,7 @@ export async function uploadMaterial(
     .insert({
       user_id: userId,
       title,
+      file_name: fileName,
       file_url: fileUrl,
       status: 'uploaded' satisfies MaterialStatus,
     })
