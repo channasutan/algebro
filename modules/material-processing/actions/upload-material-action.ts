@@ -9,7 +9,6 @@ import { ensureModulesBootstrapped } from '@/modules/bootstrap'
 import { getPublicEnv } from '@/config/env.server-entry'
 
 const ACCEPTED_MIME_TYPES_TUPLE = ['application/pdf', 'text/plain'] as const
-const ACCEPTED_MIME_TYPES = new Set<string>(ACCEPTED_MIME_TYPES_TUPLE)
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10MB
 
 const uploadMaterialInputSchema = z.object({
