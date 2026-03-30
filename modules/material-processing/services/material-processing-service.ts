@@ -37,85 +37,112 @@ export async function uploadMaterial(
   eventBus: EventBus,
   params: UploadMaterialParams,
 ): Promise<Material> {
-  const { userId, title, fileBuffer, mimeType, fileName } = params;
+  const fileUrl = await uploadToStorage(supabase, params);
+  const material = await insertMaterialRow(supabase, params, fileUrl);
 
-  // Build a unique storage path: {userId}/{timestamp}_{fileName}
-  const storagePath = `${userId}/${Date.now()}_${fileName}`;
+  await eventBus.publish(
+    createDomainEvent({
+      eventType: 'material_uploaded',
+      payload: {
+        material_id: material.id,
+        user_id: params.userId,
+        file_name: params.fileName,
+      },
+    }),
+  );
 
-  // Upload to Supabase Storage bucket `materials`
-  // Ref: https://supabase.com/docs/reference/javascript/storage-from-upload
-  const { error: uploadError } = await supabase.storage
+  await enqueueProcessingJob(supabase, material.id);
+
+  return material;
+}
+
+// ---------------------------------------------------------------------------
+// Private helpers for uploadMaterial
+// ---------------------------------------------------------------------------
+
+/**
+ * Uploads the file buffer to Supabase Storage and returns the public URL.
+ */
+async function uploadToStorage(
+  supabase: SupabaseClient,
+  params: UploadMaterialParams,
+): Promise<string> {
+  const storagePath = `${params.userId}/${Date.now()}_${params.fileName}`;
+
+  const { error } = await supabase.storage
     .from('materials')
-    .upload(storagePath, fileBuffer, {
-      contentType: mimeType,
+    .upload(storagePath, params.fileBuffer, {
+      contentType: params.mimeType,
       upsert: false,
     });
 
-  if (uploadError) {
-    throw new Error(`Storage upload failed: ${uploadError.message}`);
+  if (error) {
+    throw new Error(`Storage upload failed: ${error.message}`);
   }
 
-  // Retrieve the public URL
-  // Ref: https://supabase.com/docs/reference/javascript/storage-from-getpublicurl
   const { data: urlData } = supabase.storage
     .from('materials')
     .getPublicUrl(storagePath);
 
-  const fileUrl = urlData.publicUrl;
+  return urlData.publicUrl;
+}
 
-  // Persist row in `materials` table
-  const { data: materialRow, error: insertError } = await supabase
+/**
+ * Inserts a new material row into the database.
+ */
+async function insertMaterialRow(
+  supabase: SupabaseClient,
+  params: UploadMaterialParams,
+  fileUrl: string,
+): Promise<Material> {
+  const { data, error } = await supabase
     .from('materials')
     .insert({
-      user_id: userId,
-      title,
-      file_name: fileName,
+      user_id: params.userId,
+      title: params.title,
+      file_name: params.fileName,
       file_url: fileUrl,
       status: 'uploaded' satisfies MaterialStatus,
     })
     .select()
     .single();
 
-  if (insertError || !materialRow) {
-    throw new Error(`Failed to insert material row: ${insertError?.message ?? 'no data returned'}`);
+  if (error || !data) {
+    throw new Error(`Failed to insert material row: ${error?.message ?? 'no data returned'}`);
   }
 
-  const material = materialRow as Material;
-  await eventBus.publish(
-    createDomainEvent({
-      eventType: 'material_uploaded',
-      payload: {
-        material_id: material.id,
-        user_id: userId,
-        file_name: fileName,
-      },
-    }),
-  );
+  return data as Material;
+}
 
-  // Enqueue background job for processing
+/**
+ * Enqueues a background job to process the uploaded material.
+ * Errors are logged but never thrown - job enqueue is best-effort.
+ */
+async function enqueueProcessingJob(
+  supabase: SupabaseClient,
+  materialId: string,
+): Promise<void> {
   try {
-    const { error: enqueueError } = await supabase.from('jobs').insert({
+    const { error } = await supabase.from('jobs').insert({
       type: 'material_processing',
-      payload: { material_id: material.id },
+      payload: { material_id: materialId },
       status: 'pending',
       attempt_count: 0,
       max_attempts: 3,
     });
 
-    if (enqueueError) {
-      console.warn('[material-processing] Failed to enqueue material_processing job', {
-        materialId: material.id,
-        error: enqueueError.message,
+    if (error) {
+      console.warn('[material-processing] Failed to enqueue job', {
+        materialId,
+        error: error.message,
       });
     }
-  } catch (error) {
-    console.warn('[material-processing] Failed to enqueue material_processing job', {
-      materialId: material.id,
-      error: error instanceof Error ? error.message : String(error),
+  } catch (err) {
+    console.warn('[material-processing] Failed to enqueue job', {
+      materialId,
+      error: err instanceof Error ? err.message : String(err),
     });
   }
-
-  return material;
 }
 
 // ---------------------------------------------------------------------------
