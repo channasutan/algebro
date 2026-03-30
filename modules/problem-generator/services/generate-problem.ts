@@ -1,29 +1,31 @@
 import type { ProblemRepository } from "../repositories/problem-repository";
 import type { GenerateProblemInput, GenerateProblemResult } from "../contracts/generation";
+import type { GeneratedProblem } from "../domain/generated-problem";
 import { randomizeParameters } from "./randomize-parameters";
 import { renderTemplate } from "./render-template";
 import { validateSolvability } from "./validate-solvability";
 import { createServiceLogger, type ServiceContext } from "@/lib/observability";
 
+type BuildProblemRecordInput = {
+  templateId: string;
+  topicId: string | null;
+  difficultyLevel: number;
+  problemLatex: string;
+  solutionLatex: string;
+};
+
 /**
  * Builds the record object for saving a generated problem to the database.
  */
-function buildProblemRecord(
-  input: GenerateProblemInput,
-  rendered: string,
-  parameters: Record<string, number>,
-  solutionRaw: unknown
-) {
+function buildProblemRecord(input: BuildProblemRecordInput): GeneratedProblem {
   return {
     id: "",
     templateId: input.templateId,
-    topicId: input.topicId ?? null,
+    topicId: input.topicId,
     difficultyLevel: input.difficultyLevel,
-    problemLatex: rendered,
-    solutionLatex: typeof solutionRaw === "string"
-      ? solutionRaw
-      : JSON.stringify(solutionRaw),
-    parameters,
+    problemLatex: input.problemLatex,
+    solutionLatex: input.solutionLatex,
+    parameters: null,
     isValidated: true,
     createdAt: "",
   };
@@ -104,8 +106,18 @@ export async function generateProblem(
   }
 
   // 5. Save the problem
+  const solutionLatex = typeof validation.solutionRaw === "string"
+    ? validation.solutionRaw
+    : JSON.stringify(validation.solutionRaw);
+
   const saved = await repo.saveProblem(
-    buildProblemRecord(input, rendered, parameters, validation.solutionRaw)
+    buildProblemRecord({
+      templateId: template.id,
+      topicId: input.topicId ?? null,
+      difficultyLevel: input.difficultyLevel,
+      problemLatex: rendered,
+      solutionLatex,
+    })
   );
 
   log.info({

@@ -19,7 +19,7 @@ vi.mock("../../services/validate-solvability", () => ({
 import { validateSolvability } from "../../services/validate-solvability";
 
 const TEMPLATE_FIXTURE: ProblemTemplate = {
-  id: "tpl-1",
+  id: "11111111-1111-4111-8111-111111111111",
   name: "Linear",
   templateLatex: "2x + 4 = 10",
   parameterSchema: null,
@@ -126,6 +126,24 @@ describe("generateProblem", () => {
     await generateProblem(repo, { templateId: "tpl-1", difficultyLevel: 2 }, context);
 
     expect(repo.saveProblem).toHaveBeenCalledTimes(1);
+  });
+
+  it("persists resolved template UUID even when input templateId is a slug", async () => {
+    const repo = createRepoMock();
+    vi.mocked(repo.getTemplate).mockResolvedValue(TEMPLATE_FIXTURE);
+    mockValidationSuccess();
+    mockSaveProblemSuccess(repo);
+
+    await generateProblem(
+      repo,
+      { templateId: "default-beginner-template", difficultyLevel: 1 },
+      context
+    );
+
+    expect(repo.saveProblem).toHaveBeenCalledTimes(1);
+    expect(vi.mocked(repo.saveProblem).mock.calls[0][0].templateId).toBe(
+      TEMPLATE_FIXTURE.id
+    );
   });
 
   it("does not call repo.saveProblem when validation fails", async () => {
