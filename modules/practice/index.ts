@@ -33,3 +33,10 @@ export {
   AttemptNotFoundError, 
   StepAdditionError 
 } from "./errors";
+export { 
+  getNextProblem 
+} from "./services/get-next-problem";
+export type { 
+  GetNextProblemInput, 
+  GetNextProblemResult 
+} from "./services/get-next-problem";
