@@ -48,7 +48,7 @@ describe("Problem Generator Integration", () => {
           c: { type: "int", min: 10, max: 20 },
         },
         base_difficulty: 2,
-      } as Record<string, unknown>)
+      } as any)
       .select()
       .single();
 
