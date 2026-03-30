@@ -140,7 +140,13 @@ _OPERATION_HANDLERS: dict[str, Callable[[str, dict[str, Any]], EvaluateResponse]
 }
 
 
-@app.post("/evaluate", response_model=EvaluateResponse)
+@app.post(
+    "/evaluate",
+    responses={
+        422: {"description": "Invalid input or unknown operation"},
+        500: {"description": "Internal server error"},
+    },
+)
 def evaluate(req: EvaluateRequest) -> EvaluateResponse:
     """
     Evaluate a mathematical expression with the specified operation.
