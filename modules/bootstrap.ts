@@ -14,6 +14,14 @@ import {
   materialProcessingHandler
 } from "@/jobs/handlers/material-processing";
 import {
+  MATERIAL_UPLOADED,
+  MATERIAL_PROCESSED
+} from "@/events/event-types";
+import type {
+  MaterialUploadedPayload,
+  MaterialProcessedPayload
+} from "@/events/event-types";
+import {
   POPULATE_POOL_JOB,
   populatePoolHandler,
   populatePoolPayloadSchema
@@ -50,6 +58,29 @@ function registerCurriculumModule(): void {
   eventBus.subscribe(ATTEMPT_COMPLETED, handleAttemptCompleted(curriculumRepo, practiceRepo));
 }
 
+function registerMaterialProcessingModule(): void {
+  eventBus.subscribe(MATERIAL_UPLOADED, async (event) => {
+    try {
+      const payload = event.payload as MaterialUploadedPayload;
+      // Job is already enqueued inside uploadMaterial() service —
+      // this subscriber is a safety net for events emitted outside the service
+      console.info('[bootstrap] material_uploaded received, material_id:', payload.material_id);
+    } catch (err) {
+      console.error('[bootstrap] material_uploaded handler failed:', err);
+    }
+  });
+
+  eventBus.subscribe(MATERIAL_PROCESSED, async (event) => {
+    try {
+      const payload = event.payload as MaterialProcessedPayload;
+      // TODO: wire to curriculumService.updateCurriculumFromMaterial() once available
+      console.info('[bootstrap] material_processed received, topics:', payload.topics);
+    } catch (err) {
+      console.error('[bootstrap] material_processed handler failed:', err);
+    }
+  });
+}
+
 function registerOptionalJobs(): void {
   // Additional Phase 2 job wiring stays opt-in and can be appended here later.
 }
@@ -78,6 +109,7 @@ export function ensureModulesBootstrapped(): Promise<void> {
     registerAuthenticationModule();
     registerUserProfilesModule();
     registerCurriculumModule();
+    registerMaterialProcessingModule();
     registerOptionalJobs();
 
     bootstrapped = true;
