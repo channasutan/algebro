@@ -1,12 +1,12 @@
 import 'server-only';
 
 import { eventBus } from '@/events/event-bus';
-import { getSupabaseAdminClient } from '@/lib/supabase/admin-client';
 import {
   type JobHandler,
   NonRetryableJobError,
 } from '@/jobs/job-runner';
 import { processMaterial } from '@/modules/material-processing/services/material-processing-service';
+import { createServiceRoleMaterialRepository } from '@/modules/material-processing/repositories/material-repository';
 
 export const MATERIAL_PROCESSING_JOB = 'material_processing' as const;
 
@@ -35,7 +35,8 @@ function readPayload(payload: Record<string, unknown>): MaterialProcessingPayloa
 export const materialProcessingHandler: JobHandler = async (job) => {
   const { material_id } = readPayload(job.payload as Record<string, unknown>);
 
-  const supabase = getSupabaseAdminClient();
+  const repository = createServiceRoleMaterialRepository();
+  const supabase = repository.getClient();
 
   await processMaterial(supabase, eventBus, material_id);
 };
