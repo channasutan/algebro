@@ -1,6 +1,0 @@
-tests/integration/problem-generator.test.ts(42,15): error TS2769: No overload matches this call.
-  Overload 1 of 2, '(values: never, options?: { count?: "exact" | "planned" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "problem_templates", never, "POST">', gave the following error.
-    Argument of type '{ name: string; template_latex: string; parameter_schema: Record<string, unknown>; base_difficulty: number; }' is not assignable to parameter of type 'never'.
-  Overload 2 of 2, '(values: never[], options?: { count?: "exact" | "planned" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "problem_templates", never, "POST">', gave the following error.
-    Argument of type '{ name: string; template_latex: string; parameter_schema: Record<string, unknown>; base_difficulty: number; }' is not assignable to parameter of type 'never[]'.
-      Type '{ name: string; template_latex: string; parameter_schema: Record<string, unknown>; base_difficulty: number; }' is missing the following properties from type 'never[]': length, pop, push, concat, and 35 more.
