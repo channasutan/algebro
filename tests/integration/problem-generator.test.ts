@@ -10,6 +10,7 @@ import {
   type GenerateProblemInput,
 } from "@/modules/problem-generator";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin-client";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Mock SymPy client for deterministic tests
 vi.mock("@/lib/math/sympy-client", () => ({
@@ -31,10 +32,11 @@ describe("Problem Generator Integration", () => {
 
   let repo: Awaited<ReturnType<typeof createSupabaseProblemRepository>>;
   let testTemplateId: string;
-  const adminClient = getSupabaseAdminClient();
+  let adminClient: SupabaseClient;
 
   beforeAll(async () => {
     repo = await createSupabaseProblemRepository();
+    adminClient = getSupabaseAdminClient();
 
     // Create test template
     const { data: template, error } = await adminClient
@@ -48,7 +50,7 @@ describe("Problem Generator Integration", () => {
           c: { type: "int", min: 10, max: 20 },
         },
         base_difficulty: 2,
-      } as unknown as never)
+      })
       .select()
       .single();
 
