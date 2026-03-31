@@ -10,6 +10,8 @@ import {
   type GenerateProblemInput,
 } from "@/modules/problem-generator";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin-client";
+import { dbInsert } from "@/lib/supabase/repository-utils";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Mock SymPy client for deterministic tests
 vi.mock("@/lib/math/sympy-client", () => ({
@@ -31,15 +33,17 @@ describe("Problem Generator Integration", () => {
 
   let repo: Awaited<ReturnType<typeof createSupabaseProblemRepository>>;
   let testTemplateId: string;
-  const adminClient = getSupabaseAdminClient();
+  let adminClient: SupabaseClient;
 
   beforeAll(async () => {
     repo = await createSupabaseProblemRepository();
+    adminClient = getSupabaseAdminClient();
 
-    // Create test template
-    const { data: template, error } = await adminClient
-      .from("problem_templates")
-      .insert({
+    // Create test template using dbInsert utility
+    const template = await dbInsert<{ id: string }>(
+      adminClient,
+      "problem_templates",
+      {
         name: "Integration Test Template",
         template_latex: "$a*x + $b = $c",
         parameter_schema: {
@@ -48,12 +52,10 @@ describe("Problem Generator Integration", () => {
           c: { type: "int", min: 10, max: 20 },
         },
         base_difficulty: 2,
-      } as { name: string; template_latex: string; parameter_schema: Record<string, unknown>; base_difficulty: number })
-      .select()
-      .single();
-
-    if (error) throw error;
-    testTemplateId = (template as { id: string }).id;
+      },
+      { context: "create test template" }
+    );
+    testTemplateId = template.id;
   });
 
   afterAll(async () => {
