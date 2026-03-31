@@ -1,14 +1,6 @@
-jobs/handlers/material-processing.ts(4,49): error TS2307: Cannot find module '@/infrastructure/supabase/service-role-client' or its corresponding type declarations.
-tests/integration/curriculum/supabase-curriculum-repository.test.ts(31,12): error TS2304: Cannot find name 'adminClient'.
-tests/integration/curriculum/supabase-curriculum-repository.test.ts(31,29): error TS2304: Cannot find name 'TEST_USER_A'.
-tests/integration/curriculum/supabase-curriculum-repository.test.ts(31,46): error TS2304: Cannot find name 'TEST_USER_B'.
-tests/integration/curriculum/supabase-curriculum-repository.test.ts(35,33): error TS2304: Cannot find name 'adminClient'.
-tests/integration/curriculum/supabase-curriculum-repository.test.ts(51,34): error TS2304: Cannot find name 'TEST_USER_A'.
-tests/integration/curriculum/supabase-curriculum-repository.test.ts(52,34): error TS2304: Cannot find name 'TEST_USER_A'.
-tests/integration/curriculum/supabase-curriculum-repository.test.ts(53,34): error TS2304: Cannot find name 'TEST_USER_B'.
 tests/integration/problem-generator.test.ts(42,15): error TS2769: No overload matches this call.
   Overload 1 of 2, '(values: never, options?: { count?: "exact" | "planned" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "problem_templates", never, "POST">', gave the following error.
-    Argument of type 'Record<string, unknown>' is not assignable to parameter of type 'never'.
+    Argument of type '{ name: string; template_latex: string; parameter_schema: Record<string, unknown>; base_difficulty: number; }' is not assignable to parameter of type 'never'.
   Overload 2 of 2, '(values: never[], options?: { count?: "exact" | "planned" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "problem_templates", never, "POST">', gave the following error.
-    Argument of type 'Record<string, unknown>' is not assignable to parameter of type 'never[]'.
-      Type 'Record<string, unknown>' is missing the following properties from type 'never[]': length, pop, push, concat, and 35 more.
+    Argument of type '{ name: string; template_latex: string; parameter_schema: Record<string, unknown>; base_difficulty: number; }' is not assignable to parameter of type 'never[]'.
+      Type '{ name: string; template_latex: string; parameter_schema: Record<string, unknown>; base_difficulty: number; }' is missing the following properties from type 'never[]': length, pop, push, concat, and 35 more.
