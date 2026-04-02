@@ -31,7 +31,8 @@ export async function generateHintAction(
       studentStepLatex: String(stepIndex),
       errorType: null,
       previousStepsLatex: [],
-      hintCount: stepIndex
+      hintCount: stepIndex,
+      requestId
     })
 
     if (result.success) {

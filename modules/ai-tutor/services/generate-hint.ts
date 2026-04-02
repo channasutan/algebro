@@ -23,6 +23,11 @@ export async function generateHintWithRepository(
   repo: AiTutorRepository,
   input: GenerateHintInput
 ): Promise<GenerateHintResult> {
+  // Log requestId for tracing if provided
+  if (input.requestId) {
+    console.debug("[ai-tutor] generateHint called", { requestId: input.requestId });
+  }
+
   const quotaResult = await checkHintQuotaWithRepository(repo, {
     userId: input.userId,
     problemId: input.problemId,

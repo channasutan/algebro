@@ -22,7 +22,8 @@ export const GenerateHintInputSchema = z.object({
   studentStepLatex: z.string(),
   errorType: z.enum(validationErrorValues).nullable(),
   previousStepsLatex: z.array(z.string()),
-  hintCount: z.number().int().nonnegative()
+  hintCount: z.number().int().nonnegative(),
+  requestId: z.string().optional()
 });
 
 export type GenerateHintInput = z.infer<typeof GenerateHintInputSchema>;
