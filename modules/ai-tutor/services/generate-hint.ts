@@ -34,7 +34,8 @@ export async function generateHintWithRepository(
   });
 
   if (!quotaResult.allowed) {
-    return { success: false, reason: "quota_exceeded" };
+    // feature_not_allowed and quota_exceeded both map to quota_exceeded for the UI
+    return { success: false, reason: quotaResult.reason === "feature_not_allowed" ? "quota_exceeded" : "quota_exceeded" };
   }
 
   const contents = buildHintPrompt({
