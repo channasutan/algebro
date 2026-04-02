@@ -63,4 +63,14 @@ describe("checkHintQuotaWithRepository", () => {
     expect(result).toEqual({ allowed: true, remaining: null });
     expect(repo.getHintUsage).not.toHaveBeenCalled();
   });
+
+  it("returns feature_not_allowed when checkFeatureAccess returns allowed: false", async () => {
+    vi.mocked(checkFeatureAccess).mockResolvedValue({ allowed: false, planTier: "free" });
+    const repo = makeMockRepo(0);
+
+    const result = await checkHintQuotaWithRepository(repo, { userId: "u1", problemId: "p1" });
+
+    expect(result).toEqual({ allowed: false, reason: "feature_not_allowed", remaining: 0 });
+    expect(repo.getHintUsage).not.toHaveBeenCalled();
+  });
 });

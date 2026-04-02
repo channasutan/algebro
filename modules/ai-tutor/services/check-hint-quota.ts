@@ -21,6 +21,11 @@ export async function checkHintQuotaWithRepository(
 ): Promise<CheckQuotaResult> {
   const access = await checkFeatureAccess(input.userId, "ai_hints");
 
+  // Billing gate takes priority — if feature not allowed, skip quota checks entirely
+  if (!access.allowed) {
+    return { allowed: false, reason: "feature_not_allowed", remaining: 0 };
+  }
+
   if (access.planTier === "premium") {
     return { allowed: true, remaining: null };
   }

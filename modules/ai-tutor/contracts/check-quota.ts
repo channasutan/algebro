@@ -9,4 +9,4 @@ export type CheckQuotaInput = z.infer<typeof CheckQuotaInputSchema>;
 
 export type CheckQuotaResult =
   | { allowed: true; remaining: number | null }
-  | { allowed: false; reason: "quota_exceeded"; remaining: 0 };
+  | { allowed: false; reason: "quota_exceeded" | "feature_not_allowed"; remaining: 0 };
