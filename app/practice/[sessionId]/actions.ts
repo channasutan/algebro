@@ -1,5 +1,5 @@
-'use server';
 import 'server-only';
+'use server';
 
 import { ensureModulesBootstrapped } from "@/modules/bootstrap";
 import { getCurrentSession } from "@/modules/authentication";
@@ -21,7 +21,7 @@ export async function generateHintAction(
   }
 
   const userId = sessionResult.session.userId
-  const _requestId = await getRequestId()
+  const requestId = await getRequestId()
 
   try {
     const result = await generateHint({
