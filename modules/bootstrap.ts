@@ -95,6 +95,15 @@ function registerOptionalJobs(): void {
  *
  * The registration order is deterministic so later Phase 2 tasks can layer in
  * auth and profile subscribers without duplicating side effects.
+ *
+ * Registration order:
+ * 1. registerSharedInfrastructure  — job handlers
+ * 2. registerAuthenticationModule  — auth boundary scaffold
+ * 3. registerUserProfilesModule    — profile event subscribers
+ * 4. registerCurriculumModule      — attempt-completed subscribers
+ * 5. registerMaterialProcessingModule — material upload/processed subscribers
+ * 6. registerAiTutorModule         — AFTER billing and practice (generateHint depends on both)
+ * 7. registerOptionalJobs          — optional phase wiring
  */
 export function ensureModulesBootstrapped(): Promise<void> {
   if (bootstrapped) {

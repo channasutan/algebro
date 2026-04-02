@@ -1,5 +1,6 @@
 import "server-only";
 
+// Idempotency guard — module-level flag prevents duplicate subscriptions
 let _registered = false;
 
 /**
