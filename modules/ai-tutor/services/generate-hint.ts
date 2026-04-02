@@ -38,13 +38,14 @@ export async function generateHintWithRepository(
     hintIndex: input.hintCount,
   });
 
-  let response;
+  let response: Awaited<ReturnType<typeof geminiClient.generateContent>>;
   try {
-    response = await geminiClient.generateContent({
+    const result = await geminiClient.generateContent({
       model: "gemini-2.0-flash",
       contents,
       signal: AbortSignal.timeout(10_000),
     });
+    response = result;
   } catch {
     return { success: false, reason: "ai_unavailable" };
   }
