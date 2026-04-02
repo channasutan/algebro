@@ -24,26 +24,49 @@ describe("getFreeHintLimit", () => {
   it("throws when FREE_HINT_LIMIT is a non-integer string", () => {
     vi.stubEnv("FREE_HINT_LIMIT", "abc");
     expect(() => getFreeHintLimit()).toThrowError(
-      `Invalid FREE_HINT_LIMIT value: "abc". Must be a positive integer.`
+      `Invalid FREE_HINT_LIMIT value: "abc". Must be a positive integer string (e.g. "5").`
     );
   });
 
   it("throws when FREE_HINT_LIMIT is '0'", () => {
     vi.stubEnv("FREE_HINT_LIMIT", "0");
     expect(() => getFreeHintLimit()).toThrowError(
-      `Invalid FREE_HINT_LIMIT value: "0". Must be a positive integer.`
+      `Invalid FREE_HINT_LIMIT value: "0". Must be >= 1.`
     );
   });
 
   it("throws when FREE_HINT_LIMIT is a negative integer string", () => {
     vi.stubEnv("FREE_HINT_LIMIT", "-1");
     expect(() => getFreeHintLimit()).toThrowError(
-      `Invalid FREE_HINT_LIMIT value: "-1". Must be a positive integer.`
+      `Invalid FREE_HINT_LIMIT value: "-1". Must be a positive integer string (e.g. "5").`
     );
   });
 
   it("throws when FREE_HINT_LIMIT is a float string", () => {
     vi.stubEnv("FREE_HINT_LIMIT", "3.5");
-    expect(() => getFreeHintLimit()).not.toThrow(); // parseInt("3.5") = 3, which is valid
+    expect(() => getFreeHintLimit()).toThrowError(
+      `Invalid FREE_HINT_LIMIT value: "3.5". Must be a positive integer string (e.g. "5").`
+    );
+  });
+
+  it("throws when FREE_HINT_LIMIT is a float string that is a whole number", () => {
+    vi.stubEnv("FREE_HINT_LIMIT", "3.0");
+    expect(() => getFreeHintLimit()).toThrowError(
+      `Invalid FREE_HINT_LIMIT value: "3.0". Must be a positive integer string (e.g. "5").`
+    );
+  });
+
+  it("throws when FREE_HINT_LIMIT has leading space", () => {
+    vi.stubEnv("FREE_HINT_LIMIT", " 3");
+    expect(() => getFreeHintLimit()).toThrowError(
+      `Invalid FREE_HINT_LIMIT value: " 3". Must be a positive integer string (e.g. "5").`
+    );
+  });
+
+  it("throws when FREE_HINT_LIMIT has trailing characters", () => {
+    vi.stubEnv("FREE_HINT_LIMIT", "3abc");
+    expect(() => getFreeHintLimit()).toThrowError(
+      `Invalid FREE_HINT_LIMIT value: "3abc". Must be a positive integer string (e.g. "5").`
+    );
   });
 });

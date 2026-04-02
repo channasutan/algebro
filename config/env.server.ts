@@ -181,11 +181,19 @@ export function getLoggerStrict(): boolean {
 export function getFreeHintLimit(): number {
   const rawEnv = getRawServerEnv();
   const raw = rawEnv.freeHintLimit ?? "3";
+
+  // Strict positive integer validation: reject floats, negatives, non-digits
+  if (!/^\d+$/.test(raw)) {
+    throw new Error(
+      `Invalid FREE_HINT_LIMIT value: "${raw}". Must be a positive integer string (e.g. "5").`
+    );
+  }
+
   const parsed = parseInt(raw, 10);
 
-  if (!Number.isInteger(parsed) || parsed <= 0) {
+  if (parsed <= 0) {
     throw new Error(
-      `Invalid FREE_HINT_LIMIT value: "${raw}". Must be a positive integer.`
+      `Invalid FREE_HINT_LIMIT value: "${raw}". Must be >= 1.`
     );
   }
 
