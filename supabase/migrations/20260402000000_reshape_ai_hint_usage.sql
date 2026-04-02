@@ -1,5 +1,8 @@
 BEGIN;
 
+-- Replaces the original ai_hint_usage table (id, user_id, attempt_id, feature_type,
+-- token_usage, created_at) with a per-user-per-problem hint counter, as required by
+-- the free-hint quota feature (phase 8). No production data existed at time of migration.
 -- Drop the existing ai_hint_usage table (no production data yet)
 DROP TABLE IF EXISTS public.ai_hint_usage;
 
