@@ -86,7 +86,7 @@ export async function generateHintWithRepository(
     },
   });
 
-  eventBus.publish(event).catch(() => {
+  void   void eventBus.publish(event).catch(() => {
     // fire-and-forget: event emission should not block hint delivery
   });
 
