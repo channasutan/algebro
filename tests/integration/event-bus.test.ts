@@ -1,7 +1,40 @@
-import { describe, expect, it, vi, type Mock } from "vitest";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 import { createEventBus, type EventBus } from "@/events/event-bus";
 import { createDomainEvent, type DomainEvent } from "@/events/event-types";
+import { eventBus } from "@/events/event-bus";
+import { generateHint } from "@/modules/ai-tutor";
+import { geminiClient } from "@/infrastructure/ai/gemini-client";
+import { checkFeatureAccess } from "@/modules/billing";
+import type { GenerateHintInput } from "@/modules/ai-tutor/contracts/generate-hint";
+
+vi.mock("server-only", () => ({}));
+
+vi.mock("@/modules/billing", () => ({
+  checkFeatureAccess: vi.fn()
+}));
+
+vi.mock("@/config/env.server-entry", () => ({
+  getFreeHintLimit: vi.fn().mockReturnValue(3)
+}));
+
+vi.mock("@/infrastructure/ai/gemini-client", () => ({
+  geminiClient: {
+    generateContent: vi.fn()
+  }
+}));
+
+const { getHintUsageMock, incrementHintUsageMock } = vi.hoisted(() => ({
+  getHintUsageMock: vi.fn(),
+  incrementHintUsageMock: vi.fn().mockResolvedValue(undefined)
+}));
+
+vi.mock("@/modules/ai-tutor/repositories/supabase-ai-tutor-repository", () => ({
+  createSupabaseAiTutorRepository: vi.fn(() => ({
+    getHintUsage: getHintUsageMock,
+    incrementHintUsage: incrementHintUsageMock
+  }))
+}));
 
 /**
  * Helper to create a test event and subscribe a handler.
@@ -198,5 +231,67 @@ describe("event bus", () => {
       expect(received.payload.userId).toBe("user-123");
       expect(received.payload.changedFields.display_name).toBe("Test Name");
     });
+  });
+});
+
+describe("ai_hint_requested emission", () => {
+  const makeInput = (hintCount: number): GenerateHintInput => ({
+    userId: "u-1",
+    problemId: "p-1",
+    problemLatex: "x^2-4=0",
+    studentStepLatex: "x=2",
+    errorType: null,
+    previousStepsLatex: [],
+    hintCount
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.spyOn(eventBus, "publish");
+    vi.mocked(checkFeatureAccess).mockResolvedValue({ allowed: true, planTier: "free" });
+    vi.mocked(geminiClient.generateContent).mockResolvedValue({
+      candidates: [{ content: { parts: [{ text: "Here is your hint." }] } }],
+      promptFeedback: {}
+    });
+    getHintUsageMock.mockResolvedValue(1);
+    incrementHintUsageMock.mockResolvedValue(undefined);
+  });
+
+  it("publishes ai_hint_requested exactly once on success", async () => {
+    await generateHint(makeInput(0));
+
+    expect(eventBus.publish).toHaveBeenCalledTimes(1);
+    expect(eventBus.publish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_type: "ai_hint_requested",
+        payload: expect.objectContaining({
+          userId: "u-1",
+          problemId: "p-1"
+        })
+      })
+    );
+  });
+
+  it("does not publish when quota is exceeded", async () => {
+    getHintUsageMock.mockResolvedValue(3);
+
+    await generateHint(makeInput(3));
+
+    expect(eventBus.publish).toHaveBeenCalledTimes(0);
+  });
+
+  it("does not publish when Gemini throws", async () => {
+    vi.mocked(geminiClient.generateContent).mockRejectedValueOnce(new Error("AI unavailable"));
+
+    await generateHint(makeInput(0));
+
+    expect(eventBus.publish).toHaveBeenCalledTimes(0);
+  });
+
+  it("publishes twice on two sequential successful hints", async () => {
+    await generateHint(makeInput(0));
+    await generateHint(makeInput(1));
+
+    expect(eventBus.publish).toHaveBeenCalledTimes(2);
   });
 });

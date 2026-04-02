@@ -11,7 +11,10 @@ export default defineConfig({
     include: [
       "tests/**/*.test.ts",
       "modules/**/*.test.ts",
-      "jobs/**/*.test.ts"
+      "jobs/**/*.test.ts",
+      "app/**/*.test.ts",
+      "app/**/*.test.tsx",
+      "app/**/*.spec.ts"
     ],
     setupFiles: ["./tests/setup.ts"],
     coverage: {

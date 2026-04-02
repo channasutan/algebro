@@ -17,7 +17,9 @@ export type CoreDomainEventType =
   | "auth_user_registered"
   // user profile events
   | "user_profile_initialized"
-  | "user_profile_updated";
+  | "user_profile_updated"
+  // AI tutor events
+  | "ai_hint_requested";
 
 export type DomainEventType = CoreDomainEventType | (string & {});
 
@@ -196,3 +198,12 @@ export {
   type MaterialUploadedPayload,
   type MaterialProcessedPayload,
 } from "./material-events";
+
+// ---------------------------------------------------------------------------
+// AI tutor events
+// ---------------------------------------------------------------------------
+export {
+  AI_HINT_REQUESTED,
+  type AiHintRequestedPayload,
+  type AiHintRequestedEvent,
+} from "./ai-hint-events";

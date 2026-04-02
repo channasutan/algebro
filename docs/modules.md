@@ -288,26 +288,30 @@ Invariants
 
 ## AI Tutor
 
+Scaffold Shape
+
+`index.ts`
+`contracts/generate-hint.ts`
+`contracts/check-quota.ts`
+`contracts/index.ts`
+`domain/hint-prompt.ts`
+`domain/quota-policy.ts`
+
 Responsibilities
 
-Provides AI-based explanations and hints.
+Provides AI-powered hints for incorrect student algebra steps.
+Enforces per-user hint quotas tracked in `ai_hint_usage`.
+Respects subscription plan limits via the billing module.
 
-AI model
+AI Model
 
-Gemini Flash
+`gemini-2.0-flash` via `infrastructure/ai/gemini-client.ts`
 
 Constraints
 
 AI must not directly solve problems.
-
-AI only explains detected mistakes.
-
-Pipeline
-
-Student step
-→ validation result
-→ error classification
-→ hint generation
+AI only provides hints that guide toward the correct algebraic rule.
+Hint prompts are constructed server-side and never exposed to the client in raw form.
 
 Owned Tables
 
@@ -315,9 +319,9 @@ ai_hint_usage
 
 Public API
 
-generateHint(problem_id, step_context)
+generateHint(input: GenerateHintInput): Promise<GenerateHintResult>
 
-checkHintQuota(user_id)
+checkHintQuota(input: CheckQuotaInput): Promise<CheckQuotaResult>
 
 Dependencies
 
@@ -327,15 +331,17 @@ Billing & Subscription
 Forbidden Access
 
 Cannot modify attempts or solution_steps.
+Cannot import billing module internals — only checkFeatureAccess() through public API.
 
-Events Consumed
+Events Emitted
 
-step_validated
+ai_hint_requested
 
 Invariants
 
-- AI hints must respect usage quota
+- AI hints must respect usage quota (free: 3 per problem, premium: unlimited)
 - AI responses must never reveal final answers
+- Gemini API is called exclusively from server contexts
 
 ---
 

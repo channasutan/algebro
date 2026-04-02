@@ -2,7 +2,7 @@
  * Client-safe environment configuration entry point.
  *
  * This file can be safely imported in both client and server code.
- * Server-only functions (getServerEnv, getAuthEnv, getInfrastructureServerEnv, getSympyServiceUrl, getMayarApiBaseUrl)
+ * Server-only functions (getServerEnv, getAuthEnv, getInfrastructureServerEnv, getSympyServiceUrl, getMayarApiBaseUrl, getFreeHintLimit)
  * are re-exported from env.server for server-side usage.
  * Client code should not call these functions as they require server-side environment access.
  */
@@ -26,7 +26,8 @@ export {
   getSympyServiceUrl,
   getMayarApiBaseUrl,
   getMayarApiKey,
-  getMayarWebhookSecret
+  getMayarWebhookSecret,
+  getFreeHintLimit
 } from "./env.server-entry";
 
 /**

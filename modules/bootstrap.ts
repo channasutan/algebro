@@ -8,6 +8,7 @@ import { ATTEMPT_COMPLETED } from "@/events/attempt-events";
 import { handleAttemptCompleted } from "@/modules/curriculum/events/on-attempt-completed";
 import { createServiceRoleCurriculumRepository } from "@/modules/curriculum/repositories/supabase-curriculum-repository";
 import { createSupabasePracticeRepository } from "@/modules/practice/repositories/supabase-practice-repository";
+import { registerAiTutorModule } from "@/modules/ai-tutor";
 
 import {
   MATERIAL_PROCESSING_JOB,
@@ -109,6 +110,7 @@ export function ensureModulesBootstrapped(): Promise<void> {
     registerAuthenticationModule();
     registerUserProfilesModule();
     registerCurriculumModule();
+    registerAiTutorModule();
     registerMaterialProcessingModule();
     registerOptionalJobs();
 

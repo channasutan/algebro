@@ -28,6 +28,7 @@ type RawServerEnv = {
   mayarApiBaseUrl?: string;
   sympyServiceUrl?: string;
   loggerStrict?: string;
+  freeHintLimit?: string;
 };
 
 function getRawServerEnv(): RawServerEnv {
@@ -40,7 +41,8 @@ function getRawServerEnv(): RawServerEnv {
     mayarWebhookSecret: process.env.MAYAR_WEBHOOK_SECRET,
     mayarApiBaseUrl: process.env.MAYAR_API_BASE_URL,
     sympyServiceUrl: process.env.SYMPY_SERVICE_URL,
-    loggerStrict: process.env.LOGGER_STRICT
+    loggerStrict: process.env.LOGGER_STRICT,
+    freeHintLimit: process.env.FREE_HINT_LIMIT
   };
 }
 
@@ -77,6 +79,7 @@ export type InfrastructureServerEnv = ServerEnv & {
   mayarApiBaseUrl: string;
   sympyServiceUrl: string;
   loggerStrict: boolean;
+  freeHintLimit: number;
 };
 
 export function getPublicEnv(): PublicEnv {
@@ -103,7 +106,8 @@ export function getInfrastructureServerEnv(): InfrastructureServerEnv {
     mayarWebhookSecret: getMayarWebhookSecret(),
     mayarApiBaseUrl: getMayarApiBaseUrl(),
     sympyServiceUrl: getSympyServiceUrl(),
-    loggerStrict: getLoggerStrict()
+    loggerStrict: getLoggerStrict(),
+    freeHintLimit: getFreeHintLimit()
   };
 }
 
@@ -172,6 +176,20 @@ export function getSympyServiceUrl(): string {
 export function getLoggerStrict(): boolean {
   const rawEnv = getRawServerEnv();
   return rawEnv.loggerStrict === "true";
+}
+
+export function getFreeHintLimit(): number {
+  const rawEnv = getRawServerEnv();
+  const raw = rawEnv.freeHintLimit ?? "3";
+  const parsed = parseInt(raw, 10);
+
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    throw new Error(
+      `Invalid FREE_HINT_LIMIT value: "${raw}". Must be a positive integer.`
+    );
+  }
+
+  return parsed;
 }
 
 function getPublicEnvFromClientSafeConfig(): PublicEnv {
