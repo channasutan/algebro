@@ -33,15 +33,17 @@ function createRepositoryFromClient(
   const incrementHintUsage = async (userId: string, problemId: string): Promise<void> => {
     const adminClient = getSupabaseAdminClient();
 
-    await dbUpsert(adminClient, "ai_hint_usage", {
-      user_id: userId,
-      problem_id: problemId,
-      hint_count: 1
-    }, {
-      onConflict: "user_id,problem_id",
-      ignoreDuplicates: false,
-      context: "ai-tutor"
+    // Call the database function for atomic increment
+    // This ensures hint_count = hint_count + 1 is executed atomically
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (adminClient as any).rpc('increment_ai_hint_usage', {
+      p_user_id: userId,
+      p_problem_id: problemId
     });
+
+    if (error) {
+      throw new Error(`[ai-tutor] Failed to increment hint usage: ${error.message}`);
+    }
   };
 
   return {
