@@ -17,9 +17,9 @@ vi.mock('react', async (importOriginal) => {
 })
 
 import { HintPanel } from './hint-panel'
-import type { GenerateHintResult } from '@/modules/ai-tutor/contracts'
+import type { HintActionResult } from '@/modules/ai-tutor/contracts'
 
-function mockActionState(state: GenerateHintResult | null, isPending: boolean) {
+function mockActionState(state: HintActionResult | null, isPending: boolean) {
   const formAction = vi.fn()
   vi.mocked(React.useActionState).mockReturnValue([
     state,
@@ -62,7 +62,7 @@ describe('HintPanel', () => {
   })
 
   it('quota_exceeded: shows 0 hints remaining and upgrade CTA without raw details', () => {
-    mockActionState({ status: 'quota_exceeded' }, false)
+    mockActionState({ status: 'quota_exceeded', remaining: 0 }, false)
 
     render(<HintPanel attemptId="attempt-1" stepIndex={0} isPremium={false} />)
 

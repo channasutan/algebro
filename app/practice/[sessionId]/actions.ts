@@ -5,14 +5,14 @@ import { ensureModulesBootstrapped } from "@/modules/bootstrap";
 import { getCurrentSession } from "@/modules/authentication";
 import { getRequestId } from "@/lib/observability";
 import { generateHint } from "@/modules/ai-tutor";
-import type { GenerateHintResult } from "@/modules/ai-tutor/contracts";
+import type { HintActionResult } from "@/modules/ai-tutor/contracts";
 
 export async function generateHintAction(
   attemptId: string,
   stepIndex: number,
-  _prev: GenerateHintResult | null,
+  _prev: HintActionResult | null,
   _formData: FormData
-): Promise<GenerateHintResult> {
+): Promise<HintActionResult> {
   await ensureModulesBootstrapped()
 
   const sessionResult = await getCurrentSession()
@@ -39,7 +39,7 @@ export async function generateHintAction(
     }
 
     if (result.reason === 'quota_exceeded') {
-      return { status: 'quota_exceeded' }
+      return { status: 'quota_exceeded', remaining: 0 }
     }
 
     if (result.reason === 'validation_error') {

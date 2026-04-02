@@ -3,7 +3,7 @@
 import { useActionState } from 'react'
 
 import { generateHintAction } from '../actions'
-import type { GenerateHintResult } from '@/modules/ai-tutor/contracts'
+import type { HintActionResult } from '@/modules/ai-tutor/contracts'
 
 interface HintPanelProps {
   attemptId: string
@@ -136,7 +136,7 @@ function AiUnavailableState({
 
 export function HintPanel({ attemptId, stepIndex, remainingHints, isPremium }: HintPanelProps) {
   const boundAction = generateHintAction.bind(null, attemptId, stepIndex)
-  const [state, formAction, isPending] = useActionState<GenerateHintResult | null, FormData>(
+  const [state, formAction, isPending] = useActionState<HintActionResult | null, FormData>(
     boundAction,
     null
   )
