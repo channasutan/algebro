@@ -33,7 +33,7 @@ export async function checkHintQuotaWithRepository(
   const hintCount = await repo.getHintUsage(input.userId, input.problemId);
   const limit = getFreeHintLimit();
 
-  if (isQuotaExceeded(hintCount, access.planTier)) {
+  if (isQuotaExceeded(hintCount, access.planTier, limit)) {
     return { allowed: false, reason: "quota_exceeded", remaining: 0 };
   }
 

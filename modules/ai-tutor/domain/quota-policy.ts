@@ -1,8 +1,10 @@
-import { getFreeHintLimit } from "@/config/env.server-entry";
+export type PlanTier = "free" | "premium";
 
-export const FREE_HINT_LIMIT: number = getFreeHintLimit();
-
-export function isQuotaExceeded(hintCount: number, planTier: string): boolean {
+export function isQuotaExceeded(
+  hintCount: number,
+  planTier: PlanTier,
+  freeHintLimit: number
+): boolean {
   if (planTier === "premium") return false;
-  return hintCount >= FREE_HINT_LIMIT;
+  return hintCount >= freeHintLimit;
 }
