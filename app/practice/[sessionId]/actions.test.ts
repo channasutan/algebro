@@ -62,7 +62,7 @@ describe("generateHintAction", () => {
 
     const result = await generateHintAction("attempt-1", 1, null, new FormData());
 
-    expect(result).toEqual({ status: "quota_exceeded" });
+    expect(result).toEqual({ status: "quota_exceeded", remaining: 0 });
     expect(ensureModulesBootstrapped).toHaveBeenCalledTimes(1);
     expect(generateHint).toHaveBeenCalledTimes(1);
     expect(
