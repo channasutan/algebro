@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin-client";
-import { dbSelect, dbUpsert } from "@/lib/supabase/repository-utils";
+import { dbSelect } from "@/lib/supabase/repository-utils";
 
 import type { AiTutorRepository } from "./ai-tutor-repository";
 

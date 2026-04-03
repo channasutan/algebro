@@ -1,5 +1,5 @@
-import 'server-only';
 'use server';
+import 'server-only';
 
 import { ensureModulesBootstrapped } from "@/modules/bootstrap";
 import { getCurrentSession } from "@/modules/authentication";

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import { getFreeHintLimit } from "../../../config/env.server";
 
 describe("getFreeHintLimit", () => {
