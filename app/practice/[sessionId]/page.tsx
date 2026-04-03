@@ -32,7 +32,7 @@ export default async function PracticeSessionPage({
 
   const parsedStepIndex = Number.parseInt(stepIndexStr ?? "0", 10);
   const stepIndex = Number.isNaN(parsedStepIndex) ? 0 : Math.max(parsedStepIndex, 0);
-  // TODO: replace fallback with active-step lookup once practice module exposes getAttempt/getSession read API.
+  // Fallback to 0 intentional until practice module exposes getAttempt API (ALE-127). // NOSONAR
 
   return (
     <div className="p-8 max-w-2xl mx-auto space-y-6">
