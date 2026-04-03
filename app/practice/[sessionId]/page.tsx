@@ -8,8 +8,8 @@ import { ensureModulesBootstrapped } from "@/modules/bootstrap";
 import { HintPanel } from "./components/hint-panel";
 
 type PageProps = {
-  params: Promise<{ sessionId: string }>;
-  searchParams: Promise<{ attemptId?: string; stepIndex?: string }>;
+  readonly params: Promise<{ sessionId: string }>;
+  readonly searchParams: Promise<{ attemptId?: string; stepIndex?: string }>;
 };
 
 export default async function PracticeSessionPage({
@@ -30,7 +30,7 @@ export default async function PracticeSessionPage({
     redirect("/practice");
   }
 
-  const parsedStepIndex = parseInt(stepIndexStr ?? "0", 10);
+  const parsedStepIndex = Number.parseInt(stepIndexStr ?? "0", 10);
   const stepIndex = Number.isNaN(parsedStepIndex) ? 0 : Math.max(parsedStepIndex, 0);
   // TODO: replace fallback with active-step lookup once practice module exposes getAttempt/getSession read API.
 

@@ -6,18 +6,18 @@ import { generateHintAction } from '../actions'
 import type { HintActionResult } from '@/modules/ai-tutor/contracts'
 
 interface HintPanelProps {
-  attemptId: string
-  stepIndex: number
-  remainingHints?: number
-  isPremium?: boolean
+  readonly attemptId: string
+  readonly stepIndex: number
+  readonly remainingHints?: number
+  readonly isPremium?: boolean
 }
 
 function IdleState({
   remainingHints,
   formAction
 }: {
-  remainingHints?: number
-  formAction: (payload: FormData) => void
+  readonly remainingHints?: number
+  readonly formAction: (payload: FormData) => void
 }) {
   return (
     <div className="space-y-2">
@@ -37,7 +37,7 @@ function IdleState({
   )
 }
 
-function PendingState({ formAction }: { formAction: (payload: FormData) => void }) {
+function PendingState({ formAction }: { readonly formAction: (payload: FormData) => void }) {
   return (
     <form action={formAction}>
       <button
@@ -63,14 +63,14 @@ function HintDisplayedState({
   hint,
   formAction
 }: {
-  hint: string
-  formAction: (payload: FormData) => void
+  readonly hint: string
+  readonly formAction: (payload: FormData) => void
 }) {
   return (
     <div className="space-y-3">
-      <div role="status" aria-label="Hint" className="p-4 bg-gray-100 border rounded-lg">
+      <output aria-label="Hint" className="block p-4 bg-gray-100 border rounded-lg">
         <p className="text-gray-800">{hint}</p>
-      </div>
+      </output>
       <form action={formAction}>
         <button
           type="submit"
@@ -84,7 +84,7 @@ function HintDisplayedState({
   )
 }
 
-function QuotaExceededState({ isPremium = false }: { isPremium?: boolean }) {
+function QuotaExceededState({ isPremium = false }: { readonly isPremium?: boolean }) {
   return (
     <div role="alert" className="p-4 bg-red-50 border border-red-200 rounded-lg space-y-2">
       <p className="text-red-600">You&apos;ve used all your hints.</p>
@@ -106,8 +106,8 @@ function AiUnavailableState({
   formAction,
   isPending
 }: {
-  formAction: (payload: FormData) => void
-  isPending: boolean
+  readonly formAction: (payload: FormData) => void
+  readonly isPending: boolean
 }) {
   return (
     <div role="alert" className="p-4 bg-red-50 border border-red-200 rounded-lg space-y-2">
