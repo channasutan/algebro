@@ -80,6 +80,7 @@ export type InfrastructureServerEnv = ServerEnv & {
   sympyServiceUrl: string;
   loggerStrict: boolean;
   freeHintLimit: number;
+  NODE_ENV: string;
 };
 
 export function getPublicEnv(): PublicEnv {
@@ -107,7 +108,8 @@ export function getInfrastructureServerEnv(): InfrastructureServerEnv {
     mayarApiBaseUrl: getMayarApiBaseUrl(),
     sympyServiceUrl: getSympyServiceUrl(),
     loggerStrict: getLoggerStrict(),
-    freeHintLimit: getFreeHintLimit()
+    freeHintLimit: getFreeHintLimit(),
+    NODE_ENV: process.env.NODE_ENV ?? 'development'
   };
 }
 

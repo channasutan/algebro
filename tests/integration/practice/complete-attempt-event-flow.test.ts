@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
@@ -48,16 +48,19 @@ function makePracticeRepo() {
 }
 
 describe("E2E: attempt_completed event flow", () => {
+  // Bootstrap once before the suite — module graph is stable across all tests
+  beforeAll(async () => {
+    const { ensureModulesBootstrapped } = await import("@/modules/bootstrap");
+    await ensureModulesBootstrapped();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.resetModules();
+    // Remove vi.resetModules() — it destroys the eventBus subscription registry
+    // causing tests to time out waiting for updateMastery to be called
   });
 
   it("completeAttemptWithRepository() → eventBus → handleAttemptCompleted → updateMastery()", async () => {
-    // Bootstrap curriculum module fresh (dynamic import after resetModules)
-    const { ensureModulesBootstrapped } = await import("@/modules/bootstrap");
-    await ensureModulesBootstrapped();
-
     const { completeAttemptWithRepository } = await import(
       "@/modules/practice/services/complete-attempt"
     );
@@ -89,9 +92,6 @@ describe("E2E: attempt_completed event flow", () => {
     const { eventBus } = await import("@/events/event-bus");
     const publishSpy = vi.spyOn(eventBus, "publish");
 
-    const { ensureModulesBootstrapped } = await import("@/modules/bootstrap");
-    await ensureModulesBootstrapped();
-
     const { completeAttemptWithRepository } = await import(
       "@/modules/practice/services/complete-attempt"
     );
@@ -108,9 +108,6 @@ describe("E2E: attempt_completed event flow", () => {
   });
 
   it("repo.completeAttempt() throws → updateMastery NOT called", async () => {
-    const { ensureModulesBootstrapped } = await import("@/modules/bootstrap");
-    await ensureModulesBootstrapped();
-
     const { completeAttemptWithRepository } = await import(
       "@/modules/practice/services/complete-attempt"
     );

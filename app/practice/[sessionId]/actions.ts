@@ -6,6 +6,7 @@ import { getCurrentSession } from "@/modules/authentication";
 import { getRequestId } from "@/lib/observability";
 import { generateHint } from "@/modules/ai-tutor";
 import type { HintActionResult } from "@/modules/ai-tutor/contracts";
+import { getInfrastructureServerEnv } from "@/config/env.server";
 
 export async function generateHintAction(
   attemptId: string,
@@ -15,12 +16,13 @@ export async function generateHintAction(
 ): Promise<HintActionResult> {
   // Stubbed inputs intentionally guarded above (ALE-127). Wire to real
   // problem data when practice module exposes getAttempt API. // NOSONAR
-  const isStubbedGenerateHintInput = true
-  if (process.env.NODE_ENV === 'production' && isStubbedGenerateHintInput) {
+  const isStubbedGenerateHintInput = true;
+  const { NODE_ENV } = getInfrastructureServerEnv();
+  if (NODE_ENV === 'production' && isStubbedGenerateHintInput) {
     console.error(
       '[generateHintAction] Stubbed inputs detected in production — returning ai_unavailable'
-    )
-    return { status: 'ai_unavailable' }
+    );
+    return { status: 'ai_unavailable' };
   }
 
   await ensureModulesBootstrapped()
