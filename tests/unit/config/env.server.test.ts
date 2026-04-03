@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { getFreeHintLimit } from "../../../config/env.server";
 
 describe("getFreeHintLimit", () => {
@@ -7,7 +7,7 @@ describe("getFreeHintLimit", () => {
   });
 
   it("returns 3 when FREE_HINT_LIMIT is not set", () => {
-    vi.stubEnv("FREE_HINT_LIMIT", undefined as unknown as string);
+    delete process.env.FREE_HINT_LIMIT;
     expect(getFreeHintLimit()).toBe(3);
   });
 
