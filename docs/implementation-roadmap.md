@@ -392,7 +392,7 @@ Test:
 
 Phase 8 — AI Tutor
 
-Goal: provide explanations and hints.
+Goal: provide explanations and hints during algebra practice.
 
 Modules:
 
@@ -400,30 +400,72 @@ AI Tutor
 
 Tasks:
 
-Integrate Gemini Flash API.
+Task 1 — Extend env config for AI Tutor quota policy.
 
-Implement:
+Add FREE_HINT_LIMIT to config/env.server.ts with validated integer default 3.
+Expose through config/env.server-entry.ts and config/env.ts.
 
-generateHint()
+Task 2 — Define AI Tutor domain types and quota policy.
 
-checkHintQuota()
+Create modules/ai-tutor/domain/quota-policy.ts.
+Implement checkHintQuota() using FREE_HINT_LIMIT from config.
 
-Hints based on:
+Task 3 — Implement AI Tutor repository interface and Supabase adapter.
 
-- incorrect algebra steps
-- validation errors
+Define IAiTutorRepository with getHintUsage() and incrementHintUsage().
+Implement SupabaseAiTutorRepository using ai_hint_usage table.
+
+Task 4 — Implement generateHint() service with Gemini Flash API.
+
+Create modules/ai-tutor/services/generate-hint.ts.
+Call Gemini Flash API via infrastructure/ai/gemini-client.ts.
+Guard with checkHintQuota() before API call.
+
+Task 5 — Implement AI Tutor API route.
+
+Create app/api/ai-tutor/hint/route.ts.
+Validate request, enforce quota, return hint response.
+
+Task 6 — Integrate AI Tutor hint button into practice UI.
+
+Add hint button to the practice step component.
+Wire to POST /api/ai-tutor/hint.
+Display hint inline below the current step.
+
+Task 7 — Publish hint_requested domain event.
+
+Emit hint_requested event from generateHint() service.
+Follow existing event bus pattern in events/event-bus.ts.
+
+Task 8 — Write AI Tutor unit and integration tests.
+
+Domain unit tests: checkHintQuota(), generateHint() mock.
+Repository integration test: ai_hint_usage upsert and read.
+API route test: quota enforcement, error handling.
+
+Full execution detail:
+
+docs/phase8-execution-plan.md
 
 Deliverables:
 
-Students receive AI hints during practice.
+Students receive AI-generated hints during algebra practice.
+Hint usage is tracked per user per problem.
+Free users are limited to FREE_HINT_LIMIT hints per problem.
 
 Testing:
 
 Test:
 
 - hint generation
-- quota limits
+- quota enforcement
+- hint_requested event emission
+- API error handling
 - response safety
+
+Exit criteria:
+
+Phase 8 completion closes the MVP scope (Phase 0 → Phase 8).
 
 ---
 

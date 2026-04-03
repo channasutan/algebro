@@ -19,3 +19,7 @@ export function registerAiTutorModule(): void {
   // No inbound event subscriptions required currently.
   // The module exposes generateHint() as its public API surface.
 }
+
+// Public API surface — consumers import ONLY from "@/modules/ai-tutor"
+export { generateHint } from "@/modules/ai-tutor/services/generate-hint";
+export type { GenerateHintResult } from "@/modules/ai-tutor/contracts/generate-hint";

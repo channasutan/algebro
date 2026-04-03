@@ -291,19 +291,41 @@ AI Tutor
 
 ai_hint_usage
 
-Tracks AI tutor usage.
+Tracks AI hint usage per user per problem. Used by the AI Tutor module
+to enforce the FREE_HINT_LIMIT quota policy.
+
+Owner
+
+modules/ai-tutor/repositories/supabase-ai-tutor-repository.ts
+
+No other module may read or write this table directly.
 
 Fields
-
-id uuid primary key
 
 user_id uuid references public.users(id) on delete cascade
 
 problem_id uuid references problems(id) on delete restrict
 
-hint_count integer
+hint_count integer default 0 NOT NULL
 
 created_at timestamptz default now()
+
+Constraints
+
+primary key (user_id, problem_id)
+
+Upsert conflict key
+
+(user_id, problem_id)
+
+Used in INSERT ... ON CONFLICT (user_id, problem_id) DO UPDATE SET hint_count = hint_count + 1
+
+RLS Policy
+
+Users may SELECT their own rows where user_id = auth.uid().
+
+All INSERT and UPDATE operations are performed using the Supabase service role key.
+Direct client writes are not permitted.
 
 Indexes
 
