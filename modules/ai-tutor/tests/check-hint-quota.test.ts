@@ -73,4 +73,26 @@ describe("checkHintQuotaWithRepository", () => {
     expect(result).toEqual({ allowed: false, reason: "feature_not_allowed", remaining: 0 });
     expect(repo.getHintUsage).not.toHaveBeenCalled();
   });
+
+  it("allows when usage is one below the limit", async () => {
+    vi.mocked(checkFeatureAccess).mockResolvedValue({ allowed: true, planTier: "free" });
+    const repo = makeMockRepo(2); // limit is 3, so 2 is allowed
+
+    const result = await checkHintQuotaWithRepository(repo, { userId: "u1", problemId: "p1" });
+
+    expect(result).toEqual({ allowed: true, remaining: 1 });
+  });
+
+  it("increments usage correctly via repository", async () => {
+    const incrementSpy = vi.fn().mockResolvedValue(undefined);
+    const repo = {
+      getHintUsage: vi.fn().mockResolvedValue(0),
+      incrementHintUsage: incrementSpy,
+    };
+
+    await repo.incrementHintUsage("u1", "p1");
+
+    expect(incrementSpy).toHaveBeenCalledTimes(1);
+    expect(incrementSpy).toHaveBeenCalledWith("u1", "p1");
+  });
 });
