@@ -35,7 +35,8 @@ export async function generateHintWithRepository(
 
   if (!quotaResult.allowed) {
     // feature_not_allowed and quota_exceeded both map to quota_exceeded for the UI
-    return { success: false, reason: quotaResult.reason === "feature_not_allowed" ? "quota_exceeded" : "quota_exceeded" };
+    // since both cases result in the same user-facing behavior (hint unavailable)
+    return { success: false, reason: "quota_exceeded" };
   }
 
   const contents = buildHintPrompt({
