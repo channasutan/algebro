@@ -14,12 +14,14 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "test:integration": "vitest run --config vitest.config.integration.ts"
+    "test:integration": "vitest run --config vitest.config.integration.ts",
+    "test:watch": "vitest",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@cortex-js/compute-engine": "^0.55.6",
     "@supabase/ssr": "^0.9.0",
-    "@supabase/supabase-js": "2.99.0",
+    "@supabase/supabase-js": "^2.99.0",
     "client-only": "^0.0.1",
     "next": "16.1.7",
     "react": "19.2.4",
@@ -41,7 +43,6 @@
     "dotenv": "^16.6.1",
     "eslint": "9.39.4",
     "eslint-config-next": "16.1.7",
-    "eslint-plugin-next": "^0.0.0",
     "happy-dom": "^20.8.9",
     "js-yaml": "^4.1.1",
     "typescript": "5.9.3",
