@@ -37,6 +37,7 @@ async function evaluate(input: SympyEvaluateInput): Promise<SympyEvaluateRespons
       operation: input.operation,
       context: input.context ?? {}
     }),
+    // AbortSignal.timeout requires Node 18+ (CI uses Node 22)
     signal: input.signal ?? AbortSignal.timeout(getSympyTimeoutMs())
   });
 
