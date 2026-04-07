@@ -36,8 +36,9 @@ async function verifyAttemptOwnership(
 
 export async function POST(
   request: Request,
-  { params }: { params: { attempt_id: string } }
+  { params }: { params: Promise<{ attempt_id: string }> }
 ): Promise<Response> {
+  const { attempt_id } = await params;
   const supabase = await getSupabaseServerClient();
 
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -46,7 +47,7 @@ export async function POST(
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const ownership = await verifyAttemptOwnership(supabase, params.attempt_id, user.id);
+  const ownership = await verifyAttemptOwnership(supabase, attempt_id, user.id);
 
   if (ownership.error) {
     return Response.json({ error: ownership.error }, { status: ownership.status });
@@ -72,7 +73,7 @@ export async function POST(
 
   try {
     const step = await repo.addStep(
-      params.attempt_id,
+      attempt_id,
       parsed.data.step_index,
       parsed.data.expression
     );
@@ -86,8 +87,9 @@ export async function POST(
 
 export async function GET(
   request: Request,
-  { params }: { params: { attempt_id: string } }
+  { params }: { params: Promise<{ attempt_id: string }> }
 ): Promise<Response> {
+  const { attempt_id } = await params;
   const supabase = await getSupabaseServerClient();
 
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -96,7 +98,7 @@ export async function GET(
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const ownership = await verifyAttemptOwnership(supabase, params.attempt_id, user.id);
+  const ownership = await verifyAttemptOwnership(supabase, attempt_id, user.id);
 
   if (ownership.error && ownership.status !== 409) {
     return Response.json({ error: ownership.error }, { status: ownership.status });
@@ -105,7 +107,7 @@ export async function GET(
   const repo = createSupabasePracticeRepository();
 
   try {
-    const steps = await repo.getSteps(params.attempt_id);
+    const steps = await repo.getSteps(attempt_id);
 
     return Response.json(steps, { status: 200 });
   } catch (error) {
