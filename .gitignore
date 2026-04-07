@@ -46,3 +46,6 @@ test-results/
 # misc
 *.log
 cookies.txt
+
+# lock files (using pnpm only)
+package-lock.json
