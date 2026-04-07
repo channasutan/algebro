@@ -30,9 +30,12 @@ describe("Practice Loop Service Integration", () => {
     mockRepo = {
       createSession: vi.fn(),
       getSession: vi.fn(),
+      findActiveSession: vi.fn(),
       createAttempt: vi.fn(),
       getAttempt: vi.fn(),
       updateAttempt: vi.fn(),
+      completeAttempt: vi.fn(),
+      createAttemptWithStep: vi.fn(),
       addStep: vi.fn(),
       getSteps: vi.fn(),
       updateStep: vi.fn(),
@@ -59,27 +62,39 @@ describe("Practice Loop Service Integration", () => {
     expect(session).toEqual(mockSession);
     expect(mockRepo.createSession).toHaveBeenCalledWith(testUserId, "topic-1");
 
-    // 2. Success creating an attempt
-    const mockAttempt = { 
-      id: "attempt-1", 
-      sessionId: "session-1", 
-      problemId: "problem-1", 
-      userId: testUserId, 
-      startedAt: new Date().toISOString(), 
-      completedAt: null, 
-      isCorrect: null, 
-      createdAt: new Date().toISOString() 
-    };
-    mockRepo.createAttempt.mockResolvedValue(mockAttempt);
-
-    const attempt = await createAttemptWithRepository(mockRepo, {
+    // 2. Success creating an attempt with initial step (transactional)
+    const mockAttempt = {
+      id: "attempt-1",
       sessionId: "session-1",
       problemId: "problem-1",
-      userId: testUserId
+      userId: testUserId,
+      startedAt: new Date().toISOString(),
+      completedAt: null,
+      isCorrect: null,
+      createdAt: new Date().toISOString()
+    };
+    const mockStep = {
+      id: "step-0",
+      attemptId: "attempt-1",
+      stepIndex: 0,
+      stepLatex: "",
+      isValid: null,
+      errorType: null,
+      createdAt: new Date().toISOString()
+    };
+    mockRepo.createAttemptWithStep.mockResolvedValue({ attempt: mockAttempt, step: mockStep });
+
+    const attemptResult = await createAttemptWithRepository(mockRepo, {
+      sessionId: "session-1",
+      problemId: "problem-1",
+      userId: testUserId,
+      stepIndex: 0,
+      stepLatex: ""
     }, context);
 
-    expect(attempt).toEqual(mockAttempt);
-    expect(mockRepo.createAttempt).toHaveBeenCalledWith("session-1", "problem-1", testUserId);
+    expect(attemptResult.attempt).toEqual(mockAttempt);
+    expect(attemptResult.step).toEqual(mockStep);
+    expect(mockRepo.createAttemptWithStep).toHaveBeenCalledWith("session-1", "problem-1", testUserId, 0, "");
 
     // 3. Success submitting steps
     const mockStep1 = { 

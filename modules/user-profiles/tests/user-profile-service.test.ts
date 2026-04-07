@@ -111,13 +111,12 @@ describe("User Profiles Service Logic", () => {
       expect(result).toEqual(existingProfile);
     });
 
-    it("throws error if profile not found", async () => {
+    it("returns null if profile not found", async () => {
       mockRepo.findById.mockResolvedValue(null);
 
-      await expect(
-        getCurrentProfile(mockRepo, { userId: "user-1" })
-      ).rejects.toBeInstanceOf(ProfileNotFoundError);
+      const result = await getCurrentProfile(mockRepo, { userId: "user-1" });
 
+      expect(result).toBeNull();
       expect(mockRepo.insertProfile).not.toHaveBeenCalled();
     });
   });

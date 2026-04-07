@@ -28,10 +28,25 @@ export async function startSessionWithRepository(
   const { requestId } = context;
   const log = createServiceLogger(requestId);
 
-  log.info({ 
-    event: "practice.session", 
-    meta: { type: "domain", userId, phase: "start", topicId } 
+  log.info({
+    event: "practice.session",
+    meta: { type: "domain", userId, phase: "start", topicId }
   });
+
+  const existing = await repo.findActiveSession(userId, topicId);
+  if (existing) {
+    log.info({
+      event: "practice.session",
+      meta: {
+        type: "domain",
+        userId,
+        phase: "complete",
+        sessionId: existing.id,
+        outcome: "success",
+      },
+    });
+    return existing;
+  }
 
   try {
     const session = await repo.createSession(userId, topicId);

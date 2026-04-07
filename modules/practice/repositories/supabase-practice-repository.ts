@@ -3,7 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 import { PracticeSession, Attempt, SolutionStep } from "../domain/practice";
-import { PracticeRepository } from "./practice-repository";
+import { PracticeRepository, AttemptWithStep } from "./practice-repository";
 import { AttemptNotFoundError, StepAdditionError } from "../errors";
 import { dbSelect, dbInsert, dbUpdate } from "@/lib/supabase/repository-utils";
 
@@ -36,6 +36,59 @@ function createRepositoryFromClientFactory(
     });
 
     return data ? mapSession(data) : null;
+  };
+
+  const findActiveSession = async (
+    userId: string,
+    topicId: string | null
+  ): Promise<PracticeSession | null> => {
+    const client = await getClient();
+    let query = client
+      .from("practice_sessions")
+      .select("*")
+      .eq("user_id", userId)
+      .is("completed_at", null);
+
+    if (topicId === null) {
+      query = query.is("topic_id", null);
+    } else {
+      query = query.eq("topic_id", topicId);
+    }
+
+    const { data, error } = await query.maybeSingle();
+
+    if (error) {
+      throw new Error(`[practice] findActiveSession failed: ${error.message}`);
+    }
+
+    return data ? mapSession(data as Record<string, unknown>) : null;
+  };
+
+  const createAttemptWithStep = async (
+    sessionId: string,
+    problemId: string,
+    userId: string,
+    stepIndex: number,
+    stepLatex: string
+  ): Promise<AttemptWithStep> => {
+    const client = await getClient();
+
+    const { data, error } = await client.rpc("create_attempt_with_step", {
+      p_session_id: sessionId,
+      p_problem_id: problemId,
+      p_user_id: userId,
+      p_step_index: stepIndex,
+      p_step_latex: stepLatex,
+    });
+
+    if (error) {
+      throw new Error(`[practice] createAttemptWithStep RPC failed: ${error.message}`);
+    }
+
+    return {
+      attempt: mapAttempt(data.attempt as Record<string, unknown>),
+      step: mapStep(data.step as Record<string, unknown>),
+    };
   };
 
   const createAttempt = async (sessionId: string, problemId: string, userId: string): Promise<Attempt> => {
@@ -145,10 +198,12 @@ function createRepositoryFromClientFactory(
   return {
     createSession,
     getSession,
+    findActiveSession,
     createAttempt,
     getAttempt,
     updateAttempt,
     completeAttempt,
+    createAttemptWithStep,
     addStep,
     getSteps,
     updateStep,

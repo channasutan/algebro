@@ -25,3 +25,10 @@ export class StepAdditionError extends PracticeError {
     this.name = "StepAdditionError";
   }
 }
+
+export class DuplicateActiveSessionError extends PracticeError {
+  constructor(userId: string, topicId: string | null) {
+    super(`Active session already exists for user ${userId} and topic ${topicId}`);
+    this.name = "DuplicateActiveSessionError";
+  }
+}
