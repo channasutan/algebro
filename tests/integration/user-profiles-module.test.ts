@@ -84,16 +84,15 @@ describe("User Profiles Module Integration", () => {
 
   const getClient = async () => mockClient as unknown as import("@supabase/supabase-js").SupabaseClient;
 
-  it("throws error when profile not found", async () => {
+  it("returns null when profile not found", async () => {
     vi.spyOn(ServerClientAuth, "getSupabaseServerClient").mockImplementation(getClient);
     const repo = createSupabaseProfileRepository();
 
     // getCurrentProfile calls findById -> returns null
     maybeSingleMock.mockResolvedValueOnce({ data: null, error: null });
 
-    await expect(
-      getCurrentProfile(repo, { userId: "user-123" })
-    ).rejects.toThrow(ProfileNotFoundError);
+    const result = await getCurrentProfile(repo, { userId: "user-123" });
+    expect(result).toBeNull();
   });
 
   it("updates a profile and validates RLS indirectly by ensuring equality check", async () => {
