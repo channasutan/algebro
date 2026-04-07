@@ -28,13 +28,12 @@ export async function startPracticeFlowAction(topicId: string | null): Promise<S
   const nextProblem = await getNextProblem({ userId, topicId }, context);
   const problemId = nextProblem.problemId;
 
-  // Create attempt with initial step atomically (not exposed to UI)
+  // Create attempt without initial step — first step will be added via submitStep
   const attemptResult = await createAttempt({
     sessionId: practiceSession.id,
     problemId,
-    userId,
-    stepIndex: 0,
-    stepLatex: "" // Initial empty step, user will submit actual steps via submitStep
+    userId
+    // stepIndex and stepLatex omitted — attempt-only creation
   }, context);
 
   log.info({ event: "practice.flow", meta: { type: "domain", phase: "complete", userId, sessionId: practiceSession.id, attemptId: attemptResult.attempt.id } });

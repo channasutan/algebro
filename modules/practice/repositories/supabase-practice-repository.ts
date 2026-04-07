@@ -76,13 +76,17 @@ function createRepositoryFromClientFactory(
     const { data, error } = await client.rpc("create_attempt_with_step", {
       p_session_id: sessionId,
       p_problem_id: problemId,
-      p_user_id: userId,
       p_step_index: stepIndex,
       p_step_latex: stepLatex,
     });
 
     if (error) {
       throw new Error(`[practice] createAttemptWithStep RPC failed: ${error.message}`);
+    }
+
+    // Defensive guard: RPC can return { data: null, error: null } in edge cases
+    if (!data || typeof data !== "object" || !("attempt" in data) || !("step" in data)) {
+      throw new Error("[practice] createAttemptWithStep RPC returned unexpected shape");
     }
 
     return {

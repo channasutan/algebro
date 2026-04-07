@@ -7,15 +7,15 @@ export type CreateAttemptInput = {
   sessionId: string;
   problemId: string;
   userId: string;
-  /** The index of the first solution step (typically 0). */
-  stepIndex: number;
-  /** The LaTeX string of the first solution step. */
-  stepLatex: string;
+  /** The index of the first solution step (typically 0). Optional — if omitted, no step is created. */
+  stepIndex?: number;
+  /** The LaTeX string of the first solution step. Optional — if omitted or empty, no step is created. */
+  stepLatex?: string;
 };
 
 export type CreateAttemptResult = {
   attempt: Attempt;
-  step: SolutionStep;
+  step?: SolutionStep;
 };
 
 export async function createAttempt(
@@ -45,27 +45,47 @@ export async function createAttemptWithRepository(
     meta: { type: "domain", userId, phase: "start", sessionId, problemId },
   });
 
-  try {
-    const result = await repo.createAttemptWithStep(
-      sessionId,
-      problemId,
-      userId,
-      stepIndex,
-      stepLatex
-    );
+  const hasStep = stepLatex !== undefined && stepLatex !== "";
 
-    log.info({
-      event: "practice.attempt",
-      meta: {
-        type: "domain",
+  try {
+    if (hasStep) {
+      // Atomic attempt + step creation via RPC
+      const result = await repo.createAttemptWithStep(
+        sessionId,
+        problemId,
         userId,
-        phase: "complete",
-        attemptId: result.attempt.id,
-        stepId: result.step.id,
-        outcome: "success",
-      },
-    });
-    return result;
+        stepIndex ?? 0,
+        stepLatex
+      );
+
+      log.info({
+        event: "practice.attempt",
+        meta: {
+          type: "domain",
+          userId,
+          phase: "complete",
+          attemptId: result.attempt.id,
+          stepId: result.step.id,
+          outcome: "success",
+        },
+      });
+      return result;
+    } else {
+      // Attempt only (no step) — first step will be added via submitStep
+      const attempt = await repo.createAttempt(sessionId, problemId, userId);
+
+      log.info({
+        event: "practice.attempt",
+        meta: {
+          type: "domain",
+          userId,
+          phase: "complete",
+          attemptId: attempt.id,
+          outcome: "success",
+        },
+      });
+      return { attempt };
+    }
   } catch (err) {
     log.error({
       event: "practice.attempt",

@@ -61,7 +61,7 @@ describe("createAttempt — transactional RPC", () => {
     const result = await createAttemptWithRepository(repo as never, baseInput, context);
 
     expect(result.attempt.id).toBe("attempt-1");
-    expect(result.step.id).toBe("step-1");
+    expect(result.step?.id).toBe("step-1");
     expect(repo.createAttemptWithStep).toHaveBeenCalledWith(
       "session-1",
       "problem-1",

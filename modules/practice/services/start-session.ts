@@ -1,6 +1,7 @@
 import { createSupabasePracticeRepository } from "../repositories/supabase-practice-repository";
 import { PracticeRepository } from "../repositories/practice-repository";
 import { PracticeSession } from "../domain/practice";
+import { DuplicateActiveSessionError } from "../errors";
 import { createServiceLogger, type ServiceContext } from "@/lib/observability";
 
 export type StartSessionInput = {
@@ -51,20 +52,46 @@ export async function startSessionWithRepository(
   try {
     const session = await repo.createSession(userId, topicId);
 
-    log.info({ 
-      event: "practice.session", 
-      meta: { type: "domain", userId, phase: "complete", sessionId: session.id, outcome: "success" } 
+    log.info({
+      event: "practice.session",
+      meta: { type: "domain", userId, phase: "complete", sessionId: session.id, outcome: "success" }
     });
     return session;
   } catch (err) {
-    log.error({ 
-      event: "practice.session", 
-      meta: { 
+    // Handle race condition: another request created the session between findActiveSession and createSession
+    // PostgreSQL unique constraint violation code: 23505
+    const isUniqueViolation = err instanceof Error &&
+      (err.message?.includes("23505") || (err as { code?: string }).code === "23505");
+
+    if (isUniqueViolation) {
+      // Retry finding the existing session (the winning request created it)
+      const existingAfterRace = await repo.findActiveSession(userId, topicId);
+      if (existingAfterRace) {
+        log.info({
+          event: "practice.session",
+          meta: {
+            type: "domain",
+            userId,
+            phase: "complete",
+            sessionId: existingAfterRace.id,
+            outcome: "success",
+          },
+        });
+        return existingAfterRace;
+      }
+
+      // Extremely unlikely: constraint violated but session not found
+      throw new DuplicateActiveSessionError(userId, topicId);
+    }
+
+    log.error({
+      event: "practice.session",
+      meta: {
         type: "domain",
-        userId, 
+        userId,
         phase: "infra",
         outcome: "failure",
-        error: err instanceof Error ? err.message : String(err) 
+        error: err instanceof Error ? err.message : String(err)
       }
     });
     throw err;
