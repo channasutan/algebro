@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 
 import {
@@ -10,7 +11,23 @@ export async function POST(request: NextRequest) {
   const expectedSecret = getAdminSecret();
   const incomingSecret = request.headers.get("x-admin-secret");
 
-  if (!expectedSecret || incomingSecret !== expectedSecret) {
+  // Return 401 if either secret is missing
+  if (!expectedSecret || !incomingSecret) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Use timingSafeEqual to prevent timing attacks
+  let isValid = false;
+  try {
+    isValid = timingSafeEqual(
+      Buffer.from(incomingSecret),
+      Buffer.from(expectedSecret)
+    );
+  } catch {
+    isValid = false;
+  }
+
+  if (!isValid) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
