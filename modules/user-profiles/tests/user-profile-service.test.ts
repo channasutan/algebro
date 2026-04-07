@@ -19,7 +19,7 @@ vi.mock("@/lib/observability", () => ({
 import { ensureProfileExists } from "../services/ensure-profile-exists";
 import { getCurrentProfile } from "../services/get-current-profile";
 import { updateProfile } from "../services/update-profile";
-import { ProfileNotFoundError, ProfileCreationError } from "../errors";
+import { ProfileCreationError } from "../errors";
 import type { ProfileRepository } from "../repositories/supabase-profile-repository";
 import { eventBus } from "@/events/event-bus";
 import { USER_PROFILE_INITIALIZED } from "../events/profile-initialized";
