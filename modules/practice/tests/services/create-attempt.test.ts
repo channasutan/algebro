@@ -62,13 +62,12 @@ describe("createAttempt — transactional RPC", () => {
 
     expect(result.attempt.id).toBe("attempt-1");
     expect(result.step?.id).toBe("step-1");
-    expect(repo.createAttemptWithStep).toHaveBeenCalledWith(
-      "session-1",
-      "problem-1",
-      "user-1",
-      0,
-      "x + 1 = 2"
-    );
+    expect(repo.createAttemptWithStep).toHaveBeenCalledWith({
+      sessionId: "session-1",
+      problemId: "problem-1",
+      stepIndex: 0,
+      stepLatex: "x + 1 = 2",
+    });
   });
 
   it("rollback guard: throws when RPC fails — no orphaned attempt row", async () => {

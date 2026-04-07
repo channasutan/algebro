@@ -18,6 +18,64 @@ export async function startSession(
 }
 
 /**
+ * Checks if error is a PostgreSQL unique constraint violation (code 23505).
+ * Handles wrapped errors by traversing the full cause chain.
+ */
+function isUniqueConstraintViolation(err: unknown): boolean {
+  const targetCode = "23505";
+  const visited = new Set<unknown>();
+  let current: unknown = err;
+
+  while (current && typeof current === "object" && !visited.has(current)) {
+    visited.add(current);
+
+    const candidate = current as { code?: unknown; message?: unknown; cause?: unknown };
+    if (candidate.code === targetCode) {
+      return true;
+    }
+
+    if (typeof candidate.message === "string" && candidate.message.includes(targetCode)) {
+      return true;
+    }
+
+    current = candidate.cause;
+  }
+
+  return false;
+}
+
+/**
+ * Recovers from race condition by finding the existing session that was created
+ * by another concurrent request.
+ */
+async function recoverFromDuplicateSession(
+  repo: PracticeRepository,
+  userId: string,
+  topicId: string | null,
+  log: ReturnType<typeof createServiceLogger>
+): Promise<PracticeSession> {
+  // Retry finding the existing session (the winning request created it)
+  const existingAfterRace = await repo.findActiveSession(userId, topicId);
+
+  if (existingAfterRace) {
+    log.info({
+      event: "practice.session",
+      meta: {
+        type: "domain",
+        userId,
+        phase: "complete",
+        sessionId: existingAfterRace.id,
+        outcome: "success",
+      },
+    });
+    return existingAfterRace;
+  }
+
+  // Extremely unlikely: constraint violated but session not found
+  throw new DuplicateActiveSessionError(userId, topicId);
+}
+
+/**
  * Starts a new practice session for a user.
  */
 export async function startSessionWithRepository(
@@ -59,29 +117,8 @@ export async function startSessionWithRepository(
     return session;
   } catch (err) {
     // Handle race condition: another request created the session between findActiveSession and createSession
-    // PostgreSQL unique constraint violation code: 23505
-    const isUniqueViolation = err instanceof Error &&
-      (err.message?.includes("23505") || (err as { code?: string }).code === "23505");
-
-    if (isUniqueViolation) {
-      // Retry finding the existing session (the winning request created it)
-      const existingAfterRace = await repo.findActiveSession(userId, topicId);
-      if (existingAfterRace) {
-        log.info({
-          event: "practice.session",
-          meta: {
-            type: "domain",
-            userId,
-            phase: "complete",
-            sessionId: existingAfterRace.id,
-            outcome: "success",
-          },
-        });
-        return existingAfterRace;
-      }
-
-      // Extremely unlikely: constraint violated but session not found
-      throw new DuplicateActiveSessionError(userId, topicId);
+    if (isUniqueConstraintViolation(err)) {
+      return recoverFromDuplicateSession(repo, userId, topicId, log);
     }
 
     log.error({

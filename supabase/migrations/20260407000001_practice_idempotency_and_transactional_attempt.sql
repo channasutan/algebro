@@ -8,41 +8,38 @@
 DO $$
 BEGIN
   -- Deduplicate active sessions with non-null topic_id
-  -- Keep the most recent session per (user_id, topic_id), mark older as completed
+  -- Keep exactly one deterministic survivor per (user_id, topic_id)
+  WITH ranked AS (
+    SELECT
+      id,
+      ROW_NUMBER() OVER (
+        PARTITION BY user_id, topic_id
+        ORDER BY started_at DESC, id ASC
+      ) AS rn
+    FROM practice_sessions
+    WHERE completed_at IS NULL
+      AND topic_id IS NOT NULL
+  )
   UPDATE practice_sessions
   SET completed_at = NOW()
-  WHERE id IN (
-    SELECT ps.id
-    FROM practice_sessions ps
-    INNER JOIN (
-      SELECT user_id, topic_id, MAX(started_at) as max_started_at
-      FROM practice_sessions
-      WHERE completed_at IS NULL AND topic_id IS NOT NULL
-      GROUP BY user_id, topic_id
-      HAVING COUNT(*) > 1
-    ) dup ON ps.user_id = dup.user_id AND ps.topic_id = dup.topic_id
-    WHERE ps.completed_at IS NULL
-      AND ps.started_at < dup.max_started_at
-  );
+  WHERE id IN (SELECT id FROM ranked WHERE rn > 1);
 
   -- Deduplicate active sessions with null topic_id (free practice)
-  -- Keep the most recent session per user_id, mark older as completed
+  -- Keep exactly one deterministic survivor per user_id
+  WITH ranked AS (
+    SELECT
+      id,
+      ROW_NUMBER() OVER (
+        PARTITION BY user_id
+        ORDER BY started_at DESC, id ASC
+      ) AS rn
+    FROM practice_sessions
+    WHERE completed_at IS NULL
+      AND topic_id IS NULL
+  )
   UPDATE practice_sessions
   SET completed_at = NOW()
-  WHERE id IN (
-    SELECT ps.id
-    FROM practice_sessions ps
-    INNER JOIN (
-      SELECT user_id, MAX(started_at) as max_started_at
-      FROM practice_sessions
-      WHERE completed_at IS NULL AND topic_id IS NULL
-      GROUP BY user_id
-      HAVING COUNT(*) > 1
-    ) dup ON ps.user_id = dup.user_id
-    WHERE ps.completed_at IS NULL
-      AND ps.topic_id IS NULL
-      AND ps.started_at < dup.max_started_at
-  );
+  WHERE id IN (SELECT id FROM ranked WHERE rn > 1);
 END $$;
 
 -- ============================================================

@@ -52,6 +52,7 @@ describe("Practice Loop Service Integration", () => {
       completedAt: null, 
       createdAt: new Date().toISOString() 
     };
+    mockRepo.findActiveSession.mockResolvedValue(null);
     mockRepo.createSession.mockResolvedValue(mockSession);
 
     const session = await startSessionWithRepository(mockRepo, {
@@ -77,7 +78,7 @@ describe("Practice Loop Service Integration", () => {
       id: "step-0",
       attemptId: "attempt-1",
       stepIndex: 0,
-      stepLatex: "",
+      stepLatex: "x + 1 = 2",
       isValid: null,
       errorType: null,
       createdAt: new Date().toISOString()
@@ -89,12 +90,17 @@ describe("Practice Loop Service Integration", () => {
       problemId: "problem-1",
       userId: testUserId,
       stepIndex: 0,
-      stepLatex: ""
+      stepLatex: "x + 1 = 2"
     }, context);
 
     expect(attemptResult.attempt).toEqual(mockAttempt);
     expect(attemptResult.step).toEqual(mockStep);
-    expect(mockRepo.createAttemptWithStep).toHaveBeenCalledWith("session-1", "problem-1", testUserId, 0, "");
+    expect(mockRepo.createAttemptWithStep).toHaveBeenCalledWith({
+      sessionId: "session-1",
+      problemId: "problem-1",
+      stepIndex: 0,
+      stepLatex: "x + 1 = 2"
+    });
 
     // 3. Success submitting steps
     const mockStep1 = { 

@@ -5,6 +5,13 @@ export type AttemptWithStep = {
   step: SolutionStep;
 };
 
+export type CreateAttemptWithStepInput = {
+  sessionId: string;
+  problemId: string;
+  stepIndex: number;
+  stepLatex: string;
+};
+
 export interface PracticeRepository {
   // ── Session ──────────────────────────────────────────────────
   createSession(userId: string, topicId: string | null): Promise<PracticeSession>;
@@ -20,14 +27,11 @@ export interface PracticeRepository {
     attemptId: string,
     input: { completedAt: string; isCorrect: boolean }
   ): Promise<Attempt>;
-  /** Creates an attempt and its first solution step in a single DB transaction. */
-  createAttemptWithStep(
-    sessionId: string,
-    problemId: string,
-    userId: string,
-    stepIndex: number,
-    stepLatex: string
-  ): Promise<AttemptWithStep>;
+  /**
+   * Creates an attempt and its first solution step in a single DB transaction.
+   * User ownership is derived from the authenticated DB context (auth.uid()).
+   */
+  createAttemptWithStep(input: CreateAttemptWithStepInput): Promise<AttemptWithStep>;
 
   // ── Steps ─────────────────────────────────────────────────────
   addStep(attemptId: string, stepIndex: number, stepLatex: string): Promise<SolutionStep>;

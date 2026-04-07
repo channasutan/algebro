@@ -49,6 +49,7 @@ vi.mock("@/modules/problem-generator", () => ({
 
 import { getNextProblem } from "../../services/get-next-problem";
 import { startSession, startSessionWithRepository } from "../../services/start-session";
+import { DuplicateActiveSessionError } from "../../errors";
 
 describe("practice start session and next problem integration", () => {
   const context = { requestId: "req-1" };
@@ -270,6 +271,94 @@ describe("practice start session and next problem integration", () => {
       expect(result.id).toBe("session-null-topic");
       expect(repo.createSession).not.toHaveBeenCalled();
       expect(repo.findActiveSession).toHaveBeenCalledWith("user-1", null);
+    });
+
+    it("recovers idempotently when createSession hits unique violation with direct cause code", async () => {
+      const existingSession = {
+        id: "existing-after-race-1",
+        userId: "user-1",
+        topicId: "topic-1",
+        startedAt: "2026-01-01T00:00:00.000Z",
+        completedAt: null,
+        createdAt: "2026-01-01T00:00:00.000Z",
+      };
+
+      const repo = {
+        findActiveSession: vi
+          .fn()
+          .mockResolvedValueOnce(null)
+          .mockResolvedValueOnce(existingSession),
+        createSession: vi
+          .fn()
+          .mockRejectedValueOnce(new Error("[practice] duplicate key", { cause: { code: "23505" } })),
+      };
+
+      const result = await startSessionWithRepository(
+        repo as never,
+        { userId: "user-1", topicId: "topic-1" },
+        context
+      );
+
+      expect(result.id).toBe("existing-after-race-1");
+      expect(repo.createSession).toHaveBeenCalledTimes(1);
+      expect(repo.findActiveSession).toHaveBeenCalledTimes(2);
+    });
+
+    it("recovers when unique violation code is nested multiple cause levels deep", async () => {
+      const existingSession = {
+        id: "existing-after-race-2",
+        userId: "user-1",
+        topicId: "topic-1",
+        startedAt: "2026-01-01T00:00:00.000Z",
+        completedAt: null,
+        createdAt: "2026-01-01T00:00:00.000Z",
+      };
+
+      const nestedError = new Error("repo createSession failed", {
+        cause: new Error("db wrapper", {
+          cause: { code: "23505", message: "duplicate key value violates unique constraint" },
+        }),
+      });
+
+      const repo = {
+        findActiveSession: vi
+          .fn()
+          .mockResolvedValueOnce(null)
+          .mockResolvedValueOnce(existingSession),
+        createSession: vi.fn().mockRejectedValueOnce(nestedError),
+      };
+
+      const result = await startSessionWithRepository(
+        repo as never,
+        { userId: "user-1", topicId: "topic-1" },
+        context
+      );
+
+      expect(result.id).toBe("existing-after-race-2");
+      expect(repo.createSession).toHaveBeenCalledTimes(1);
+      expect(repo.findActiveSession).toHaveBeenCalledTimes(2);
+    });
+
+    it("throws DuplicateActiveSessionError when duplicate is detected but no row can be recovered", async () => {
+      const repo = {
+        findActiveSession: vi
+          .fn()
+          .mockResolvedValueOnce(null)
+          .mockResolvedValueOnce(null),
+        createSession: vi
+          .fn()
+          .mockRejectedValueOnce(new Error("[practice] duplicate key", { cause: { code: "23505" } })),
+      };
+
+      await expect(
+        startSessionWithRepository(
+          repo as never,
+          { userId: "user-1", topicId: "topic-1" },
+          context
+        )
+      ).rejects.toBeInstanceOf(DuplicateActiveSessionError);
+
+      expect(repo.findActiveSession).toHaveBeenCalledTimes(2);
     });
   });
 });

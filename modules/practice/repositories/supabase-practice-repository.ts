@@ -3,7 +3,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 import { PracticeSession, Attempt, SolutionStep } from "../domain/practice";
-import { PracticeRepository, AttemptWithStep } from "./practice-repository";
+import { PracticeRepository, AttemptWithStep, CreateAttemptWithStepInput } from "./practice-repository";
 import { AttemptNotFoundError, StepAdditionError } from "../errors";
 import { dbSelect, dbInsert, dbUpdate } from "@/lib/supabase/repository-utils";
 
@@ -64,13 +64,12 @@ function createRepositoryFromClientFactory(
     return data ? mapSession(data as Record<string, unknown>) : null;
   };
 
-  const createAttemptWithStep = async (
-    sessionId: string,
-    problemId: string,
-    userId: string,
-    stepIndex: number,
-    stepLatex: string
-  ): Promise<AttemptWithStep> => {
+  const createAttemptWithStep = async ({
+    sessionId,
+    problemId,
+    stepIndex,
+    stepLatex,
+  }: CreateAttemptWithStepInput): Promise<AttemptWithStep> => {
     const client = await getClient();
 
     const { data, error } = await client.rpc("create_attempt_with_step", {

@@ -45,18 +45,17 @@ export async function createAttemptWithRepository(
     meta: { type: "domain", userId, phase: "start", sessionId, problemId },
   });
 
-  const hasStep = stepLatex !== undefined && stepLatex !== "";
+  const hasStep = typeof stepLatex === "string" && stepLatex.trim() !== "";
 
   try {
     if (hasStep) {
       // Atomic attempt + step creation via RPC
-      const result = await repo.createAttemptWithStep(
+      const result = await repo.createAttemptWithStep({
         sessionId,
         problemId,
-        userId,
-        stepIndex ?? 0,
-        stepLatex
-      );
+        stepIndex: stepIndex ?? 0,
+        stepLatex: stepLatex.trim(),
+      });
 
       log.info({
         event: "practice.attempt",

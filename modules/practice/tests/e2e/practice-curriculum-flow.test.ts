@@ -59,6 +59,7 @@ function makePracticeRepo(input: {
   };
 
   return {
+    findActiveSession: vi.fn().mockResolvedValue(null),
     createSession: vi.fn().mockResolvedValue({
       id: "session-created",
       userId: input.userId,
