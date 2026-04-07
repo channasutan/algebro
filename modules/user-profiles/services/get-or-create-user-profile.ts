@@ -81,7 +81,7 @@ export async function getOrCreateUserProfile(
         meta: {
           type: "domain",
           userId,
-          phase: "insert",
+          phase: "read_after_insert",
           outcome: "failure",
           durationMs: Date.now() - startTime,
           source
