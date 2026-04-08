@@ -803,10 +803,10 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      [_ in never]: never // NOSONAR: auto-generated Supabase empty placeholder, structural change not allowed
     }
     Functions: {
-      [_ in never]: never
+      [_ in never]: never // NOSONAR: auto-generated Supabase empty placeholder, structural change not allowed
     }
     Enums: {
       [_ in never]: never

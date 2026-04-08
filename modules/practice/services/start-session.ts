@@ -136,9 +136,8 @@ function getErrorCauseChain(err: unknown): ErrorLike[] {
 
   while (isErrorLike(current) && !visited.has(current)) {
     visited.add(current);
-    const candidate = current as ErrorLike;
-    chain.push(candidate);
-    current = candidate.cause;
+    chain.push(current);
+    current = current.cause;
   }
 
   return chain;
