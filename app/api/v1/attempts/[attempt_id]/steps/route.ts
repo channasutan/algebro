@@ -1,56 +1,25 @@
 import { z } from "zod";
-import { getSupabaseServerClient } from "@/lib/supabase/server-client";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabasePracticeRepository } from "@/modules/practice/repositories/supabase-practice-repository";
+import { verifyAuthenticatedAttemptAccess } from "@/modules/practice/repositories/supabase-attempt-access-repository";
 
 const StepSubmitSchema = z.object({
   expression: z.string().min(1).max(2000),
   step_index: z.number().int().min(0),
 });
 
-async function verifyAttemptOwnership(
-  supabase: SupabaseClient,
-  attemptId: string,
-  userId: string
-): Promise<{ attempt: { id: string; user_id: string; status: string } | null; error?: string; status?: number }> {
-  const { data: attempt, error } = await supabase
-    .from("attempts")
-    .select("id, user_id, status")
-    .eq("id", attemptId)
-    .single();
-
-  if (error || !attempt) {
-    return { attempt: null, error: "Attempt not found", status: 404 };
-  }
-
-  if (attempt.user_id !== userId) {
-    return { attempt: null, error: "Forbidden", status: 403 };
-  }
-
-  if (attempt.status === "completed") {
-    return { attempt: null, error: "Attempt is completed", status: 409 };
-  }
-
-  return { attempt };
-}
-
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ attempt_id: string }> }
 ): Promise<Response> {
   const { attempt_id } = await params;
-  const supabase = await getSupabaseServerClient();
+  const access = await verifyAuthenticatedAttemptAccess(attempt_id);
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  if ("error" in access) {
+    return Response.json({ error: access.error }, { status: access.status });
   }
 
-  const ownership = await verifyAttemptOwnership(supabase, attempt_id, user.id);
-
-  if (ownership.error) {
-    return Response.json({ error: ownership.error }, { status: ownership.status });
+  if (access.attemptStatus === "completed") {
+    return Response.json({ error: "Attempt is completed" }, { status: 409 });
   }
 
   let body: unknown;
@@ -86,22 +55,14 @@ export async function POST(
 }
 
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ attempt_id: string }> }
 ): Promise<Response> {
   const { attempt_id } = await params;
-  const supabase = await getSupabaseServerClient();
+  const access = await verifyAuthenticatedAttemptAccess(attempt_id);
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const ownership = await verifyAttemptOwnership(supabase, attempt_id, user.id);
-
-  if (ownership.error && ownership.status !== 409) {
-    return Response.json({ error: ownership.error }, { status: ownership.status });
+  if ("error" in access) {
+    return Response.json({ error: access.error }, { status: access.status });
   }
 
   const repo = createSupabasePracticeRepository();

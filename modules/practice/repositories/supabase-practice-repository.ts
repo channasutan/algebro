@@ -115,9 +115,7 @@ function createRepositoryFromClientFactory(
   };
 
   const updateAttempt = async (attemptId: string, updates: Partial<Attempt>): Promise<Attempt> => {
-    const dbUpdates: Record<string, unknown> = {};
-    if (updates.isCorrect !== undefined) dbUpdates.is_correct = updates.isCorrect;
-    if (updates.completedAt !== undefined) dbUpdates.completed_at = updates.completedAt;
+    const dbUpdates = buildAttemptDbUpdates(updates);
 
     const data = await dbUpdate<Record<string, unknown>>({
       client: await getClient(),
@@ -181,9 +179,7 @@ function createRepositoryFromClientFactory(
   };
 
   const updateStep = async (stepId: string, updates: Partial<SolutionStep>): Promise<SolutionStep> => {
-    const dbUpdates: Record<string, unknown> = {};
-    if (updates.isValid !== undefined) dbUpdates.is_valid = updates.isValid;
-    if (updates.errorType !== undefined) dbUpdates.error_type = updates.errorType;
+    const dbUpdates = buildStepDbUpdates(updates);
 
     const data = await dbUpdate<Record<string, unknown>>({
       client: await getClient(),
@@ -247,4 +243,28 @@ function mapStep(data: Record<string, unknown>): SolutionStep {
     errorType: data.error_type as string | null,
     createdAt: data.created_at as string,
   };
+}
+
+/**
+ * Builds the database update object for attempt fields.
+ * Business rule: only defined fields are included in the update to preserve existing values.
+ * Maps domain field names to database column names.
+ */
+function buildAttemptDbUpdates(updates: Partial<Attempt>): Record<string, unknown> {
+  const dbUpdates: Record<string, unknown> = {};
+  if (updates.isCorrect !== undefined) dbUpdates.is_correct = updates.isCorrect;
+  if (updates.completedAt !== undefined) dbUpdates.completed_at = updates.completedAt;
+  return dbUpdates;
+}
+
+/**
+ * Builds the database update object for solution step fields.
+ * Business rule: only defined fields are included in the update to preserve existing values.
+ * Maps domain field names to database column names.
+ */
+function buildStepDbUpdates(updates: Partial<SolutionStep>): Record<string, unknown> {
+  const dbUpdates: Record<string, unknown> = {};
+  if (updates.isValid !== undefined) dbUpdates.is_valid = updates.isValid;
+  if (updates.errorType !== undefined) dbUpdates.error_type = updates.errorType;
+  return dbUpdates;
 }

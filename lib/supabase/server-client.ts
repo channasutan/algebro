@@ -6,8 +6,7 @@ import { cookies } from "next/headers";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
 import { getPublicEnv } from "@/config/env.server-entry";
-
-type Database = Record<string, never>;
+import type { Database } from "@/types/database.types";
 
 /**
  * Creates a cookie adapter that delegates to the provided cookie store.

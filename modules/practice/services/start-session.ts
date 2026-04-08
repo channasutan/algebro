@@ -18,33 +18,6 @@ export async function startSession(
 }
 
 /**
- * Checks if error is a PostgreSQL unique constraint violation (code 23505).
- * Handles wrapped errors by traversing the full cause chain.
- */
-function isUniqueConstraintViolation(err: unknown): boolean {
-  const targetCode = "23505";
-  const visited = new Set<unknown>();
-  let current: unknown = err;
-
-  while (current && typeof current === "object" && !visited.has(current)) {
-    visited.add(current);
-
-    const candidate = current as { code?: unknown; message?: unknown; cause?: unknown };
-    if (candidate.code === targetCode) {
-      return true;
-    }
-
-    if (typeof candidate.message === "string" && candidate.message.includes(targetCode)) {
-      return true;
-    }
-
-    current = candidate.cause;
-  }
-
-  return false;
-}
-
-/**
  * Recovers from race condition by finding the existing session that was created
  * by another concurrent request.
  */
@@ -118,6 +91,16 @@ export async function startSessionWithRepository(
   } catch (err) {
     // Handle race condition: another request created the session between findActiveSession and createSession
     if (isUniqueConstraintViolation(err)) {
+      log.warn({
+        event: "practice.session",
+        meta: {
+          type: "domain",
+          userId,
+          phase: "infra",
+          outcome: "failure",
+          reason: "unique_constraint",
+        },
+      });
       return recoverFromDuplicateSession(repo, userId, topicId, log);
     }
 
@@ -128,9 +111,50 @@ export async function startSessionWithRepository(
         userId,
         phase: "infra",
         outcome: "failure",
-        error: err instanceof Error ? err.message : String(err)
+        error: getErrorMessage(err),
       }
     });
     throw err;
   }
+}
+
+const UNIQUE_CONSTRAINT_CODE = "23505";
+type ErrorLike = { code?: unknown; message?: unknown; cause?: unknown };
+
+/**
+ * Returns true when the error represents a PostgreSQL unique constraint violation.
+ * Business rule: a user may not have two active sessions for the same topic.
+ */
+function isUniqueConstraintViolation(err: unknown): boolean {
+  return getErrorCauseChain(err).some(hasUniqueConstraintMarker);
+}
+
+function getErrorCauseChain(err: unknown): ErrorLike[] {
+  const chain: ErrorLike[] = [];
+  const visited = new Set<unknown>();
+  let current: unknown = err;
+
+  while (isErrorLike(current) && !visited.has(current)) {
+    visited.add(current);
+    const candidate = current as ErrorLike;
+    chain.push(candidate);
+    current = candidate.cause;
+  }
+
+  return chain;
+}
+
+function hasUniqueConstraintMarker(error: ErrorLike): boolean {
+  return (
+    error.code === UNIQUE_CONSTRAINT_CODE ||
+    (typeof error.message === "string" && error.message.includes(UNIQUE_CONSTRAINT_CODE))
+  );
+}
+
+function isErrorLike(value: unknown): value is ErrorLike {
+  return typeof value === "object" && value !== null;
+}
+
+function getErrorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
 }

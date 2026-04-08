@@ -1,8 +1,10 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 import { getMayarWebhookSecret } from "@/config/env.server-entry";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import {
+  createSupabaseMayarWebhookRepository,
+  type MayarWebhookData,
+} from "@/modules/billing/repositories/supabase-mayar-webhook-repository";
 
 /**
  * Verifies Mayar webhook signature using HMAC-SHA256.
@@ -14,113 +16,6 @@ function verifyMayarSignature(rawBody: string, signature: string, secret: string
     return timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(signature, "hex"));
   } catch {
     return false;
-  }
-}
-
-/**
- * Checks if a webhook event has already been processed (idempotency).
- */
-async function isDuplicateEvent(supabase: SupabaseClient, eventId: string): Promise<boolean> {
-  const { data } = await supabase
-    .from("webhook_events")
-    .select("id")
-    .eq("event_id", eventId)
-    .single();
-
-  return data !== null;
-}
-
-/**
- * Stores webhook event for idempotency tracking.
- */
-async function storeWebhookEvent(
-  supabase: SupabaseClient,
-  eventId: string,
-  eventType: string,
-  payload: unknown
-): Promise<void> {
-  await supabase.from("webhook_events").insert({
-    event_id: eventId,
-    event_type: eventType,
-    payload: payload,
-    processed_at: new Date().toISOString(),
-  });
-}
-
-/**
- * Handles payment.success event.
- * Activates subscription or marks order as paid.
- */
-async function handlePaymentSuccess(
-  supabase: SupabaseClient,
-  data: {
-    id: string;
-    status: string;
-    amount: number;
-    customer?: { name?: string; email?: string };
-    payment?: { method?: string; referenceId?: string };
-  }
-): Promise<void> {
-  // Update subscription status if this is a subscription payment
-  const { error } = await supabase
-    .from("subscriptions")
-    .update({
-      status: "active",
-      mayar_invoice_id: data.id,
-      paid_at: new Date().toISOString(),
-      amount_paid: data.amount,
-      payment_method: data.payment?.method,
-      payment_reference: data.payment?.referenceId,
-    })
-    .eq("mayar_invoice_id", data.id);
-
-  if (error) {
-    console.error("[mayar webhook] Failed to activate subscription:", error);
-    throw error;
-  }
-}
-
-/**
- * Handles payment.failed event.
- * Marks subscription as failed.
- */
-async function handlePaymentFailed(
-  supabase: SupabaseClient,
-  data: { id: string; status: string }
-): Promise<void> {
-  const { error } = await supabase
-    .from("subscriptions")
-    .update({
-      status: "failed",
-      mayar_invoice_id: data.id,
-    })
-    .eq("mayar_invoice_id", data.id);
-
-  if (error) {
-    console.error("[mayar webhook] Failed to mark payment as failed:", error);
-    throw error;
-  }
-}
-
-/**
- * Handles subscription.cancelled event.
- * Deactivates subscription.
- */
-async function handleSubscriptionCancelled(
-  supabase: SupabaseClient,
-  data: { id: string }
-): Promise<void> {
-  const { error } = await supabase
-    .from("subscriptions")
-    .update({
-      status: "cancelled",
-      cancelled_at: new Date().toISOString(),
-    })
-    .eq("mayar_invoice_id", data.id);
-
-  if (error) {
-    console.error("[mayar webhook] Failed to cancel subscription:", error);
-    throw error;
   }
 }
 
@@ -147,13 +42,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // 4. Parse verified payload
   let payload: {
     event: string;
-    data: {
-      id: string;
-      status: string;
-      amount: number;
-      customer?: { name?: string; email?: string };
-      payment?: { method?: string; referenceId?: string };
-    };
+    data: MayarWebhookData;
   };
 
   try {
@@ -167,8 +56,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const eventId = `${event}:${data.id}`;
 
   // 5. Check for duplicate event (idempotency)
-  const supabase = await getSupabaseServerClient();
-  const isDuplicate = await isDuplicateEvent(supabase, eventId);
+  const repo = await createSupabaseMayarWebhookRepository();
+  const isDuplicate = await repo.isDuplicateEvent(eventId);
 
   if (isDuplicate) {
     console.log("[mayar webhook] Duplicate event, acknowledging without reprocessing:", eventId);
@@ -179,15 +68,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     switch (event) {
       case "payment.success":
-        await handlePaymentSuccess(supabase, data);
+        await repo.markPaymentSuccess(data);
         break;
 
       case "payment.failed":
-        await handlePaymentFailed(supabase, data);
+        await repo.markPaymentFailed(data);
         break;
 
       case "subscription.cancelled":
-        await handleSubscriptionCancelled(supabase, data);
+        await repo.markSubscriptionCancelled(data);
         break;
 
       default:
@@ -195,7 +84,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     // 7. Store event for idempotency tracking
-    await storeWebhookEvent(supabase, eventId, event, payload);
+    await repo.storeWebhookEvent(eventId, event, payload);
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (error) {

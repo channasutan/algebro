@@ -3,6 +3,8 @@ import { startSessionWithRepository } from "@/modules/practice/services/start-se
 import { createAttemptWithRepository } from "@/modules/practice/services/create-attempt";
 import { submitStepWithRepository } from "@/modules/practice/services/submit-step";
 import type { PracticeRepository } from "@/modules/practice/repositories/practice-repository";
+import type { PracticeSession, Attempt, SolutionStep } from "@/modules/practice/domain/practice";
+import type { CreateAttemptResult } from "@/modules/practice/services/create-attempt";
 import type { Mocked } from "vitest";
 import { TEST_USER_ID } from "../test-constants";
 
@@ -19,6 +21,97 @@ vi.mock("@/lib/observability", () => ({
     info: vi.fn(),
   })),
 }));
+
+/**
+ * Sets up a mock session for testing the practice flow.
+ * Configures mockRepo.createSession and calls startSessionWithRepository.
+ */
+async function setupMockSession(
+  mockRepo: Mocked<PracticeRepository>,
+  testUserId: string,
+  context: { requestId: string }
+): Promise<{ session: PracticeSession; mockSession: PracticeSession }> {
+  const mockSession: PracticeSession = {
+    id: "session-1",
+    userId: testUserId,
+    topicId: "topic-1",
+    startedAt: new Date().toISOString(),
+    completedAt: null,
+    createdAt: new Date().toISOString(),
+  };
+  mockRepo.findActiveSession.mockResolvedValue(null);
+  mockRepo.createSession.mockResolvedValue(mockSession);
+
+  const session = await startSessionWithRepository(
+    mockRepo,
+    { userId: testUserId, topicId: "topic-1" },
+    context
+  );
+
+  expect(session).toEqual(mockSession);
+  expect(mockRepo.createSession).toHaveBeenCalledWith(testUserId, "topic-1");
+
+  return { session, mockSession };
+}
+
+/**
+ * Sets up a mock attempt with step for testing the practice flow.
+ * Configures mockRepo.createAttemptWithStep and calls createAttemptWithRepository.
+ */
+async function setupMockAttempt(
+  mockRepo: Mocked<PracticeRepository>,
+  sessionId: string,
+  testUserId: string,
+  context: { requestId: string }
+): Promise<{
+  attemptResult: CreateAttemptResult;
+  mockAttempt: Attempt;
+  mockStep: SolutionStep;
+}> {
+  const mockAttempt: Attempt = {
+    id: "attempt-1",
+    sessionId: sessionId,
+    problemId: "problem-1",
+    userId: testUserId,
+    startedAt: new Date().toISOString(),
+    completedAt: null,
+    isCorrect: null,
+    createdAt: new Date().toISOString(),
+  };
+  const mockStep: SolutionStep = {
+    id: "step-0",
+    attemptId: "attempt-1",
+    stepIndex: 0,
+    stepLatex: "x + 1 = 2",
+    isValid: null,
+    errorType: null,
+    createdAt: new Date().toISOString(),
+  };
+  mockRepo.createAttemptWithStep.mockResolvedValue({ attempt: mockAttempt, step: mockStep });
+
+  const attemptResult = await createAttemptWithRepository(
+    mockRepo,
+    {
+      sessionId: sessionId,
+      problemId: "problem-1",
+      userId: testUserId,
+      stepIndex: 0,
+      stepLatex: "x + 1 = 2",
+    },
+    context
+  );
+
+  expect(attemptResult.attempt).toEqual(mockAttempt);
+  expect(attemptResult.step).toEqual(mockStep);
+  expect(mockRepo.createAttemptWithStep).toHaveBeenCalledWith({
+    sessionId: sessionId,
+    problemId: "problem-1",
+    stepIndex: 0,
+    stepLatex: "x + 1 = 2",
+  });
+
+  return { attemptResult, mockAttempt, mockStep };
+}
 
 describe("Practice Loop Service Integration", () => {
   let mockRepo: Mocked<PracticeRepository>;
@@ -43,74 +136,21 @@ describe("Practice Loop Service Integration", () => {
   });
 
   it("should complete a basic practice flow: start session -> create attempt -> submit steps", async () => {
-    // 1. Success starting a session
-    const mockSession = { 
-      id: "session-1", 
-      userId: testUserId, 
-      topicId: "topic-1", 
-      startedAt: new Date().toISOString(), 
-      completedAt: null, 
-      createdAt: new Date().toISOString() 
-    };
-    mockRepo.findActiveSession.mockResolvedValue(null);
-    mockRepo.createSession.mockResolvedValue(mockSession);
+    // Phase 1: Setup mock session
+    const { session } = await setupMockSession(mockRepo, testUserId, context);
 
-    const session = await startSessionWithRepository(mockRepo, {
-      userId: testUserId,
-      topicId: "topic-1"
-    }, context);
+    // Phase 2: Setup mock attempt with step
+    await setupMockAttempt(mockRepo, session.id, testUserId, context);
 
-    expect(session).toEqual(mockSession);
-    expect(mockRepo.createSession).toHaveBeenCalledWith(testUserId, "topic-1");
-
-    // 2. Success creating an attempt with initial step (transactional)
-    const mockAttempt = {
-      id: "attempt-1",
-      sessionId: "session-1",
-      problemId: "problem-1",
-      userId: testUserId,
-      startedAt: new Date().toISOString(),
-      completedAt: null,
-      isCorrect: null,
-      createdAt: new Date().toISOString()
-    };
-    const mockStep = {
-      id: "step-0",
+    // Phase 3: Submit step (kept inline for narrative clarity)
+    const mockStep1 = {
+      id: "step-1",
       attemptId: "attempt-1",
       stepIndex: 0,
-      stepLatex: "x + 1 = 2",
-      isValid: null,
+      stepLatex: "2x = 4",
+      isValid: true,
       errorType: null,
-      createdAt: new Date().toISOString()
-    };
-    mockRepo.createAttemptWithStep.mockResolvedValue({ attempt: mockAttempt, step: mockStep });
-
-    const attemptResult = await createAttemptWithRepository(mockRepo, {
-      sessionId: "session-1",
-      problemId: "problem-1",
-      userId: testUserId,
-      stepIndex: 0,
-      stepLatex: "x + 1 = 2"
-    }, context);
-
-    expect(attemptResult.attempt).toEqual(mockAttempt);
-    expect(attemptResult.step).toEqual(mockStep);
-    expect(mockRepo.createAttemptWithStep).toHaveBeenCalledWith({
-      sessionId: "session-1",
-      problemId: "problem-1",
-      stepIndex: 0,
-      stepLatex: "x + 1 = 2"
-    });
-
-    // 3. Success submitting steps
-    const mockStep1 = { 
-      id: "step-1", 
-      attemptId: "attempt-1", 
-      stepIndex: 0, 
-      stepLatex: "2x = 4", 
-      isValid: true, 
-      errorType: null, 
-      createdAt: new Date().toISOString() 
+      createdAt: new Date().toISOString(),
     };
     mockRepo.getSteps.mockResolvedValue([]);
     mockRepo.addStep.mockResolvedValue({ ...mockStep1, isValid: null });
@@ -119,7 +159,7 @@ describe("Practice Loop Service Integration", () => {
     const step1 = await submitStepWithRepository(mockRepo, {
       attemptId: "attempt-1",
       userId: testUserId,
-      stepLatex: "2x = 4"
+      stepLatex: "2x = 4",
     }, context);
 
     expect(step1).toEqual(mockStep1);
@@ -128,10 +168,12 @@ describe("Practice Loop Service Integration", () => {
   });
 
   it("should throw error when submitting empty step", async () => {
-    await expect(submitStepWithRepository(mockRepo, {
-      attemptId: "attempt-1",
-      userId: testUserId,
-      stepLatex: "  "
-    }, context)).rejects.toThrow("[practice] Step cannot be empty");
+    await expect(
+      submitStepWithRepository(mockRepo, {
+        attemptId: "attempt-1",
+        userId: testUserId,
+        stepLatex: "  ",
+      }, context)
+    ).rejects.toThrow("[practice] Step cannot be empty");
   });
 });

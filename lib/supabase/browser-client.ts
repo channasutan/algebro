@@ -13,8 +13,7 @@ import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { getPublicEnv } from "@/config/env.public";
-
-type Database = Record<string, never>;
+import type { Database } from "@/types/database.types";
 
 let browserClient: SupabaseClient<Database> | undefined;
 
