@@ -2,6 +2,7 @@ import "server-only";
 
 import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 import type { Json } from "@/types/database.types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type MayarWebhookData = {
   id: string;
@@ -21,6 +22,45 @@ export type MayarWebhookRepository = {
 
 function toJson(value: unknown): Json {
   return value as Json;
+}
+
+type PaymentUpdateFields = {
+  status: string;
+  provider_payment_id: string;
+  amount?: number;
+};
+
+async function updatePaymentAndSubscription(
+  supabase: SupabaseClient,
+  providerId: string,
+  paymentFields: PaymentUpdateFields,
+  subscriptionStatus: string
+): Promise<void> {
+  const { data: payment, error: paymentLookupError } = await supabase
+    .from("payments")
+    .select("subscription_id")
+    .eq("provider", "mayar")
+    .eq("provider_payment_id", providerId)
+    .maybeSingle();
+
+  if (paymentLookupError) throw paymentLookupError;
+
+  const { error: paymentUpdateError } = await supabase
+    .from("payments")
+    .update(paymentFields)
+    .eq("provider", "mayar")
+    .eq("provider_payment_id", providerId);
+
+  if (paymentUpdateError) throw paymentUpdateError;
+
+  if (payment?.subscription_id) {
+    const { error: subscriptionUpdateError } = await supabase
+      .from("subscriptions")
+      .update({ status: subscriptionStatus })
+      .eq("id", payment.subscription_id);
+
+    if (subscriptionUpdateError) throw subscriptionUpdateError;
+  }
 }
 
 export async function createSupabaseMayarWebhookRepository(): Promise<MayarWebhookRepository> {
@@ -63,84 +103,23 @@ export async function createSupabaseMayarWebhookRepository(): Promise<MayarWebho
   };
 
   const markPaymentSuccess = async (data: MayarWebhookData): Promise<void> => {
-    const { data: payment, error: paymentLookupError } = await supabase
-      .from("payments")
-      .select("subscription_id")
-      .eq("provider", "mayar")
-      .eq("provider_payment_id", data.id)
-      .maybeSingle();
-
-    if (paymentLookupError) {
-      throw paymentLookupError;
-    }
-
-    const { error: paymentUpdateError } = await supabase
-      .from("payments")
-      .update({
-        status: data.status,
-        amount: data.amount,
-        provider_payment_id: data.id,
-      })
-      .eq("provider", "mayar")
-      .eq("provider_payment_id", data.id);
-
-    if (paymentUpdateError) {
-      throw paymentUpdateError;
-    }
-
-    if (payment?.subscription_id) {
-      const { error: subscriptionUpdateError } = await supabase
-        .from("subscriptions")
-        .update({
-          status: "active",
-        })
-        .eq("id", payment.subscription_id);
-
-      if (subscriptionUpdateError) {
-        throw subscriptionUpdateError;
-      }
-    }
+    await updatePaymentAndSubscription(
+      supabase,
+      data.id,
+      { status: data.status, amount: data.amount, provider_payment_id: data.id },
+      "active"
+    );
   };
 
   const markPaymentFailed = async (
     data: Pick<MayarWebhookData, "id" | "status">
   ): Promise<void> => {
-    const { data: payment, error: paymentLookupError } = await supabase
-      .from("payments")
-      .select("subscription_id")
-      .eq("provider", "mayar")
-      .eq("provider_payment_id", data.id)
-      .maybeSingle();
-
-    if (paymentLookupError) {
-      throw paymentLookupError;
-    }
-
-    const { error: paymentUpdateError } = await supabase
-      .from("payments")
-      .update({
-        status: data.status,
-        provider_payment_id: data.id,
-      })
-      .eq("provider", "mayar")
-      .eq("provider_payment_id", data.id);
-
-    if (paymentUpdateError) {
-      throw paymentUpdateError;
-    }
-
-    if (payment?.subscription_id) {
-      const { error: subscriptionUpdateError } = await supabase
-        .from("subscriptions")
-        .update({
-          status: "failed",
-        })
-        .eq("id", payment.subscription_id);
-
-      if (subscriptionUpdateError) {
-        throw subscriptionUpdateError;
-      }
-    }
+    await updatePaymentAndSubscription(
+      supabase,
+      data.id,
+      { status: data.status, provider_payment_id: data.id },
+      "failed"
+    );
   };
 
   const markSubscriptionCancelled = async (
