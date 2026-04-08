@@ -30,36 +30,43 @@ type PaymentUpdateFields = {
   amount?: number;
 };
 
+type SubscriptionOutcome = "active" | "failed" | "cancelled";
+
+function assertNoError(error: unknown): void {
+  if (error) throw error;
+}
+
 async function updatePaymentAndSubscription(
   supabase: SupabaseClient,
-  providerId: string,
   paymentFields: PaymentUpdateFields,
-  subscriptionStatus: string
+  subscriptionStatus: SubscriptionOutcome
 ): Promise<void> {
-  const { data: payment, error: paymentLookupError } = await supabase
+  const providerId = paymentFields.provider_payment_id;
+
+  const { data: payment, error: lookupError } = await supabase
     .from("payments")
     .select("subscription_id")
     .eq("provider", "mayar")
     .eq("provider_payment_id", providerId)
     .maybeSingle();
 
-  if (paymentLookupError) throw paymentLookupError;
+  assertNoError(lookupError);
 
-  const { error: paymentUpdateError } = await supabase
+  const { error: paymentError } = await supabase
     .from("payments")
     .update(paymentFields)
     .eq("provider", "mayar")
     .eq("provider_payment_id", providerId);
 
-  if (paymentUpdateError) throw paymentUpdateError;
+  assertNoError(paymentError);
 
   if (payment?.subscription_id) {
-    const { error: subscriptionUpdateError } = await supabase
+    const { error: subError } = await supabase
       .from("subscriptions")
       .update({ status: subscriptionStatus })
       .eq("id", payment.subscription_id);
 
-    if (subscriptionUpdateError) throw subscriptionUpdateError;
+    assertNoError(subError);
   }
 }
 
@@ -105,7 +112,6 @@ export async function createSupabaseMayarWebhookRepository(): Promise<MayarWebho
   const markPaymentSuccess = async (data: MayarWebhookData): Promise<void> => {
     await updatePaymentAndSubscription(
       supabase,
-      data.id,
       { status: data.status, amount: data.amount, provider_payment_id: data.id },
       "active"
     );
@@ -116,7 +122,6 @@ export async function createSupabaseMayarWebhookRepository(): Promise<MayarWebho
   ): Promise<void> => {
     await updatePaymentAndSubscription(
       supabase,
-      data.id,
       { status: data.status, provider_payment_id: data.id },
       "failed"
     );
