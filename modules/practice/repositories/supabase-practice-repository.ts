@@ -7,6 +7,35 @@ import { PracticeRepository, AttemptWithStep, CreateAttemptWithStepInput } from 
 import { AttemptNotFoundError, StepAdditionError } from "../errors";
 import { dbSelect, dbInsert, dbUpdate } from "@/lib/supabase/repository-utils";
 
+async function performEntityUpdate(
+  client: SupabaseClient,
+  table: string,
+  id: string,
+  values: Record<string, unknown>,
+  context: string,
+  errorFactory?: () => Error
+): Promise<Record<string, unknown>> {
+  return dbUpdate({
+    client,
+    table,
+    id,
+    values,
+    options: {
+      context,
+      ...(errorFactory && { errorFactory })
+    }
+  });
+}
+
+function isValidRpcResponse(response: unknown): response is { attempt: unknown; step: unknown } {
+  return (
+    response !== null &&
+    typeof response === "object" &&
+    "attempt" in response &&
+    "step" in response
+  );
+}
+
 export function buildSupabasePracticeRepository(client: SupabaseClient): PracticeRepository {
   const getClient = () => Promise.resolve(client);
   return createRepositoryFromClientFactory(getClient);
@@ -84,7 +113,7 @@ function createRepositoryFromClientFactory(
     }
 
     // Defensive guard: RPC can return { data: null, error: null } in edge cases
-    if (!data || typeof data !== "object" || !("attempt" in data) || !("step" in data)) {
+    if (!isValidRpcResponse(data)) {
       throw new Error("[practice] createAttemptWithStep RPC returned unexpected shape");
     }
 
@@ -117,16 +146,14 @@ function createRepositoryFromClientFactory(
   const updateAttempt = async (attemptId: string, updates: Partial<Attempt>): Promise<Attempt> => {
     const dbUpdates = buildAttemptDbUpdates(updates);
 
-    const data = await dbUpdate<Record<string, unknown>>({
-      client: await getClient(),
-      table: "attempts",
-      id: attemptId,
-      values: dbUpdates,
-      options: {
-        context: "practice",
-        errorFactory: () => new AttemptNotFoundError(attemptId)
-      }
-    });
+    const data = await performEntityUpdate(
+      await getClient(),
+      "attempts",
+      attemptId,
+      dbUpdates,
+      "practice",
+      () => new AttemptNotFoundError(attemptId)
+    );
 
     return mapAttempt(data);
   };
@@ -181,15 +208,13 @@ function createRepositoryFromClientFactory(
   const updateStep = async (stepId: string, updates: Partial<SolutionStep>): Promise<SolutionStep> => {
     const dbUpdates = buildStepDbUpdates(updates);
 
-    const data = await dbUpdate<Record<string, unknown>>({
-      client: await getClient(),
-      table: "solution_steps",
-      id: stepId,
-      values: dbUpdates,
-      options: {
-        context: "practice"
-      }
-    });
+    const data = await performEntityUpdate(
+      await getClient(),
+      "solution_steps",
+      stepId,
+      dbUpdates,
+      "practice"
+    );
 
     return mapStep(data);
   };
