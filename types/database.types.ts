@@ -802,10 +802,10 @@ export type Database = {
         ]
       }
     }
-    Views: {} // NOSONAR: auto-generated Supabase empty placeholder, structural change not allowed
-    Functions: {} // NOSONAR: auto-generated Supabase empty placeholder, structural change not allowed
-    Enums: {} // NOSONAR: auto-generated Supabase empty placeholder, structural change not allowed
-    CompositeTypes: {} // NOSONAR: auto-generated Supabase empty placeholder, structural change not allowed
+    Views: Record<never, never> // NOSONAR: auto-generated Supabase empty placeholder, structural change not allowed
+    Functions: Record<never, never> // NOSONAR: auto-generated Supabase empty placeholder, structural change not allowed
+    Enums: Record<never, never> // NOSONAR: auto-generated Supabase empty placeholder, structural change not allowed
+    CompositeTypes: Record<never, never> // NOSONAR: auto-generated Supabase empty placeholder, structural change not allowed
   }
 }
 
