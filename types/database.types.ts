@@ -802,18 +802,10 @@ export type Database = {
         ]
       }
     }
-    Views: {
-      [_ in never]: never // NOSONAR: auto-generated Supabase empty placeholder, structural change not allowed
-    }
-    Functions: {
-      [_ in never]: never // NOSONAR: auto-generated Supabase empty placeholder, structural change not allowed
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+    Views: {} // NOSONAR: auto-generated Supabase empty placeholder, structural change not allowed
+    Functions: {} // NOSONAR: auto-generated Supabase empty placeholder, structural change not allowed
+    Enums: {} // NOSONAR: auto-generated Supabase empty placeholder, structural change not allowed
+    CompositeTypes: {} // NOSONAR: auto-generated Supabase empty placeholder, structural change not allowed
   }
 }
 
