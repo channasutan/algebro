@@ -7,22 +7,24 @@ import { PracticeRepository, AttemptWithStep, CreateAttemptWithStepInput } from 
 import { AttemptNotFoundError, StepAdditionError } from "../errors";
 import { dbSelect, dbInsert, dbUpdate } from "@/lib/supabase/repository-utils";
 
-async function performEntityUpdate(
-  client: SupabaseClient,
-  table: string,
-  id: string,
-  values: Record<string, unknown>,
-  context: string,
-  errorFactory?: () => Error
-): Promise<Record<string, unknown>> {
+interface EntityUpdateOptions {
+  client: SupabaseClient;
+  table: string;
+  id: string;
+  values: Record<string, unknown>;
+  context: string;
+  errorFactory?: () => Error;
+}
+
+async function performEntityUpdate(options: EntityUpdateOptions): Promise<Record<string, unknown>> {
   return dbUpdate({
-    client,
-    table,
-    id,
-    values,
+    client: options.client,
+    table: options.table,
+    id: options.id,
+    values: options.values,
     options: {
-      context,
-      ...(errorFactory && { errorFactory })
+      context: options.context,
+      ...(options.errorFactory && { errorFactory: options.errorFactory })
     }
   });
 }
@@ -146,14 +148,14 @@ function createRepositoryFromClientFactory(
   const updateAttempt = async (attemptId: string, updates: Partial<Attempt>): Promise<Attempt> => {
     const dbUpdates = buildAttemptDbUpdates(updates);
 
-    const data = await performEntityUpdate(
-      await getClient(),
-      "attempts",
-      attemptId,
-      dbUpdates,
-      "practice",
-      () => new AttemptNotFoundError(attemptId)
-    );
+    const data = await performEntityUpdate({
+      client: await getClient(),
+      table: "attempts",
+      id: attemptId,
+      values: dbUpdates,
+      context: "practice",
+      errorFactory: () => new AttemptNotFoundError(attemptId)
+    });
 
     return mapAttempt(data);
   };
@@ -208,13 +210,13 @@ function createRepositoryFromClientFactory(
   const updateStep = async (stepId: string, updates: Partial<SolutionStep>): Promise<SolutionStep> => {
     const dbUpdates = buildStepDbUpdates(updates);
 
-    const data = await performEntityUpdate(
-      await getClient(),
-      "solution_steps",
-      stepId,
-      dbUpdates,
-      "practice"
-    );
+    const data = await performEntityUpdate({
+      client: await getClient(),
+      table: "solution_steps",
+      id: stepId,
+      values: dbUpdates,
+      context: "practice"
+    });
 
     return mapStep(data);
   };
