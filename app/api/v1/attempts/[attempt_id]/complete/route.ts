@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, buildContext } from "@/app/api/v1/_helpers/auth";
-import { submitStep } from "@/modules/practice/services/submit-step";
+import { completeAttempt } from "@/modules/practice/services/complete-attempt";
 
 export async function POST(req: NextRequest, { params }: { params: { attempt_id: string } }): Promise<NextResponse> {
   const auth = await requireAuth();
@@ -18,20 +18,23 @@ export async function POST(req: NextRequest, { params }: { params: { attempt_id:
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  if (typeof body !== "object" || body === null || !("stepLatex" in body)) {
+  if (typeof body !== "object" || body === null || !("isCorrect" in body)) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const { stepLatex } = body as { stepLatex: unknown };
-  if (typeof stepLatex !== "string" || stepLatex.trim() === "") {
+  const { isCorrect, topicId } = body as { isCorrect: unknown; topicId?: string | null };
+  if (typeof isCorrect !== "boolean") {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+  if (topicId !== undefined && topicId !== null && typeof topicId !== "string") {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
   const context = buildContext();
 
   try {
-    const result = await submitStep({ attemptId: attempt_id, userId: auth.userId, stepLatex }, context);
-    return NextResponse.json(result, { status: 201 });
+    const result = await completeAttempt({ attemptId: attempt_id, userId: auth.userId, isCorrect, topicId: topicId ?? null }, context);
+    return NextResponse.json(result, { status: 200 });
   } catch (err) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
