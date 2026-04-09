@@ -6,7 +6,7 @@ orbs:
 jobs:
   validate:
     docker:
-      - image: cimg/node:22.11
+      - image: cimg/node:24
 
     steps:
       - checkout
