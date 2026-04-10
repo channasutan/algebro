@@ -1,10 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { getMayarWebhookSecret } from "@/config/env.server-entry";
-import {
-  createSupabaseMayarWebhookRepository,
-  type MayarWebhookData,
-} from "@/modules/billing/repositories/supabase-mayar-webhook-repository";
+import { handleMayarWebhook } from "@/modules/billing";
 
 /**
  * Verifies Mayar webhook signature using HMAC-SHA256.
@@ -55,36 +52,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const { event, data } = payload;
   const eventId = `${event}:${data.id}`;
 
-  // 5. Check for duplicate event (idempotency)
-  const repo = await createSupabaseMayarWebhookRepository();
-  const isDuplicate = await repo.isDuplicateEvent(eventId);
-
-  if (isDuplicate) {
-    console.log("[mayar webhook] Duplicate event, acknowledging without reprocessing:", eventId);
-    return NextResponse.json({ ok: true, duplicate: true }, { status: 200 });
-  }
-
-  // 6. Process event based on type
+  // 5. Process webhook using billing module
   try {
-    switch (event) {
-      case "payment.success":
-        await repo.markPaymentSuccess(data);
-        break;
+    const result = await handleMayarWebhook(eventId, event, payload);
 
-      case "payment.failed":
-        await repo.markPaymentFailed(data);
-        break;
-
-      case "subscription.cancelled":
-        await repo.markSubscriptionCancelled(data);
-        break;
-
-      default:
-        console.log("[mayar webhook] Unhandled event type:", event);
+    if (result.duplicate) {
+      console.log("[mayar webhook] Duplicate event, acknowledging without reprocessing:", eventId);
+      return NextResponse.json({ ok: true, duplicate: true }, { status: 200 });
     }
-
-    // 7. Store event for idempotency tracking
-    await repo.storeWebhookEvent(eventId, event, payload);
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (error) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth, buildContext } from "@/lib/auth/server-auth";
+import { requireAuth, buildContext } from "@/lib/auth/server-auth-facade";
 import { startSession } from "@/modules/practice";
 import { DuplicateActiveSessionError } from "@/modules/practice/errors";
 

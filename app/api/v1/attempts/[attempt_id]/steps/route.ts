@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth, buildContext } from "@/lib/auth/server-auth";
+import { requireAuth, buildContext } from "@/lib/auth/server-auth-facade";
 import { logger } from "@/lib/observability";
 import { submitStep } from "@/modules/practice";
 

@@ -21,12 +21,16 @@ import { getCurrentProfile } from "../services/get-current-profile";
 import { updateProfile } from "../services/update-profile";
 import { ProfileCreationError } from "../errors";
 import type { ProfileRepository } from "../repositories/supabase-profile-repository";
-import { eventBus } from "@/events/event-bus";
+import { eventBus } from "@/modules/user-profiles";
 import { USER_PROFILE_INITIALIZED } from "../events/profile-initialized";
 import { USER_PROFILE_UPDATED } from "../events/profile-updated";
 import type { UserProfile } from "../domain/profile";
 
-vi.mock("@/events/event-bus", () => ({
+vi.mock("@/modules/user-profiles", () => ({
+  eventBus: {
+    publish: vi.fn(),
+  },
+}));
   eventBus: {
     publish: vi.fn(),
   },

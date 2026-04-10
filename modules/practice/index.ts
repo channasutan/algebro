@@ -36,7 +36,10 @@ export {
 export { 
   getNextProblem 
 } from "./services/get-next-problem";
-export type { 
-  GetNextProblemInput, 
-  GetNextProblemResult 
+export type {
+  GetNextProblemInput,
+  GetNextProblemResult
 } from "./services/get-next-problem";
+
+// For tests
+export { eventBus } from "@/events/event-bus";

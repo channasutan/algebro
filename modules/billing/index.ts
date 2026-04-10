@@ -1,3 +1,6 @@
+import { getSupabaseServerClient } from "@/lib/supabase/server-client";
+import { createSupabaseMayarWebhookRepository } from "./repositories/supabase-mayar-webhook-repository";
+
 export const billingModule = {
   name: "billing"
 } as const;
@@ -19,4 +22,34 @@ export async function checkFeatureAccess(
   _feature: string
 ): Promise<FeatureAccessResult> {
   return { allowed: true, planTier: "free" };
+}
+
+export async function handleMayarWebhook(eventId: string, event: string, payload: { event: string; data: any }) {
+  const client = getSupabaseServerClient();
+  const repo = createSupabaseMayarWebhookRepository(client);
+  const data = payload.data;
+
+  // Check duplicate
+  const isDuplicate = await repo.isDuplicateEvent(eventId);
+  if (isDuplicate) {
+    return { duplicate: true };
+  }
+
+  // Process event
+  switch (event) {
+    case "payment.success":
+      await repo.markPaymentSuccess(data);
+      break;
+    case "payment.failed":
+      await repo.markPaymentFailed(data);
+      break;
+    case "subscription.cancelled":
+      await repo.markSubscriptionCancelled(data);
+      break;
+  }
+
+  // Store event
+  await repo.storeWebhookEvent(eventId, event, payload);
+
+  return { ok: true };
 }

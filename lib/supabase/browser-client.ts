@@ -12,7 +12,7 @@ import "client-only";
 import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { getPublicEnv } from "@/config/env.public";
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config";
 import type { Database } from "@/lib/supabase/database.types";
 
 let browserClient: SupabaseClient<Database> | undefined;
@@ -22,9 +22,7 @@ export function getSupabaseBrowserClient(): SupabaseClient<Database> {
     return browserClient;
   }
 
-  const { supabaseUrl, supabaseAnonKey } = getPublicEnv();
-
-  browserClient = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
+  browserClient = createBrowserClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   return browserClient;
 }
