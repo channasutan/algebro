@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, buildContext } from "@/app/api/v1/_helpers/auth";
 import { startSession } from "@/modules/practice/services/start-session";
+import { DuplicateActiveSessionError } from "@/modules/practice/errors";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const auth = await requireAuth();
@@ -24,10 +25,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   const context = buildContext();
 
-  try {
-    const result = await startSession({ userId: auth.userId, topicId: topicId ?? null }, context);
-    return NextResponse.json(result, { status: 201 });
-  } catch (err) {
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
+   try {
+     const result = await startSession({ userId: auth.userId, topicId: topicId ?? null }, context);
+     return NextResponse.json(result, { status: 201 });
+   } catch (err) {
+     if (err instanceof DuplicateActiveSessionError) {
+       return NextResponse.json({ error: "Active practice session already exists" }, { status: 409 });
+     }
+     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+   }
 }
