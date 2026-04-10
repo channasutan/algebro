@@ -1,9 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { startSessionWithRepository } from "@/modules/practice/services/start-session";
-import { createAttemptWithRepository } from "@/modules/practice/services/create-attempt";
-import { submitStepWithRepository } from "@/modules/practice/services/submit-step";
-import type { PracticeRepository } from "@/modules/practice/repositories/practice-repository";
-import type { PracticeSession, Attempt, SolutionStep } from "@/modules/practice/domain/practice";
+import { startSessionWithRepository, createAttemptWithRepository, submitStepWithRepository } from "@/modules/practice";
+import type { PracticeRepository, PracticeSession, Attempt, SolutionStep } from "@/modules/practice";
 import type { CreateAttemptResult } from "@/modules/practice/services/create-attempt";
 import type { Mocked } from "vitest";
 import { TEST_USER_ID } from "../test-constants";

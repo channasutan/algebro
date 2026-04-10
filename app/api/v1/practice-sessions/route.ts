@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, buildContext } from "@/lib/auth/server-auth";
-import { startSession } from "@/modules/practice/services/start-session";
+import { startSession } from "@/modules/practice";
 import { DuplicateActiveSessionError } from "@/modules/practice/errors";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {

@@ -1,7 +1,7 @@
 import "server-only";
 
 import { getSupabaseServerClient } from "@/lib/supabase/server-client";
-import type { Json } from "@/types/database.types";
+import type { Json } from "@/lib/supabase/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type MayarWebhookData = {

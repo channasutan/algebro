@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, buildContext } from "@/lib/auth/server-auth";
 import { logger } from "@/lib/observability";
-import { submitStep } from "@/modules/practice/services/submit-step";
+import { submitStep } from "@/modules/practice";
 
 export async function POST(req: NextRequest, { params }: { params: { attempt_id: string } }): Promise<NextResponse> {
   const auth = await requireAuth();

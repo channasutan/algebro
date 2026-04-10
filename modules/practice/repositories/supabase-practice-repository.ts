@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getSupabaseServerClient } from "@/lib/supabase/server-client";
+
 import { PracticeSession, Attempt, SolutionStep } from "../domain/practice";
 import { PracticeRepository, AttemptWithStep, CreateAttemptWithStepInput } from "./practice-repository";
 import { AttemptNotFoundError, StepAdditionError } from "../errors";
@@ -39,11 +39,11 @@ function isValidRpcResponse(response: unknown): response is { attempt: unknown; 
 }
 
 export function buildSupabasePracticeRepository(client: SupabaseClient): PracticeRepository {
-  const getClient = () => Promise.resolve(client);
+  const getClient = () => client;
   return createRepositoryFromClientFactory(getClient);
 }
 
-export function createSupabasePracticeRepository(): PracticeRepository {
+export function createSupabasePracticeRepository(client: SupabaseClient): PracticeRepository {
   return createRepositoryFromClientFactory(getSupabaseServerClient);
 }
 
