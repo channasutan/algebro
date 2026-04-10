@@ -4,7 +4,7 @@ import { ServiceContext } from "@/lib/observability";
 
 export type AuthResult =
   | { ok: true; userId: string }
-  | { ok: false; response: NextResponse };
+  | { ok: false; response: Response };
 
 export async function requireAuth(supabase: ReturnType<typeof getSupabaseServerClient>): Promise<AuthResult> {
   const user = await getUser(supabase);

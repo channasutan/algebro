@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth, buildContext } from "@/app/api/v1/_helpers/auth";
+import { requireAuth, buildContext } from "@/lib/auth/server-auth";
+import { logger } from "@/lib/observability";
 import { submitStep } from "@/modules/practice/services/submit-step";
 
 export async function POST(req: NextRequest, { params }: { params: { attempt_id: string } }): Promise<NextResponse> {
@@ -33,6 +34,10 @@ export async function POST(req: NextRequest, { params }: { params: { attempt_id:
     const result = await submitStep({ attemptId: attempt_id, userId: auth.userId, stepLatex }, context);
     return NextResponse.json(result, { status: 201 });
   } catch (err) {
+    logger.error("Unexpected error in steps route", {
+      error: err instanceof Error ? err.message : String(err),
+      requestId: context.requestId,
+    });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

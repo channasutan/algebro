@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth, buildContext } from "@/app/api/v1/_helpers/auth";
+import { requireAuth, buildContext } from "@/lib/auth/server-auth";
+import { logger } from "@/lib/observability";
 import { createAttempt } from "@/modules/practice/services/create-attempt";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
@@ -28,6 +29,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     const result = await createAttempt({ sessionId, problemId, userId: auth.userId }, context);
     return NextResponse.json(result, { status: 201 });
   } catch (err) {
+    logger.error("Unexpected error in attempts route", {
+      error: err instanceof Error ? err.message : String(err),
+      requestId: context.requestId,
+    });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

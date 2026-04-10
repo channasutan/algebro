@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth, buildContext } from "@/app/api/v1/_helpers/auth";
+import { requireAuth, buildContext } from "@/lib/auth/server-auth";
+import { logger } from "@/lib/observability";
 import { completeAttempt } from "@/modules/practice/services/complete-attempt";
 
 export async function POST(req: NextRequest, { params }: { params: { attempt_id: string } }): Promise<NextResponse> {
@@ -36,6 +37,10 @@ export async function POST(req: NextRequest, { params }: { params: { attempt_id:
     const result = await completeAttempt({ attemptId: attempt_id, userId: auth.userId, isCorrect, topicId: topicId ?? null }, context);
     return NextResponse.json(result, { status: 200 });
   } catch (err) {
+    logger.error("Unexpected error in complete route", {
+      error: err instanceof Error ? err.message : String(err),
+      requestId: context.requestId,
+    });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
