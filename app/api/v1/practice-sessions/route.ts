@@ -22,7 +22,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
    try {
-     const result = await startSessionForUser({ topicId: topicId ?? null });
+     const result = await startSessionForUser({ topicId });
      return NextResponse.json(result, { status: 201 });
    } catch (err) {
      if (err instanceof DuplicateActiveSessionError) {

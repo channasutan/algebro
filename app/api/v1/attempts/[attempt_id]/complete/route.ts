@@ -29,7 +29,7 @@ export async function POST(req: NextRequest, { params }: { params: { attempt_id:
   }
 
   try {
-    const result = await completeAttemptForUser({ attemptId: attempt_id, isCorrect, topicId: topicId ?? null });
+    const result = await completeAttemptForUser({ attemptId: attempt_id, isCorrect, topicId });
     return NextResponse.json(result, { status: 200 });
   } catch (err) {
     logger.error("Unexpected error in complete route", {
