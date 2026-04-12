@@ -1,4 +1,4 @@
-import { getSupabaseServerClient } from "@/lib/supabase/server-client";
+
 import { createSupabaseMayarWebhookRepository } from "./repositories/supabase-mayar-webhook-repository";
 
 export const billingModule = {

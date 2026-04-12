@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth, buildContext } from "@/lib/auth/server-auth-facade";
 import { logger } from "@/lib/observability";
-import { completeAttempt } from "@/modules/practice";
+import { completeAttemptForUser } from "@/modules/practice/http-facade";
 
 export async function POST(req: NextRequest, { params }: { params: { attempt_id: string } }): Promise<NextResponse> {
-  const auth = await requireAuth();
-  if (!auth.ok) return auth.response;
 
   const { attempt_id } = params;
   if (!attempt_id || typeof attempt_id !== "string") {
@@ -31,15 +28,13 @@ export async function POST(req: NextRequest, { params }: { params: { attempt_id:
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const context = buildContext();
-
   try {
-    const result = await completeAttempt({ attemptId: attempt_id, userId: auth.userId, isCorrect, topicId: topicId ?? null }, context);
+    const result = await completeAttemptForUser({ attemptId: attempt_id, isCorrect, topicId: topicId ?? null });
     return NextResponse.json(result, { status: 200 });
   } catch (err) {
     logger.error("Unexpected error in complete route", {
       error: err instanceof Error ? err.message : String(err),
-      requestId: context.requestId,
+      requestId: crypto.randomUUID(),
     });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

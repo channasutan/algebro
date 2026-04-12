@@ -11,10 +11,7 @@ vi.mock("next/headers", () => ({
 }));
 
 import { createSupabaseProfileRepository } from "@/modules/user-profiles/repositories/supabase-profile-repository";
-import { getCurrentProfile, getOrCreateUserProfile, updateUserProfile } from "@/modules/user-profiles";
-import { InitializationSource } from "@/modules/user-profiles/domain/initialization-source";
-import { eventBus, USER_PROFILE_UPDATED } from "@/modules/user-profiles";
-import { ProfileNotFoundError } from "@/modules/user-profiles/errors";
+import { getCurrentProfile, getOrCreateUserProfile, InitializationSource, eventBus, USER_PROFILE_UPDATED, ProfileNotFoundError } from "@/modules/user-profiles";
 
 import * as ServerClientAuth from "@/lib/supabase/server-client";
 import * as ServerClientAdmin from "@/lib/supabase/admin-client";

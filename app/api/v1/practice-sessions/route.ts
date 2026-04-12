@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth, buildContext } from "@/lib/auth/server-auth-facade";
-import { startSession } from "@/modules/practice";
-import { DuplicateActiveSessionError } from "@/modules/practice/errors";
+import { startSessionForUser, DuplicateActiveSessionError } from "@/modules/practice/http-facade";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const auth = await requireAuth();
@@ -23,10 +21,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const context = buildContext();
-
    try {
-     const result = await startSession({ userId: auth.userId, topicId: topicId ?? null }, context);
+     const result = await startSessionForUser({ topicId: topicId ?? null });
      return NextResponse.json(result, { status: 201 });
    } catch (err) {
      if (err instanceof DuplicateActiveSessionError) {

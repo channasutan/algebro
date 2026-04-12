@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth, buildContext } from "@/lib/auth/server-auth-facade";
 import { logger } from "@/lib/observability";
-import { submitStep } from "@/modules/practice";
+import { submitStepForUser } from "@/modules/practice/http-facade";
 
 export async function POST(req: NextRequest, { params }: { params: { attempt_id: string } }): Promise<NextResponse> {
-  const auth = await requireAuth();
-  if (!auth.ok) return auth.response;
 
   const { attempt_id } = params;
   if (!attempt_id || typeof attempt_id !== "string") {
@@ -28,15 +25,13 @@ export async function POST(req: NextRequest, { params }: { params: { attempt_id:
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const context = buildContext();
-
   try {
-    const result = await submitStep({ attemptId: attempt_id, userId: auth.userId, stepLatex }, context);
+    const result = await submitStepForUser({ attemptId: attempt_id, stepLatex });
     return NextResponse.json(result, { status: 201 });
   } catch (err) {
     logger.error("Unexpected error in steps route", {
       error: err instanceof Error ? err.message : String(err),
-      requestId: context.requestId,
+      requestId: crypto.randomUUID(),
     });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
