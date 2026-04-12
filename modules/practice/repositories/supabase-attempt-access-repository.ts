@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getSupabaseServerClient } from "@/lib/supabase/server-client";
+import { getPracticeSupabaseClient } from "../infrastructure/supabase-provider";
 
 type AttemptAccessRecord = {
   user_id: string;
@@ -24,7 +24,7 @@ export type AttemptAccessResult =
 export async function verifyAuthenticatedAttemptAccess(
   attemptId: string
 ): Promise<AttemptAccessResult> {
-  const supabase = await getSupabaseServerClient();
+  const supabase = getPracticeSupabaseClient();
 
   const {
     data: { user },

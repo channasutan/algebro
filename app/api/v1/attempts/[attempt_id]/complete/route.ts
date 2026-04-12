@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/observability";
-import { completeAttemptForUser } from "@/modules/practice/http-facade";
+import { completeAttemptForUser } from "@/modules/practice/controller";
 
 export async function POST(req: NextRequest, { params }: { params: { attempt_id: string } }): Promise<NextResponse> {
 

@@ -1,0 +1,1 @@
+export { handleMayarWebhook } from './index';

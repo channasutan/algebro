@@ -71,7 +71,7 @@ async function updatePaymentAndSubscription(
 }
 
 export async function createSupabaseMayarWebhookRepository(): Promise<MayarWebhookRepository> {
-  const supabase = await getSupabaseServerClient();
+  const supabase = getBillingSupabaseClient();
 
   const isDuplicateEvent = async (eventId: string): Promise<boolean> => {
     const { data, error } = await supabase

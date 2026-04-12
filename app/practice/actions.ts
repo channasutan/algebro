@@ -1,7 +1,7 @@
 "use server";
 
 import { ensureModulesBootstrapped } from "@/modules/bootstrap";
-import { startSession, createAttempt, submitStep, getNextProblem } from "@/modules/practice";
+import { startSession, createAttempt, submitStep, getNextProblem } from "@/modules/practice/controller";
 import { getCurrentSession } from "@/modules/authentication";
 import { createServiceLogger, getRequestId } from "@/lib/observability";
 import type { StartPracticeResult, SubmitStepResult } from "@/modules/practice/contracts/practice";

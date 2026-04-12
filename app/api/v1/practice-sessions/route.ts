@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { startSessionForUser, DuplicateActiveSessionError } from "@/modules/practice/http-facade";
+import { startSessionForUser, DuplicateActiveSessionError } from "@/modules/practice/controller";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const auth = await requireAuth();

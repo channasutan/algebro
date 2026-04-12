@@ -1,4 +1,4 @@
-import { getSupabaseServerClient } from "@/lib/supabase/server-client";
+import { getPracticeSupabaseClient } from "./infrastructure/supabase-provider";
 import { getUser } from "@/lib/auth/user";
 import { startSession } from "./services/start-session";
 import { createAttempt } from "./services/create-attempt";
@@ -11,7 +11,7 @@ export type AuthResult =
   | { ok: false; response: Response };
 
 async function requireAuth(): Promise<AuthResult> {
-  const supabase = getSupabaseServerClient();
+  const supabase = getPracticeSupabaseClient();
   const user = await getUser(supabase);
 
   if (!user) {
@@ -52,4 +52,4 @@ export async function completeAttemptForUser(input: { attemptId: string; isCorre
   return completeAttempt({ attemptId: input.attemptId, userId: auth.userId, isCorrect: input.isCorrect, topicId: input.topicId ?? null }, { requestId: crypto.randomUUID() });
 }
 
-export { DuplicateActiveSessionError };
+export { DuplicateActiveSessionError } from './errors';
