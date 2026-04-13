@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { startSessionForUser, DuplicateActiveSessionError } from "@/modules/practice/controller";
+import { startPracticeSession, DuplicateActiveSessionError } from "@/lib/services/practice-service";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const auth = await requireAuth();
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
    try {
-     const result = await startSessionForUser({ topicId });
+     const result = await startPracticeSession({ userId: auth.userId, topicId });
      return NextResponse.json(result, { status: 201 });
    } catch (err) {
      if (err instanceof DuplicateActiveSessionError) {

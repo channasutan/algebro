@@ -1,21 +1,17 @@
-export { 
-  startSession, 
-  startSessionWithRepository, 
-  type StartSessionInput 
+export {
+  startSession,
+  type StartSessionInput
 } from "./services/start-session";
-export { 
-  createAttempt, 
-  createAttemptWithRepository, 
-  type CreateAttemptInput 
+export {
+  createAttempt,
+  type CreateAttemptInput
 } from "./services/create-attempt";
-export { 
-  submitStep, 
-  submitStepWithRepository, 
-  type SubmitStepInput 
+export {
+  submitStep,
+  type SubmitStepInput
 } from "./services/submit-step";
 export {
   completeAttempt,
-  completeAttemptWithRepository,
   type CompleteAttemptInput
 } from "./services/complete-attempt";
 export { 

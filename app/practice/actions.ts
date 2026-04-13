@@ -1,7 +1,8 @@
 "use server";
 
 import { ensureModulesBootstrapped } from "@/modules/bootstrap";
-import { startSession, createAttempt, submitStep, getNextProblem } from "@/modules/practice/controller";
+import { startPracticeSession, createNewAttempt, submitStepToAttempt } from "@/lib/services/practice-service";
+import { getNextProblem } from "@/modules/practice";
 import { getCurrentSession } from "@/modules/authentication";
 import { createServiceLogger, getRequestId } from "@/lib/observability";
 import type { StartPracticeResult, SubmitStepResult } from "@/modules/practice/contracts/practice";
@@ -22,19 +23,19 @@ export async function startPracticeFlowAction(topicId: string | null): Promise<S
   log.info({ event: "practice.flow", meta: { type: "domain", phase: "start", userId, topicId } });
 
   // Create session
-  const practiceSession = await startSession({ userId, topicId }, context);
+  const practiceSession = await startPracticeSession({ userId, topicId });
 
   // Resolve next problem via curriculum-first strategy
   const nextProblem = await getNextProblem({ userId, topicId }, context);
   const problemId = nextProblem.problemId;
 
   // Create attempt without initial step — first step will be added via submitStep
-  const attemptResult = await createAttempt({
+  const attemptResult = await createNewAttempt({
     sessionId: practiceSession.id,
     problemId,
     userId
     // stepIndex and stepLatex omitted — attempt-only creation
-  }, context);
+  });
 
   log.info({ event: "practice.flow", meta: { type: "domain", phase: "complete", userId, sessionId: practiceSession.id, attemptId: attemptResult.attempt.id } });
 
@@ -63,7 +64,7 @@ export async function submitPracticeStepAction(
 
   log.info({ event: "practice.step", meta: { type: "domain", phase: "start", userId, attemptId } });
 
-  const step = await submitStep({ attemptId, userId, stepLatex }, context);
+  const step = await submitStepToAttempt({ attemptId, userId, stepLatex });
 
   return {
     stepId: step.id,

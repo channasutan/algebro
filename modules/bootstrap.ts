@@ -7,7 +7,7 @@ import { createServiceRoleProfileRepository } from "@/modules/user-profiles/repo
 import { ATTEMPT_COMPLETED } from "@/events/attempt-events";
 import { handleAttemptCompleted } from "@/modules/curriculum/events/on-attempt-completed";
 import { createServiceRoleCurriculumRepository } from "@/modules/curriculum/repositories/supabase-curriculum-repository";
-import { createSupabasePracticeRepository } from "@/modules/practice/repositories/supabase-practice-repository";
+import { createSupabasePracticeRepository } from "@/repositories/practice/supabase-practice-repository";
 import { registerAiTutorModule } from "@/modules/ai-tutor";
 
 import {

@@ -1,42 +1,17 @@
-
 import { createSupabaseMayarWebhookRepository } from "@/repositories/billing/supabase-mayar-webhook-repository";
 import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 
-export const billingModule = {
-  name: "billing"
-} as const;
-
-export type PlanTier = "free" | "premium";
-
-export type FeatureAccessResult = {
-  allowed: boolean;
-  planTier: PlanTier;
-};
-
-/**
- * Stub implementation — always returns free-tier allowed.
- * Phase 8 unit tests mock this via vi.mock("@/modules/billing").
- * Replace with real subscription lookup in a future billing phase.
- */
-export async function checkFeatureAccess(
-  _userId: string,
-  _feature: string
-): Promise<FeatureAccessResult> {
-  return { allowed: true, planTier: "free" };
-}
-
-export async function handleMayarWebhook(eventId: string, event: string, payload: { event: string; data: any }) {
+export async function handleMayarWebhook(eventId: string, event: string, payload: { event: string; data: any }): Promise<{ ok: boolean } | { duplicate: boolean }> {
   const supabase = getSupabaseServerClient();
   const repo = await createSupabaseMayarWebhookRepository(supabase);
-  const data = payload.data;
-
-  // Check duplicate
   const isDuplicate = await repo.isDuplicateEvent(eventId);
+
   if (isDuplicate) {
     return { duplicate: true };
   }
 
-  // Process event
+  const data = payload.data;
+
   switch (event) {
     case "payment.success":
       await repo.markPaymentSuccess(data);
@@ -49,7 +24,6 @@ export async function handleMayarWebhook(eventId: string, event: string, payload
       break;
   }
 
-  // Store event
   await repo.storeWebhookEvent(eventId, event, payload);
 
   return { ok: true };

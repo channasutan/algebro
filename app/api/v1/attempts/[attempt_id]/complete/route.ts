@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/observability";
-import { completeAttemptForUser } from "@/modules/practice/controller";
+import { completePracticeAttempt } from "@/lib/services/practice-service";
 
 export async function POST(req: NextRequest, { params }: { params: { attempt_id: string } }): Promise<NextResponse> {
 
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest, { params }: { params: { attempt_id:
   }
 
   try {
-    const result = await completeAttemptForUser({ attemptId: attempt_id, isCorrect, topicId });
+    const result = await completePracticeAttempt({ attemptId: attempt_id, userId: auth.userId, isCorrect, topicId });
     return NextResponse.json(result, { status: 200 });
   } catch (err) {
     logger.error("Unexpected error in complete route", {

@@ -35,6 +35,9 @@ components:
   - name: lib
     paths:
       - lib/**
+  - name: repositories
+    paths:
+      - repositories/**
   - name: tests
     paths:
       - tests/**
@@ -105,6 +108,15 @@ directives:
   - name: "Tests can access events"
     constraint: "tests -> events"
     action: allow
-  - name: "App can access modules"
-    constraint: "app -> modules"
+  - name: "Repositories can access Supabase clients"
+    constraint: "repositories -> supabase-clients"
     action: allow
+  - name: "App can access repositories"
+    constraint: "app -> repositories"
+    action: allow
+  - name: "Modules can access repositories"
+    constraint: "modules -> repositories"
+    action: allow
+  - name: "App cannot access modules"
+    constraint: "app -> modules"
+    action: forbid

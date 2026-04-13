@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/observability";
-import { submitStepForUser } from "@/modules/practice/controller";
+import { submitStepToAttempt } from "@/lib/services/practice-service";
 
 export async function POST(req: NextRequest, { params }: { params: { attempt_id: string } }): Promise<NextResponse> {
 
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest, { params }: { params: { attempt_id:
   }
 
   try {
-    const result = await submitStepForUser({ attemptId: attempt_id, stepLatex });
+    const result = await submitStepToAttempt({ attemptId: attempt_id, userId: auth.userId, stepLatex });
     return NextResponse.json(result, { status: 201 });
   } catch (err) {
     logger.error("Unexpected error in steps route", {

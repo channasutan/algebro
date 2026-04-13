@@ -2,9 +2,9 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { PracticeSession, Attempt, SolutionStep } from "../domain/practice";
+import { PracticeSession, Attempt, SolutionStep } from "@/modules/practice/domain/practice";
 import { PracticeRepository, AttemptWithStep, CreateAttemptWithStepInput } from "./practice-repository";
-import { AttemptNotFoundError, StepAdditionError } from "../errors";
+import { AttemptNotFoundError, StepAdditionError } from "@/modules/practice/errors";
 import { dbSelect, dbInsert, dbUpdate } from "@/lib/supabase/repository-utils";
 
 interface EntityUpdateOptions {

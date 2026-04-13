@@ -1,6 +1,5 @@
 import "server-only";
 
-import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 import type { Json } from "@/lib/supabase/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -70,8 +69,7 @@ async function updatePaymentAndSubscription(
   }
 }
 
-export async function createSupabaseMayarWebhookRepository(): Promise<MayarWebhookRepository> {
-  const supabase = getBillingSupabaseClient();
+export async function createSupabaseMayarWebhookRepository(supabase: SupabaseClient): Promise<MayarWebhookRepository> {
 
   const isDuplicateEvent = async (eventId: string): Promise<boolean> => {
     const { data, error } = await supabase
