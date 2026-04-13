@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { startPracticeSession, DuplicateActiveSessionError } from "@/lib/services/practice-service";
+import { startSession, DuplicateActiveSessionError } from "@/modules/practice";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const auth = await requireAuth();
@@ -21,10 +21,10 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-   try {
-     const result = await startPracticeSession({ userId: auth.userId, topicId });
-     return NextResponse.json(result, { status: 201 });
-   } catch (err) {
+    try {
+      const result = await startSession({ userId: auth.userId, topicId }, { requestId: crypto.randomUUID() });
+      return NextResponse.json(result, { status: 201 });
+    } catch (err) {
      if (err instanceof DuplicateActiveSessionError) {
        return NextResponse.json({ error: "Active practice session already exists" }, { status: 409 });
      }

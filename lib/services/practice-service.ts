@@ -1,5 +1,7 @@
-import { createSupabasePracticeRepository } from "@/repositories/practice/supabase-practice-repository";
-import { startSession, createAttempt, submitStep, completeAttempt } from "@/modules/practice";
+import { startSession } from "@/modules/practice/services/start-session";
+import { createAttempt } from "@/modules/practice/services/create-attempt";
+import { submitStep } from "@/modules/practice/services/submit-step";
+import { completeAttempt } from "@/modules/practice/services/complete-attempt";
 
 export async function startPracticeSession(input: { userId: string; topicId?: string | null }): Promise<ReturnType<typeof startSession>> {
   return startSession(input, { requestId: crypto.randomUUID() });

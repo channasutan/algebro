@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/observability";
-import { createNewAttempt } from "@/lib/services/practice-service";
+import { createAttempt } from "@/modules/practice";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
 
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    const result = await createNewAttempt({ sessionId, problemId, userId: auth.userId });
+    const result = await createAttempt({ sessionId, problemId, userId: auth.userId }, { requestId: crypto.randomUUID() });
     return NextResponse.json(result, { status: 201 });
   } catch (err) {
     logger.error("Unexpected error in attempts route", {

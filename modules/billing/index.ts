@@ -2,6 +2,10 @@
 import { createSupabaseMayarWebhookRepository } from "@/repositories/billing/supabase-mayar-webhook-repository";
 import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 
+function createBillingClient() {
+  return getSupabaseServerClient();
+}
+
 export const billingModule = {
   name: "billing"
 } as const;
@@ -26,7 +30,7 @@ export async function checkFeatureAccess(
 }
 
 export async function handleMayarWebhook(eventId: string, event: string, payload: { event: string; data: any }) {
-  const supabase = getSupabaseServerClient();
+  const supabase = createBillingClient();
   const repo = await createSupabaseMayarWebhookRepository(supabase);
   const data = payload.data;
 
