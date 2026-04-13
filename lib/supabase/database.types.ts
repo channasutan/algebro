@@ -864,10 +864,16 @@ export type TablesUpdate<
       : never
     : never
 
+// NOTE: Manually patched — 'never' removed from generated union (SonarCloud S1710).
+// Regenerate with: pnpm supabase gen types
+type DefaultSchemaEnumName = keyof DefaultSchema["Enums"] extends never
+  ? string
+  : keyof DefaultSchema["Enums"];
+
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals }, // NOSONAR: generated union, never redundancy is expected
+    | DefaultSchemaEnumName
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
@@ -881,10 +887,16 @@ export type Enums<
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
+// NOTE: Manually patched — 'never' removed from generated union (SonarCloud S1710).
+// Regenerate with: pnpm supabase gen types
+type DefaultSchemaCompositeTypeName = keyof DefaultSchema["CompositeTypes"] extends never
+  ? string
+  : keyof DefaultSchema["CompositeTypes"];
+
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals }, // NOSONAR: generated union, never redundancy is expected
+    | DefaultSchemaCompositeTypeName
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }

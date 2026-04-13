@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { getMayarWebhookSecret } from "@/config/env.server-entry";
-import { handleMayarWebhook } from "@/modules/billing";
+import { handleMayarWebhook, type MayarWebhookData } from "@/lib/services/billing-service";
 
 /**
  * Verifies Mayar webhook signature using HMAC-SHA256.
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const { event, data } = payload;
   const eventId = `${event}:${data.id}`;
 
-  // 5. Process webhook using billing module
+  // 5. Process webhook using billing service
   try {
     const result = await handleMayarWebhook(eventId, event, payload);
 
