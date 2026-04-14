@@ -2,8 +2,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/observability";
 import { completeAttempt, parseBody, type ParseResult, requireAuth } from "@/lib/services/practice-handler";
-import { getSupabaseServerClient } from "@/lib/supabase/server-client";
-import { isPlainObject, isOptionalString } from "@/lib/validation-helpers";
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+function isOptionalString(v: unknown): v is string | null | undefined {
+  return v === null || v === undefined || typeof v === "string";
+}
 
 type CompleteAttemptInput = {
   isCorrect: boolean;
@@ -18,7 +22,7 @@ function validateCompleteAttemptInput(raw: unknown): CompleteAttemptInput | null
   return { isCorrect, topicId };
 }
 
-async function handleCompleteAttempt(userId: string, attemptId: string, input: CompleteAttemptInput): Promise<NextResponse> {
+async function handleCompleteAttempt(userId: string, attemptId: string, input: CompleteAttemptInput): Promise<Response> {
   try {
     const result = await completeAttempt({ attemptId, userId, ...input }, { requestId: crypto.randomUUID() });
     return NextResponse.json(result, { status: 200 });
@@ -36,8 +40,8 @@ async function handleCompleteAttempt(userId: string, attemptId: string, input: C
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ attempt_id: string }> }): Promise<NextResponse> {
-  const auth = await requireAuth(await getSupabaseServerClient());
+export async function POST(req: NextRequest, { params }: { params: Promise<{ attempt_id: string }> }): Promise<Response> {
+  const auth = await requireAuth();
   if (!auth.ok) return auth.response;
   const { attempt_id } = await params;
   if (!attempt_id || typeof attempt_id !== "string") {

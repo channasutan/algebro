@@ -1,8 +1,12 @@
 // Complexity reduced from 10 → 3
 import { NextRequest, NextResponse } from "next/server";
 import { startSession, DuplicateActiveSessionError, parseBody, type ParseResult, requireAuth } from "@/lib/services/practice-handler";
-import { getSupabaseServerClient } from "@/lib/supabase/server-client";
-import { isPlainObject, isOptionalString } from "@/lib/validation-helpers";
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+function isOptionalString(v: unknown): v is string | null | undefined {
+  return v === null || v === undefined || typeof v === "string";
+}
 
 type StartSessionInput = {
   topicId?: string | null;
@@ -15,7 +19,7 @@ function validateStartSessionInput(raw: unknown): StartSessionInput | null {
   return { topicId };
 }
 
-async function handleStartSession(userId: string, input: StartSessionInput): Promise<NextResponse> {
+async function handleStartSession(userId: string, input: StartSessionInput): Promise<Response> {
   try {
     const result = await startSession({ userId, topicId: input.topicId ?? null }, { requestId: crypto.randomUUID() });
     return NextResponse.json(result, { status: 201 });
@@ -27,8 +31,8 @@ async function handleStartSession(userId: string, input: StartSessionInput): Pro
   }
 }
 
-export async function POST(req: NextRequest): Promise<NextResponse> {
-  const auth = await requireAuth(await getSupabaseServerClient());
+export async function POST(req: NextRequest): Promise<Response> {
+  const auth = await requireAuth();
   if (!auth.ok) return auth.response;
   const parseResult: ParseResult<StartSessionInput> = await parseBody(req, validateStartSessionInput);
   if (!parseResult.ok) return parseResult.response;

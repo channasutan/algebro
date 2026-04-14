@@ -152,25 +152,22 @@ export async function createSupabaseMayarWebhookRepository(supabase: SupabaseCli
     );
   };
 
-  const markPaymentFailed = async (
+  async function markPaymentOutcome(
+    supabase: SupabaseClient,
     data: Pick<MayarWebhookData, "id" | "status">
-  ): Promise<void> => {
+  ): Promise<void> {
     await updatePaymentAndSubscription(
       supabase,
       { status: data.status, provider_payment_id: data.id },
       "failed"
     );
-  };
+  }
 
-  const markPaymentExpired = async (
-    data: Pick<MayarWebhookData, "id" | "status">
-  ): Promise<void> => {
-    await updatePaymentAndSubscription(
-      supabase,
-      { status: data.status, provider_payment_id: data.id },
-      "failed"
-    );
-  };
+  const markPaymentFailed = (data: Pick<MayarWebhookData, "id" | "status">) =>
+    markPaymentOutcome(supabase, data);
+
+  const markPaymentExpired = (data: Pick<MayarWebhookData, "id" | "status">) =>
+    markPaymentOutcome(supabase, data);
 
   return {
     isDuplicateEvent,

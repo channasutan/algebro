@@ -2,8 +2,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/observability";
 import { createAttempt, parseBody, type ParseResult, requireAuth } from "@/lib/services/practice-handler";
-import { getSupabaseServerClient } from "@/lib/supabase/server-client";
-import { isPlainObject, isString } from "@/lib/validation-helpers";
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+function isString(v: unknown): v is string { return typeof v === "string"; }
 
 type CreateAttemptInput = {
   sessionId: string;
@@ -17,7 +19,7 @@ function validateCreateAttemptInput(raw: unknown): CreateAttemptInput | null {
   return { sessionId, problemId };
 }
 
-async function handleCreateAttempt(userId: string, input: CreateAttemptInput): Promise<NextResponse> {
+async function handleCreateAttempt(userId: string, input: CreateAttemptInput): Promise<Response> {
   try {
     const result = await createAttempt(
       { ...input, userId },
@@ -38,8 +40,8 @@ async function handleCreateAttempt(userId: string, input: CreateAttemptInput): P
   }
 }
 
-export async function POST(req: NextRequest): Promise<NextResponse> {
-  const auth = await requireAuth(await getSupabaseServerClient());
+export async function POST(req: NextRequest): Promise<Response> {
+  const auth = await requireAuth();
   if (!auth.ok) return auth.response;
   const parseResult: ParseResult<CreateAttemptInput> = await parseBody(req, validateCreateAttemptInput);
   if (!parseResult.ok) return parseResult.response;

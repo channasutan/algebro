@@ -27,7 +27,8 @@ export type AuthResult =
   | { ok: true; userId: string }
   | { ok: false; response: Response };
 
-export async function requireAuth(supabase: ReturnType<typeof getSupabaseServerClient>): Promise<AuthResult> {
+export async function requireAuth(): Promise<AuthResult> {
+  const supabase = await getSupabaseServerClient();
   const user = await getUser(supabase);
   if (!user) {
     return {
@@ -38,10 +39,8 @@ export async function requireAuth(supabase: ReturnType<typeof getSupabaseServerC
   return { ok: true, userId: user.id };
 }
 
-export {
-  createAttempt,
-  submitStep,
-  startSession,
-  completeAttempt,
-  DuplicateActiveSessionError,
-} from "@/modules/practice";
+export { startSession } from "@/modules/practice/services/start-session";
+export { createAttempt } from "@/modules/practice/services/create-attempt";
+export { submitStep } from "@/modules/practice/services/submit-step";
+export { completeAttempt } from "@/modules/practice/services/complete-attempt";
+export { DuplicateActiveSessionError } from "@/modules/practice/errors";
