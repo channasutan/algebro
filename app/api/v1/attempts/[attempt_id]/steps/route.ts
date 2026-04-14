@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/observability";
 import { submitStep, parseBody, type ParseResult, requireAuth } from "@/lib/services/practice-handler";
+import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 import { isPlainObject, isString } from "@/lib/validation-helpers";
 
 type SubmitStepInput = {
@@ -23,8 +24,13 @@ async function handleSubmitStep(userId: string, attemptId: string, input: Submit
     );
     return NextResponse.json(result, { status: 201 });
   } catch (err) {
-    logger.error("Unexpected error in steps route", {
-      error: err instanceof Error ? err.message : String(err),
+    logger.error({
+      event: "system.route_error",
+      meta: {
+        type: "system",
+        phase: "infra",
+        error: err instanceof Error ? err.message : String(err),
+      },
       requestId: crypto.randomUUID(),
     });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -35,7 +41,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ attempt_id: string }> }
 ): Promise<NextResponse> {
-  const auth = await requireAuth();
+  const auth = await requireAuth(await getSupabaseServerClient());
   if (!auth.ok) return auth.response;
   const { attempt_id } = await params;
   if (!attempt_id || typeof attempt_id !== "string") {

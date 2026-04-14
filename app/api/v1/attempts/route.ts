@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/observability";
 import { createAttempt, parseBody, type ParseResult, requireAuth } from "@/lib/services/practice-handler";
+import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 import { isPlainObject, isString } from "@/lib/validation-helpers";
 
 type CreateAttemptInput = {
@@ -24,8 +25,13 @@ async function handleCreateAttempt(userId: string, input: CreateAttemptInput): P
     );
     return NextResponse.json(result, { status: 201 });
   } catch (err) {
-    logger.error("Unexpected error in attempts route", {
-      error: err instanceof Error ? err.message : String(err),
+    logger.error({
+      event: "system.route_error",
+      meta: {
+        type: "system",
+        phase: "infra",
+        error: err instanceof Error ? err.message : String(err),
+      },
       requestId: crypto.randomUUID(),
     });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -33,7 +39,7 @@ async function handleCreateAttempt(userId: string, input: CreateAttemptInput): P
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  const auth = await requireAuth();
+  const auth = await requireAuth(await getSupabaseServerClient());
   if (!auth.ok) return auth.response;
   const parseResult: ParseResult<CreateAttemptInput> = await parseBody(req, validateCreateAttemptInput);
   if (!parseResult.ok) return parseResult.response;

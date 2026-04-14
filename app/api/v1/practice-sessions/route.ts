@@ -1,6 +1,7 @@
 // Complexity reduced from 10 → 3
 import { NextRequest, NextResponse } from "next/server";
 import { startSession, DuplicateActiveSessionError, parseBody, type ParseResult, requireAuth } from "@/lib/services/practice-handler";
+import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 import { isPlainObject, isOptionalString } from "@/lib/validation-helpers";
 
 type StartSessionInput = {
@@ -16,7 +17,7 @@ function validateStartSessionInput(raw: unknown): StartSessionInput | null {
 
 async function handleStartSession(userId: string, input: StartSessionInput): Promise<NextResponse> {
   try {
-    const result = await startSession({ userId, ...input }, { requestId: crypto.randomUUID() });
+    const result = await startSession({ userId, topicId: input.topicId ?? null }, { requestId: crypto.randomUUID() });
     return NextResponse.json(result, { status: 201 });
   } catch (err) {
     if (err instanceof DuplicateActiveSessionError) {
@@ -27,7 +28,7 @@ async function handleStartSession(userId: string, input: StartSessionInput): Pro
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  const auth = await requireAuth();
+  const auth = await requireAuth(await getSupabaseServerClient());
   if (!auth.ok) return auth.response;
   const parseResult: ParseResult<StartSessionInput> = await parseBody(req, validateStartSessionInput);
   if (!parseResult.ok) return parseResult.response;
