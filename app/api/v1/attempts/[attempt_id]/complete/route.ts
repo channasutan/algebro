@@ -2,8 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/observability";
 import { completeAttempt } from "@/modules/practice";
-import { parseBody, type ParseResult } from "@/lib/api-helpers";
-import { requireAuth } from "@/lib/auth/server-auth-facade";
+import { parseBody, type ParseResult, requireAuth } from "@/lib/services/api-route-service";
 
 type CompleteAttemptInput = {
   isCorrect: boolean;

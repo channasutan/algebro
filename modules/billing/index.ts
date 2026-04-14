@@ -1,10 +1,6 @@
 
 import { createSupabaseMayarWebhookRepository } from "@/repositories/billing/supabase-mayar-webhook-repository";
-import { getSupabaseServerClient } from "@/lib/supabase/server-client";
-
-function createBillingClient() {
-  return getSupabaseServerClient();
-}
+import { createBillingClient } from "./infrastructure/supabase-billing-client";
 
 export const billingModule = {
   name: "billing"

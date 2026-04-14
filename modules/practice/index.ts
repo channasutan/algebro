@@ -27,7 +27,8 @@ export {
   PracticeError, 
   SessionNotFoundError, 
   AttemptNotFoundError, 
-  StepAdditionError 
+  StepAdditionError,
+  DuplicateActiveSessionError,
 } from "./errors";
 export { 
   getNextProblem 

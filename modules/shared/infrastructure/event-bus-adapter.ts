@@ -1,4 +1,4 @@
-import { eventBus } from "@/events/event-bus";
+import { eventBus } from "@/modules/shared";
 import { AUTH_USER_REGISTERED } from "@/events/auth-events";
 import { handleAuthUserRegistered } from "@/modules/user-profiles/events/on-auth-user-registered";
 import { createServiceRoleProfileRepository } from "@/modules/user-profiles/repositories/supabase-profile-repository";
