@@ -172,25 +172,15 @@ export async function createSupabaseMayarWebhookRepository(supabase: SupabaseCli
     );
   };
 
-  const markSubscriptionActive = async (
-    data: Pick<MayarWebhookData, "id">
-  ): Promise<void> => {
-    await updateSubscriptionStatus(supabase, data.id, "active");
-  };
-
-  const markSubscriptionCancelled = async (
-    data: Pick<MayarWebhookData, "id">
-  ): Promise<void> => {
-    await updateSubscriptionStatus(supabase, data.id, "cancelled");
-  };
-
   return {
     isDuplicateEvent,
     storeWebhookEvent,
     markPaymentSuccess,
     markPaymentFailed,
     markPaymentExpired,
-    markSubscriptionActive,
-    markSubscriptionCancelled,
+    markSubscriptionActive: (data: Pick<MayarWebhookData, "id">) =>
+      updateSubscriptionStatus(supabase, data.id, "active"),
+    markSubscriptionCancelled: (data: Pick<MayarWebhookData, "id">) =>
+      updateSubscriptionStatus(supabase, data.id, "cancelled"),
   };
 }
