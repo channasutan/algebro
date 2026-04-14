@@ -2,7 +2,9 @@
 import { createSupabaseMayarWebhookRepository } from "@/repositories/billing/supabase-mayar-webhook-repository";
 import { createBillingClient } from "./infrastructure/supabase-billing-client";
 
-export type { MayarWebhookData } from "@/repositories/billing/supabase-mayar-webhook-repository";
+import type { MayarWebhookData } from "@/repositories/billing/supabase-mayar-webhook-repository";
+
+export type { MayarWebhookData };
 
 export const billingModule = {
   name: "billing"
@@ -27,7 +29,7 @@ export async function checkFeatureAccess(
   return { allowed: true, planTier: "free" };
 }
 
-export async function handleMayarWebhook(eventId: string, event: string, payload: { event: string; data: any }) {
+export async function handleMayarWebhook(eventId: string, event: string, payload: { event: string; data: MayarWebhookData }) {
   const supabase = await createBillingClient();
   const repo = await createSupabaseMayarWebhookRepository(supabase);
   const data = payload.data;
