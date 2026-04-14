@@ -1,9 +1,7 @@
 // Complexity reduced from 10 → 4
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/observability";
-import { submitStep } from "@/modules/practice";
-import { parseBody, type ParseResult } from "@/lib/api-helpers";
-import { requireAuth } from "@/lib/auth/server-auth-facade";
+import { submitStep, parseBody, type ParseResult, requireAuth } from "@/lib/api-handlers/practice-handler";
 
 type SubmitStepInput = {
   stepLatex: string;
@@ -46,4 +44,3 @@ export async function POST(
   if (!parseResult.ok) return parseResult.response;
   return await handleSubmitStep(auth.userId, attempt_id, parseResult.data);
 }
-

@@ -4,6 +4,8 @@ import {
 export type { MayarWebhookData } from "@/repositories/billing/supabase-mayar-webhook-repository";
 import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 
+type MayarWebhookData = import("@/repositories/billing/supabase-mayar-webhook-repository").MayarWebhookData;
+
 export async function handleMayarWebhook(
   eventId: string,
   event: string,
@@ -11,9 +13,9 @@ export async function handleMayarWebhook(
 ): Promise<{ ok: boolean } | { duplicate: boolean }> {
   const supabase = getSupabaseServerClient();
   const repo = await createSupabaseMayarWebhookRepository(supabase);
-  const isDuplicate = await repo.isDuplicateEvent(eventId);
 
-  if (isDuplicate) {
+  const stored = await repo.storeWebhookEvent(eventId, event, payload);
+  if (!stored) {
     return { duplicate: true };
   }
 
@@ -26,14 +28,18 @@ export async function handleMayarWebhook(
     case "payment.failed":
       await repo.markPaymentFailed(data);
       break;
-    case "subscription.cancelled":
+    case "payment.expired":
+      await repo.markPaymentExpired(data);
+      break;
+    case "subscription.active":
+      await repo.markSubscriptionActive(data);
+      break;
+    case "subscription.cancel":
       await repo.markSubscriptionCancelled(data);
       break;
     default:
       break;
   }
-
-  await repo.storeWebhookEvent(eventId, event, payload);
 
   return { ok: true };
 }

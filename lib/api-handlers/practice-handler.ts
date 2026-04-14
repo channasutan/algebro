@@ -1,6 +1,9 @@
-import { completeAttempt } from "@/modules/practice/services/complete-attempt";
-import { parseBody, type ParseResult } from "@/lib/api-helpers";
-import { requireAuth } from "@/lib/auth/server-auth-facade";
-
-export { parseBody, type ParseResult, requireAuth };
-export { completeAttempt };
+export { parseBody, type ParseResult } from "@/lib/api-helpers";
+export { requireAuth } from "@/lib/auth/server-auth-facade";
+export {
+  createAttempt,
+  submitStep,
+  startSession,
+  completeAttempt,
+  DuplicateActiveSessionError,
+} from "@/modules/practice";

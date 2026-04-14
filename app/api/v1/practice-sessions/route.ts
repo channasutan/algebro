@@ -1,8 +1,6 @@
 // Complexity reduced from 10 → 3
 import { NextRequest, NextResponse } from "next/server";
-import { startSession, DuplicateActiveSessionError } from "@/modules/practice";
-import { parseBody, type ParseResult } from "@/lib/api-helpers";
-import { requireAuth } from "@/lib/auth/server-auth-facade";
+import { startSession, DuplicateActiveSessionError, parseBody, type ParseResult, requireAuth } from "@/lib/api-handlers/practice-handler";
 
 type StartSessionInput = {
   topicId?: string | null;
@@ -34,4 +32,3 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (!parseResult.ok) return parseResult.response;
   return await handleStartSession(auth.userId, parseResult.data);
 }
-

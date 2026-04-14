@@ -3,6 +3,13 @@ import "server-only";
 import type { Json } from "@/lib/supabase/database.types";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+/*
+-- Migration required (run once in Supabase SQL editor):
+-- CREATE UNIQUE INDEX IF NOT EXISTS jobs_mayar_event_id_unique
+--   ON jobs (type, (payload->>'event_id'))
+--   WHERE type = 'mayar_webhook';
+*/
+
 export type MayarWebhookData = {
   id: string;
   status: string;
@@ -13,9 +20,11 @@ export type MayarWebhookData = {
 
 export type MayarWebhookRepository = {
   isDuplicateEvent: (eventId: string) => Promise<boolean>;
-  storeWebhookEvent: (eventId: string, eventType: string, payload: unknown) => Promise<void>;
+  storeWebhookEvent: (eventId: string, eventType: string, payload: unknown) => Promise<boolean>;
   markPaymentSuccess: (data: MayarWebhookData) => Promise<void>;
   markPaymentFailed: (data: Pick<MayarWebhookData, "id" | "status">) => Promise<void>;
+  markPaymentExpired: (data: Pick<MayarWebhookData, "id" | "status">) => Promise<void>;
+  markSubscriptionActive: (data: Pick<MayarWebhookData, "id">) => Promise<void>;
   markSubscriptionCancelled: (data: Pick<MayarWebhookData, "id">) => Promise<void>;
 };
 
@@ -90,7 +99,7 @@ export async function createSupabaseMayarWebhookRepository(supabase: SupabaseCli
     eventId: string,
     eventType: string,
     payload: unknown
-  ): Promise<void> => {
+  ): Promise<boolean> => {
     const { error } = await supabase.from("jobs").insert({
       type: "mayar_webhook",
       status: "processed",
@@ -103,8 +112,12 @@ export async function createSupabaseMayarWebhookRepository(supabase: SupabaseCli
     });
 
     if (error) {
+      // Postgres unique_violation = duplicate event — safe to ignore
+      if (error.code === "23505") return false;
       throw error;
     }
+
+    return true;
   };
 
   const markPaymentSuccess = async (data: MayarWebhookData): Promise<void> => {
@@ -123,6 +136,38 @@ export async function createSupabaseMayarWebhookRepository(supabase: SupabaseCli
       { status: data.status, provider_payment_id: data.id },
       "failed"
     );
+  };
+
+  const markPaymentExpired = async (
+    data: Pick<MayarWebhookData, "id" | "status">
+  ): Promise<void> => {
+    await updatePaymentAndSubscription(
+      supabase,
+      { status: data.status, provider_payment_id: data.id },
+      "failed"
+    );
+  };
+
+  const markSubscriptionActive = async (
+    data: Pick<MayarWebhookData, "id">
+  ): Promise<void> => {
+    const { data: payment, error: paymentLookupError } = await supabase
+      .from("payments")
+      .select("subscription_id")
+      .eq("provider", "mayar")
+      .eq("provider_payment_id", data.id)
+      .maybeSingle();
+
+    if (paymentLookupError) throw paymentLookupError;
+
+    const subscriptionId = payment?.subscription_id ?? data.id;
+
+    const { error } = await supabase
+      .from("subscriptions")
+      .update({ status: "active" })
+      .eq("id", subscriptionId);
+
+    if (error) throw error;
   };
 
   const markSubscriptionCancelled = async (
@@ -158,6 +203,8 @@ export async function createSupabaseMayarWebhookRepository(supabase: SupabaseCli
     storeWebhookEvent,
     markPaymentSuccess,
     markPaymentFailed,
+    markPaymentExpired,
+    markSubscriptionActive,
     markSubscriptionCancelled,
   };
 }
