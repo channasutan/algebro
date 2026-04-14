@@ -1,4 +1,10 @@
-import { startSession, createAttempt, submitStep, completeAttempt } from "@/modules/practice";
+import { startSession } from "@/modules/practice/services/start-session";
+import { createAttempt } from "@/modules/practice/services/create-attempt";
+import { submitStep } from "@/modules/practice/services/submit-step";
+import { completeAttempt } from "@/modules/practice/services/complete-attempt";
+import { DuplicateActiveSessionError } from "@/modules/practice/errors";
+
+export { DuplicateActiveSessionError };
 
 export async function startPracticeSession(input: { userId: string; topicId?: string | null }): Promise<ReturnType<typeof startSession>> {
   return startSession(input, { requestId: crypto.randomUUID() });
@@ -16,4 +22,3 @@ export async function completePracticeAttempt(input: { attemptId: string; userId
   return completeAttempt(input, { requestId: crypto.randomUUID() });
 }
 
-export { DuplicateActiveSessionError } from "@/modules/practice";

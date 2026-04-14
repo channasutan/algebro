@@ -1,4 +1,4 @@
-import { getSupabaseServerClient } from "@/lib/supabase/server-client";
+import { getSupabaseServerClient } from "@/lib/supabase";
 
 export function createBillingClient() {
   return getSupabaseServerClient();
