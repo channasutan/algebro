@@ -2,15 +2,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/observability";
 import { submitStep, parseBody, type ParseResult, requireAuth } from "@/lib/services/practice-handler";
+import { isPlainObject, isString } from "@/lib/validation-helpers";
 
 type SubmitStepInput = {
   stepLatex: string;
 };
 
 function validateSubmitStepInput(raw: unknown): SubmitStepInput | null {
-  if (typeof raw !== "object" || raw === null || !("stepLatex" in raw)) return null;
+  if (!isPlainObject(raw) || !("stepLatex" in raw)) return null;
   const { stepLatex } = raw as { stepLatex: unknown };
-  if (typeof stepLatex !== "string" || stepLatex.trim() === "") return null;
+  if (!isString(stepLatex) || stepLatex.trim() === "") return null;
   return { stepLatex };
 }
 

@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/observability";
 import { completeAttempt, parseBody, type ParseResult, requireAuth } from "@/lib/services/practice-handler";
+import { isPlainObject, isOptionalString } from "@/lib/validation-helpers";
 
 type CompleteAttemptInput = {
   isCorrect: boolean;
@@ -9,10 +10,10 @@ type CompleteAttemptInput = {
 };
 
 function validateCompleteAttemptInput(raw: unknown): CompleteAttemptInput | null {
-  if (typeof raw !== "object" || raw === null || !("isCorrect" in raw)) return null;
+  if (!isPlainObject(raw) || !("isCorrect" in raw)) return null;
   const { isCorrect, topicId } = raw as { isCorrect: unknown; topicId?: unknown };
   if (typeof isCorrect !== "boolean") return null;
-  if (topicId !== undefined && topicId !== null && typeof topicId !== "string") return null;
+  if (!isOptionalString(topicId)) return null;
   return { isCorrect, topicId };
 }
 

@@ -1,15 +1,16 @@
 // Complexity reduced from 10 → 3
 import { NextRequest, NextResponse } from "next/server";
 import { startSession, DuplicateActiveSessionError, parseBody, type ParseResult, requireAuth } from "@/lib/services/practice-handler";
+import { isPlainObject, isOptionalString } from "@/lib/validation-helpers";
 
 type StartSessionInput = {
   topicId?: string | null;
 };
 
 function validateStartSessionInput(raw: unknown): StartSessionInput | null {
-  if (typeof raw !== "object" || raw === null || !("topicId" in raw)) return null;
+  if (!isPlainObject(raw) || !("topicId" in raw)) return null;
   const { topicId } = raw as { topicId?: unknown };
-  if (topicId !== undefined && topicId !== null && typeof topicId !== "string") return null;
+  if (!isOptionalString(topicId)) return null;
   return { topicId };
 }
 

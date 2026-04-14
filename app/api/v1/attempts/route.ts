@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/observability";
 import { createAttempt, parseBody, type ParseResult, requireAuth } from "@/lib/services/practice-handler";
+import { isPlainObject, isString } from "@/lib/validation-helpers";
 
 type CreateAttemptInput = {
   sessionId: string;
@@ -9,12 +10,9 @@ type CreateAttemptInput = {
 };
 
 function validateCreateAttemptInput(raw: unknown): CreateAttemptInput | null {
-  if (
-    typeof raw !== "object" || raw === null ||
-    !("sessionId" in raw) || !("problemId" in raw)
-  ) return null;
+  if (!isPlainObject(raw) || !("sessionId" in raw) || !("problemId" in raw)) return null;
   const { sessionId, problemId } = raw as { sessionId: unknown; problemId: unknown };
-  if (typeof sessionId !== "string" || typeof problemId !== "string") return null;
+  if (!isString(sessionId) || !isString(problemId)) return null;
   return { sessionId, problemId };
 }
 
