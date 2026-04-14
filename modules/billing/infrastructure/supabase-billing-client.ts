@@ -1,13 +1,27 @@
 import "server-only";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import { getPublicEnv } from "@/config/env.server-entry";
+import type { Database } from "@/lib/supabase/database.types";
 
-export type BillingClient = SupabaseClient;
+export async function createBillingClient() {
+  const cookieStore = await cookies();
+  const { supabaseUrl, supabaseAnonKey } = getPublicEnv();
 
-/**
- * Identity factory — accepts an already-constructed Supabase client.
- * The lib/ layer (billing-service.ts) is responsible for constructing
- * and injecting the client; this module layer stays clean of lib/ imports.
- */
-export function createBillingClient(client: BillingClient): BillingClient {
-  return client;
+  return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
+        } catch {
+          // Ignore in Server Component context
+        }
+      },
+    },
+  });
 }

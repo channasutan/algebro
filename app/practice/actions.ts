@@ -1,9 +1,15 @@
 "use server";
 
-import { startSession, createAttempt, submitStep, getNextProblem } from "@/modules/practice";
+import {
+  startSession,
+  createAttempt,
+  submitStep,
+  getNextProblem,
+  type StartPracticeResult,
+  type SubmitStepResult,
+} from "@/modules/practice";
 import { getCurrentSession } from "@/modules/authentication";
 import { createServiceLogger, getRequestId } from "@/lib/observability";
-import type { StartPracticeResult, SubmitStepResult } from "@/modules/practice";
 
 export async function startPracticeFlowAction(topicId: string | null): Promise<StartPracticeResult> {
   const sessionResult = await getCurrentSession();
