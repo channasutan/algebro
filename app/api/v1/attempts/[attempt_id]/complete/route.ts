@@ -29,10 +29,10 @@ async function handleCompleteAttempt(userId: string, attemptId: string, input: C
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: { attempt_id: string } }): Promise<NextResponse> {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ attempt_id: string }> }): Promise<NextResponse> {
   const auth = await requireAuth();
   if (!auth.ok) return auth.response;
-  const { attempt_id } = params;
+  const { attempt_id } = await params;
   if (!attempt_id || typeof attempt_id !== "string") {
     return NextResponse.json({ error: "Invalid attempt_id" }, { status: 400 });
   }
