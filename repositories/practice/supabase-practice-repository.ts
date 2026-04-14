@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 
 import { PracticeSession, Attempt, SolutionStep } from "@/modules/practice/domain/practice";
 import { PracticeRepository, AttemptWithStep, CreateAttemptWithStepInput } from "./practice-repository";
@@ -43,7 +44,7 @@ export function buildSupabasePracticeRepository(client: SupabaseClient): Practic
   return createRepositoryFromClientFactory(getClient);
 }
 
-export function createSupabasePracticeRepository(client: SupabaseClient): PracticeRepository {
+export function createSupabasePracticeRepository(): PracticeRepository {
   return createRepositoryFromClientFactory(getSupabaseServerClient);
 }
 

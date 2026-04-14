@@ -1,5 +1,5 @@
-import { createSupabasePracticeRepository } from "../repositories/supabase-practice-repository";
-import { PracticeRepository } from "../repositories/practice-repository";
+import { createSupabasePracticeRepository } from "@/repositories/practice/supabase-practice-repository";
+import { PracticeRepository } from "@/repositories/practice/practice-repository";
 import { SolutionStep } from "../domain/practice";
 import { createServiceLogger, type ServiceContext } from "@/lib/observability";
 import { validateStep } from "@/modules/step-validation";

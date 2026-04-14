@@ -2,7 +2,10 @@ import { startSession, createAttempt, submitStep, completeAttempt } from "@/modu
 export { DuplicateActiveSessionError } from "@/modules/practice";
 
 export async function startPracticeSession(input: { userId: string; topicId?: string | null }): Promise<ReturnType<typeof startSession>> {
-  return startSession(input, { requestId: crypto.randomUUID() });
+  return startSession(
+    { userId: input.userId, topicId: input.topicId ?? null },
+    { requestId: crypto.randomUUID() }
+  );
 }
 
 export async function createNewAttempt(input: { sessionId: string; problemId: string; userId: string }): Promise<ReturnType<typeof createAttempt>> {

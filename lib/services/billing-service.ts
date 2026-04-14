@@ -8,7 +8,7 @@ export async function handleMayarWebhook(
   event: string,
   payload: { event: string; data: import("@/modules/billing").MayarWebhookData }
 ): Promise<{ ok: boolean } | { duplicate: boolean }> {
-  const supabase = getSupabaseServerClient();
+  const supabase = await getSupabaseServerClient();
   const repo = await createSupabaseMayarWebhookRepository(supabase);
 
   const stored = await repo.storeWebhookEvent(eventId, event, payload);
