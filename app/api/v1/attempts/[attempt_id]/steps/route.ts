@@ -1,7 +1,9 @@
-// Complexity reduced from 10 → 4
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/observability";
-import { submitStep, parseBody, type ParseResult, requireAuth } from "@/lib/services/practice-handler";
+import { submitStep } from "@/modules/practice";
+import { parseBody, type ParseResult } from "@/lib/api-helpers";
+import { requireAuth } from "@/lib/auth/server-auth-facade";
+import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 function isPlainObject(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
@@ -12,7 +14,8 @@ type SubmitStepInput = {
 };
 
 function validateSubmitStepInput(raw: unknown): SubmitStepInput | null {
-  if (!isPlainObject(raw) || !("stepLatex" in raw)) return null;
+  if (!isPlainObject(raw)) return null;
+  if (!("stepLatex" in raw)) return null;
   const { stepLatex } = raw as { stepLatex: unknown };
   if (!isString(stepLatex) || stepLatex.trim() === "") return null;
   return { stepLatex };
@@ -43,7 +46,8 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ attempt_id: string }> }
 ): Promise<Response> {
-  const auth = await requireAuth();
+  const supabase = await getSupabaseServerClient();
+  const auth = await requireAuth(supabase);
   if (!auth.ok) return auth.response;
   const { attempt_id } = await params;
   if (!attempt_id || typeof attempt_id !== "string") {

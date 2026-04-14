@@ -1,7 +1,9 @@
-// Complexity reduced from 9 → 3
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/observability";
-import { createAttempt, parseBody, type ParseResult, requireAuth } from "@/lib/services/practice-handler";
+import { createAttempt } from "@/modules/practice";
+import { parseBody, type ParseResult } from "@/lib/api-helpers";
+import { requireAuth } from "@/lib/auth/server-auth-facade";
+import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 function isPlainObject(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
@@ -13,9 +15,11 @@ type CreateAttemptInput = {
 };
 
 function validateCreateAttemptInput(raw: unknown): CreateAttemptInput | null {
-  if (!isPlainObject(raw) || !("sessionId" in raw) || !("problemId" in raw)) return null;
+  if (!isPlainObject(raw)) return null;
+  if (!("sessionId" in raw) || !("problemId" in raw)) return null;
   const { sessionId, problemId } = raw as { sessionId: unknown; problemId: unknown };
-  if (!isString(sessionId) || !isString(problemId)) return null;
+  if (!isString(sessionId)) return null;
+  if (!isString(problemId)) return null;
   return { sessionId, problemId };
 }
 
@@ -41,7 +45,8 @@ async function handleCreateAttempt(userId: string, input: CreateAttemptInput): P
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
-  const auth = await requireAuth();
+  const supabase = await getSupabaseServerClient();
+  const auth = await requireAuth(supabase);
   if (!auth.ok) return auth.response;
   const parseResult: ParseResult<CreateAttemptInput> = await parseBody(req, validateCreateAttemptInput);
   if (!parseResult.ok) return parseResult.response;

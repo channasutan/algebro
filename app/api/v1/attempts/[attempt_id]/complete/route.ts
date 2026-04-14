@@ -1,7 +1,10 @@
-// Complexity reduced from 12 → 4
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/observability";
-import { completeAttempt, parseBody, type ParseResult, requireAuth } from "@/lib/services/practice-handler";
+import { completeAttempt } from "@/modules/practice";
+import { parseBody, type ParseResult } from "@/lib/api-helpers";
+import { requireAuth } from "@/lib/auth/server-auth-facade";
+import { getSupabaseServerClient } from "@/lib/supabase/server-client";
+
 function isPlainObject(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
@@ -15,7 +18,8 @@ type CompleteAttemptInput = {
 };
 
 function validateCompleteAttemptInput(raw: unknown): CompleteAttemptInput | null {
-  if (!isPlainObject(raw) || !("isCorrect" in raw)) return null;
+  if (!isPlainObject(raw)) return null;
+  if (!("isCorrect" in raw)) return null;
   const { isCorrect, topicId } = raw as { isCorrect: unknown; topicId?: unknown };
   if (typeof isCorrect !== "boolean") return null;
   if (!isOptionalString(topicId)) return null;
@@ -41,7 +45,8 @@ async function handleCompleteAttempt(userId: string, attemptId: string, input: C
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ attempt_id: string }> }): Promise<Response> {
-  const auth = await requireAuth();
+  const supabase = await getSupabaseServerClient();
+  const auth = await requireAuth(supabase);
   if (!auth.ok) return auth.response;
   const { attempt_id } = await params;
   if (!attempt_id || typeof attempt_id !== "string") {

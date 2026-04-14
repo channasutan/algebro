@@ -1,6 +1,8 @@
-// Complexity reduced from 10 → 3
 import { NextRequest, NextResponse } from "next/server";
-import { startSession, DuplicateActiveSessionError, parseBody, type ParseResult, requireAuth } from "@/lib/services/practice-handler";
+import { startSession, DuplicateActiveSessionError } from "@/modules/practice";
+import { parseBody, type ParseResult } from "@/lib/api-helpers";
+import { requireAuth } from "@/lib/auth/server-auth-facade";
+import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 function isPlainObject(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
@@ -13,7 +15,8 @@ type StartSessionInput = {
 };
 
 function validateStartSessionInput(raw: unknown): StartSessionInput | null {
-  if (!isPlainObject(raw) || !("topicId" in raw)) return null;
+  if (!isPlainObject(raw)) return null;
+  if (!("topicId" in raw)) return null;
   const { topicId } = raw as { topicId?: unknown };
   if (!isOptionalString(topicId)) return null;
   return { topicId };
@@ -32,7 +35,8 @@ async function handleStartSession(userId: string, input: StartSessionInput): Pro
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
-  const auth = await requireAuth();
+  const supabase = await getSupabaseServerClient();
+  const auth = await requireAuth(supabase);
   if (!auth.ok) return auth.response;
   const parseResult: ParseResult<StartSessionInput> = await parseBody(req, validateStartSessionInput);
   if (!parseResult.ok) return parseResult.response;
