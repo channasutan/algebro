@@ -78,6 +78,30 @@ async function updatePaymentAndSubscription(
   }
 }
 
+async function updateSubscriptionStatus(
+  supabase: SupabaseClient,
+  providerId: string,
+  status: "active" | "cancelled"
+): Promise<void> {
+  const { data: payment, error: paymentLookupError } = await supabase
+    .from("payments")
+    .select("subscription_id")
+    .eq("provider", "mayar")
+    .eq("provider_payment_id", providerId)
+    .maybeSingle();
+
+  if (paymentLookupError) throw paymentLookupError;
+
+  const subscriptionId = payment?.subscription_id ?? providerId;
+
+  const { error } = await supabase
+    .from("subscriptions")
+    .update({ status })
+    .eq("id", subscriptionId);
+
+  if (error) throw error;
+}
+
 export async function createSupabaseMayarWebhookRepository(supabase: SupabaseClient): Promise<MayarWebhookRepository> {
 
   const isDuplicateEvent = async (eventId: string): Promise<boolean> => {
@@ -151,51 +175,13 @@ export async function createSupabaseMayarWebhookRepository(supabase: SupabaseCli
   const markSubscriptionActive = async (
     data: Pick<MayarWebhookData, "id">
   ): Promise<void> => {
-    const { data: payment, error: paymentLookupError } = await supabase
-      .from("payments")
-      .select("subscription_id")
-      .eq("provider", "mayar")
-      .eq("provider_payment_id", data.id)
-      .maybeSingle();
-
-    if (paymentLookupError) throw paymentLookupError;
-
-    const subscriptionId = payment?.subscription_id ?? data.id;
-
-    const { error } = await supabase
-      .from("subscriptions")
-      .update({ status: "active" })
-      .eq("id", subscriptionId);
-
-    if (error) throw error;
+    await updateSubscriptionStatus(supabase, data.id, "active");
   };
 
   const markSubscriptionCancelled = async (
     data: Pick<MayarWebhookData, "id">
   ): Promise<void> => {
-    const { data: payment, error: paymentLookupError } = await supabase
-      .from("payments")
-      .select("subscription_id")
-      .eq("provider", "mayar")
-      .eq("provider_payment_id", data.id)
-      .maybeSingle();
-
-    if (paymentLookupError) {
-      throw paymentLookupError;
-    }
-
-    const subscriptionId = payment?.subscription_id ?? data.id;
-
-    const { error } = await supabase
-      .from("subscriptions")
-      .update({
-        status: "cancelled",
-      })
-      .eq("id", subscriptionId);
-
-    if (error) {
-      throw error;
-    }
+    await updateSubscriptionStatus(supabase, data.id, "cancelled");
   };
 
   return {

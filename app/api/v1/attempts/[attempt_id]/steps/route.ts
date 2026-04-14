@@ -1,7 +1,7 @@
 // Complexity reduced from 10 → 4
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/observability";
-import { submitStep, parseBody, type ParseResult, requireAuth } from "@/lib/api-handlers/practice-handler";
+import { submitStep, parseBody, type ParseResult, requireAuth } from "@/lib/services/practice-handler";
 
 type SubmitStepInput = {
   stepLatex: string;

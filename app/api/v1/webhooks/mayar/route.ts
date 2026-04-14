@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { handleMayarWebhook, type MayarWebhookData, getMayarWebhookSecret } from "@/lib/api-handlers/billing-handler";
+import { handleMayarWebhook, type MayarWebhookData, getMayarWebhookSecret } from "@/lib/services/billing-handler";
 
 /**
  * Verifies Mayar webhook signature using HMAC-SHA256.

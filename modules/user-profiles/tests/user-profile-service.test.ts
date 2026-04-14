@@ -31,10 +31,6 @@ vi.mock("@/modules/user-profiles", () => ({
     publish: vi.fn(),
   },
 }));
-  eventBus: {
-    publish: vi.fn(),
-  },
-}));
 
 describe("User Profiles Service Logic", () => {
   let mockRepo: Mocked<ProfileRepository>;

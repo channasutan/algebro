@@ -1,7 +1,7 @@
 // Complexity reduced from 9 → 3
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/observability";
-import { createAttempt, parseBody, type ParseResult, requireAuth } from "@/lib/api-handlers/practice-handler";
+import { createAttempt, parseBody, type ParseResult, requireAuth } from "@/lib/services/practice-handler";
 
 type CreateAttemptInput = {
   sessionId: string;

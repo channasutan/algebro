@@ -1,7 +1,7 @@
 // Complexity reduced from 12 → 4
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/observability";
-import { completeAttempt, parseBody, type ParseResult, requireAuth } from "@/lib/api-handlers/practice-handler";
+import { completeAttempt, parseBody, type ParseResult, requireAuth } from "@/lib/services/practice-handler";
 
 type CompleteAttemptInput = {
   isCorrect: boolean;

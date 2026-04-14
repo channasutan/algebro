@@ -1,6 +1,6 @@
 // Complexity reduced from 10 → 3
 import { NextRequest, NextResponse } from "next/server";
-import { startSession, DuplicateActiveSessionError, parseBody, type ParseResult, requireAuth } from "@/lib/api-handlers/practice-handler";
+import { startSession, DuplicateActiveSessionError, parseBody, type ParseResult, requireAuth } from "@/lib/services/practice-handler";
 
 type StartSessionInput = {
   topicId?: string | null;
