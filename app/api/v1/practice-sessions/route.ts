@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { startPracticeSession, DuplicateActiveSessionError } from "@/services/practice-service";
-import { parseBody, type ParseResult } from "@/lib/api-helpers";
+import { parseBody, type ParseResult } from "@/services/api-helpers-service";
 import { requireAuth } from "@/services/auth-service";
 function isPlainObject(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
