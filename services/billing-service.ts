@@ -1,10 +1,6 @@
 import { getSupabaseServerClient } from "@/lib/supabase/server-client";
-import {
-  handleMayarWebhook as _handleMayarWebhook,
-  type MayarWebhookData,
-} from "@/modules/billing";
-
-export type { MayarWebhookData };
+import { handleMayarWebhook as _handleMayarWebhook } from "@/modules/billing";
+export type { MayarWebhookData } from "@/modules/billing";
 
 export async function handleMayarWebhook(
   eventId: string,

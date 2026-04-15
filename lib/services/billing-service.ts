@@ -1,5 +1,5 @@
-import { createSupabaseMayarWebhookRepository, type MayarWebhookData } from "@/repositories/billing/supabase-mayar-webhook-repository";
-export type { MayarWebhookData };
+export type { MayarWebhookData } from "@/repositories/billing/supabase-mayar-webhook-repository";
+import { createSupabaseMayarWebhookRepository } from "@/repositories/billing/supabase-mayar-webhook-repository";
 import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 
 export async function handleMayarWebhook(
