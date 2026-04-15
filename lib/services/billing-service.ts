@@ -1,11 +1,11 @@
-import { createSupabaseMayarWebhookRepository } from "@/repositories/billing/supabase-mayar-webhook-repository";
-export type { MayarWebhookData } from "@/repositories/billing/supabase-mayar-webhook-repository";
+import { createSupabaseMayarWebhookRepository, type MayarWebhookData } from "@/repositories/billing/supabase-mayar-webhook-repository";
+export type { MayarWebhookData };
 import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 
 export async function handleMayarWebhook(
   eventId: string,
   event: string,
-  payload: { event: string; data: import("@/repositories/billing/supabase-mayar-webhook-repository").MayarWebhookData }
+  payload: { event: string; data: MayarWebhookData }
 ): Promise<{ ok: boolean } | { duplicate: boolean }> {
   const supabase = await getSupabaseServerClient();
   const repo = await createSupabaseMayarWebhookRepository(supabase);
