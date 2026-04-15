@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { startSession, DuplicateActiveSessionError } from "@/modules/practice";
+import { startPracticeSession, DuplicateActiveSessionError } from "@/services/practice-service";
 import { parseBody, type ParseResult } from "@/lib/api-helpers";
-import { requireAuth } from "@/lib/auth/server-auth-facade";
-import { getSupabaseServerClient } from "@/lib/supabase/server-client";
+import { requireAuth } from "@/services/auth-service";
 function isPlainObject(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
@@ -24,7 +23,7 @@ function validateStartSessionInput(raw: unknown): StartSessionInput | null {
 
 async function handleStartSession(userId: string, input: StartSessionInput): Promise<Response> {
   try {
-    const result = await startSession({ userId, topicId: input.topicId ?? null }, { requestId: crypto.randomUUID() });
+    const result = await startPracticeSession({ userId, topicId: input.topicId ?? null });
     return NextResponse.json(result, { status: 201 });
   } catch (err) {
     if (err instanceof DuplicateActiveSessionError) {
@@ -35,8 +34,7 @@ async function handleStartSession(userId: string, input: StartSessionInput): Pro
 }
 
 export async function POST(req: NextRequest): Promise<Response> {
-  const supabase = await getSupabaseServerClient();
-  const auth = await requireAuth(supabase);
+  const auth = await requireAuth();
   if (!auth.ok) return auth.response;
   const parseResult: ParseResult<StartSessionInput> = await parseBody(req, validateStartSessionInput);
   if (!parseResult.ok) return parseResult.response;

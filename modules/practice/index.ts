@@ -40,3 +40,9 @@ export type {
 
 // For tests
 export { eventBus } from "@/events/event-bus";
+
+// Testing helpers — repo-injected variants
+export { startSessionWithRepository } from "./services/start-session";
+export { createAttemptWithRepository, type CreateAttemptResult } from "./services/create-attempt";
+export { submitStepWithRepository } from "./services/submit-step";
+export type { PracticeRepository } from "@/repositories/practice/practice-repository";

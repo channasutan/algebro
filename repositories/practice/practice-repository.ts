@@ -1,4 +1,4 @@
-import { PracticeSession, Attempt, SolutionStep } from "../domain/practice";
+import { PracticeSession, Attempt, SolutionStep } from "@/modules/practice/domain/practice";
 
 export type AttemptWithStep = {
   attempt: Attempt;

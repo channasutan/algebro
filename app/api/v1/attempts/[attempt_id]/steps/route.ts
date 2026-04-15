@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/observability";
-import { submitStep } from "@/modules/practice";
+import { submitStepToAttempt } from "@/services/practice-service";
 import { parseBody, type ParseResult } from "@/lib/api-helpers";
-import { requireAuth } from "@/lib/auth/server-auth-facade";
-import { getSupabaseServerClient } from "@/lib/supabase/server-client";
+import { requireAuth } from "@/services/auth-service";
 function isPlainObject(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
@@ -23,10 +22,7 @@ function validateSubmitStepInput(raw: unknown): SubmitStepInput | null {
 
 async function handleSubmitStep(userId: string, attemptId: string, input: SubmitStepInput): Promise<Response> {
   try {
-    const result = await submitStep(
-      { attemptId, userId, ...input },
-      { requestId: crypto.randomUUID() }
-    );
+    const result = await submitStepToAttempt({ attemptId, userId, ...input });
     return NextResponse.json(result, { status: 201 });
   } catch (err) {
     logger.error({
@@ -46,8 +42,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ attempt_id: string }> }
 ): Promise<Response> {
-  const supabase = await getSupabaseServerClient();
-  const auth = await requireAuth(supabase);
+  const auth = await requireAuth();
   if (!auth.ok) return auth.response;
   const { attempt_id } = await params;
   if (!attempt_id || typeof attempt_id !== "string") {

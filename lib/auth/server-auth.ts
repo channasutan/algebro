@@ -1,4 +1,4 @@
-import { getSupabaseServerClient } from "@/lib/supabase/server-client";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { getUser } from "@/lib/auth/user";
 import { ServiceContext } from "@/lib/observability";
 
@@ -6,7 +6,7 @@ export type AuthResult =
   | { ok: true; userId: string }
   | { ok: false; response: Response };
 
-export async function requireAuth(supabase: ReturnType<typeof getSupabaseServerClient>): Promise<AuthResult> {
+export async function requireAuth(supabase: SupabaseClient): Promise<AuthResult> {
   const user = await getUser(supabase);
 
   if (!user) {

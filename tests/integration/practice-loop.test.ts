@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { startSessionWithRepository, createAttemptWithRepository, submitStepWithRepository } from "@/modules/practice";
-import type { PracticeRepository, PracticeSession, Attempt, SolutionStep } from "@/modules/practice";
+import type { PracticeRepository, PracticeSession, Attempt, SolutionStep, CreateAttemptResult } from "@/modules/practice";
 
 import type { Mocked } from "vitest";
 import { TEST_USER_ID } from "../test-constants";

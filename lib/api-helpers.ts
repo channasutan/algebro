@@ -1,4 +1,4 @@
-import type { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 export type ParseResult<T> =
   | { ok: true; data: T }
