@@ -59,3 +59,5 @@ export const geminiClient = {
   isConfigured,
   generateContent
 };
+
+export type GeminiResponse = Awaited<ReturnType<typeof geminiClient.generateContent>>;

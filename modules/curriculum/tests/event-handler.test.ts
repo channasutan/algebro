@@ -2,7 +2,7 @@ import { vi, describe, it, expect, beforeEach } from "vitest";
 import { handleAttemptCompleted } from "../events/on-attempt-completed";
 import { updateMastery } from "../services/update-mastery";
 import type { CurriculumRepository } from "../repositories/curriculum-repository";
-import type { PracticeRepository } from "@/modules/practice/repositories/practice-repository";
+import type { PracticeRepository } from "@/repositories/practice/practice-repository";
 import type { AttemptCompletedEvent } from "@/events/attempt-events";
 
 // ── Mock Observability ──────────────────────────────────────────────────────
@@ -42,8 +42,10 @@ function makeMockPracticeRepo(): PracticeRepository {
       id: "sess-1",
       topicId: "topic-1",
     }),
+    findActiveSession: vi.fn(),
     createSession: vi.fn(),
     createAttempt: vi.fn(),
+    createAttemptWithStep: vi.fn(),
     updateAttempt: vi.fn(),
     completeAttempt: vi.fn(),
     addStep: vi.fn(),

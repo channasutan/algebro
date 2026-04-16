@@ -2,8 +2,8 @@ import { eventBus } from "@/events/event-bus";
 import { createDomainEvent } from "@/events/event-types";
 import { createServiceLogger, type ServiceContext } from "@/lib/observability";
 import { Attempt } from "../domain/practice";
-import { PracticeRepository } from "../repositories/practice-repository";
-import { createSupabasePracticeRepository } from "../repositories/supabase-practice-repository";
+import { PracticeRepository } from "@/repositories/practice/practice-repository";
+import { createSupabasePracticeRepository } from "@/repositories/practice/supabase-practice-repository";
 import { ATTEMPT_COMPLETED, type AttemptCompletedPayload } from "@/events/attempt-events";
 
 export type CompleteAttemptInput = {

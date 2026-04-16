@@ -86,7 +86,7 @@ describe("environment smoke tests", () => {
         const { getPublicEnv } = await loadPublicEnvModule();
 
         expect(() => getPublicEnv()).toThrow(
-          /Missing required public environment variable: NEXT_PUBLIC_SUPABASE_URL/
+          /Missing required env var: NEXT_PUBLIC_SUPABASE_URL/
         );
       });
     });
@@ -124,7 +124,7 @@ describe("environment smoke tests", () => {
         const { getPublicAuthEnv } = await loadPublicEnvModule();
 
         expect(() => getPublicAuthEnv()).toThrow(
-          /Missing required public environment variable: NEXT_PUBLIC_AUTH_CALLBACK_URL/
+          /Missing required env var: NEXT_PUBLIC_AUTH_CALLBACK_URL/
         );
       });
     });
@@ -189,7 +189,7 @@ describe("environment smoke tests", () => {
       const { getServerEnv } = await loadServerEnvModule();
 
       expect(() => getServerEnv()).toThrow(
-        /Missing required public environment variable: NEXT_PUBLIC_SUPABASE_URL/
+        /Missing required env var: NEXT_PUBLIC_SUPABASE_URL/
       );
     });
   });

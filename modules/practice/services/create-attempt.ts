@@ -1,59 +1,102 @@
-import { createSupabasePracticeRepository } from "../repositories/supabase-practice-repository";
-import { PracticeRepository } from "../repositories/practice-repository";
-import { Attempt } from "../domain/practice";
+import { createSupabasePracticeRepository } from "@/repositories/practice/supabase-practice-repository";
+import { PracticeRepository } from "@/repositories/practice/practice-repository";
+import { Attempt, SolutionStep } from "../domain/practice";
 import { createServiceLogger, type ServiceContext } from "@/lib/observability";
 
 export type CreateAttemptInput = {
   sessionId: string;
   problemId: string;
   userId: string;
+  /** The index of the first solution step (typically 0). Optional — if omitted, no step is created. */
+  stepIndex?: number;
+  /** The LaTeX string of the first solution step. Optional — if omitted or empty, no step is created. */
+  stepLatex?: string;
+};
+
+export type CreateAttemptResult = {
+  attempt: Attempt;
+  step?: SolutionStep;
 };
 
 export async function createAttempt(
   input: CreateAttemptInput,
   context: ServiceContext
-): Promise<Attempt> {
+): Promise<CreateAttemptResult> {
   const repo = createSupabasePracticeRepository();
   return createAttemptWithRepository(repo, input, context);
 }
 
 /**
- * Creates a new practice attempt for a specific problem within a session.
+ * Creates a new practice attempt and its first solution step atomically.
+ * Both inserts execute inside a single Postgres transaction via RPC.
+ * If the step insert fails, the attempt row is rolled back — no orphans.
  */
 export async function createAttemptWithRepository(
   repo: PracticeRepository,
   input: CreateAttemptInput,
   context: ServiceContext
-): Promise<Attempt> {
-  const { sessionId, problemId, userId } = input;
+): Promise<CreateAttemptResult> {
+  const { sessionId, problemId, userId, stepIndex, stepLatex } = input;
   const { requestId } = context;
   const log = createServiceLogger(requestId);
 
-  log.info({ 
-    event: "practice.attempt", 
-    meta: { type: "domain", userId, phase: "start", sessionId, problemId } 
+  log.info({
+    event: "practice.attempt",
+    meta: { type: "domain", userId, phase: "start", sessionId, problemId },
   });
 
-  try {
-    const attempt = await repo.createAttempt(sessionId, problemId, userId);
+  const hasStep = typeof stepLatex === "string" && stepLatex.trim() !== "";
 
-    log.info({ 
-      event: "practice.attempt", 
-      meta: { type: "domain", userId, phase: "complete", attemptId: attempt.id, outcome: "success" } 
-    });
-    return attempt;
+  try {
+    if (hasStep) {
+      // Atomic attempt + step creation via RPC
+      const result = await repo.createAttemptWithStep({
+        sessionId,
+        problemId,
+        stepIndex: stepIndex ?? 0,
+        stepLatex: stepLatex.trim(),
+      });
+
+      log.info({
+        event: "practice.attempt",
+        meta: {
+          type: "domain",
+          userId,
+          phase: "complete",
+          attemptId: result.attempt.id,
+          stepId: result.step.id,
+          outcome: "success",
+        },
+      });
+      return result;
+    } else {
+      // Attempt only (no step) — first step will be added via submitStep
+      const attempt = await repo.createAttempt(sessionId, problemId, userId);
+
+      log.info({
+        event: "practice.attempt",
+        meta: {
+          type: "domain",
+          userId,
+          phase: "complete",
+          attemptId: attempt.id,
+          outcome: "success",
+        },
+      });
+      return { attempt };
+    }
   } catch (err) {
-    log.error({ 
-      event: "practice.attempt", 
-      meta: { 
+    log.error({
+      event: "practice.attempt",
+      meta: {
         type: "domain",
         userId,
         phase: "infra",
         outcome: "failure",
-        sessionId, 
+        sessionId,
         problemId,
-        error: err instanceof Error ? err.message : String(err) 
-      }
+        error: err instanceof Error ? err.message : String(err),
+      },
     });
     throw err;
   }

@@ -11,16 +11,10 @@ vi.mock("next/headers", () => ({
 }));
 
 import { createSupabaseProfileRepository } from "@/modules/user-profiles/repositories/supabase-profile-repository";
-import { getCurrentProfile } from "@/modules/user-profiles/services/get-current-profile";
-import { getOrCreateUserProfile } from "@/modules/user-profiles/services/get-or-create-user-profile";
-import { updateProfile } from "@/modules/user-profiles/services/update-profile";
-import { InitializationSource } from "@/modules/user-profiles/domain/initialization-source";
-import { eventBus } from "@/events/event-bus";
-import { USER_PROFILE_UPDATED } from "@/modules/user-profiles/events/profile-updated";
-import { ProfileNotFoundError } from "@/modules/user-profiles/errors";
-
+import { getCurrentProfile, getOrCreateUserProfile, InitializationSource, eventBus, USER_PROFILE_UPDATED, ProfileNotFoundError } from "@/modules/user-profiles";
 import * as ServerClientAuth from "@/lib/supabase/server-client";
 import * as ServerClientAdmin from "@/lib/supabase/admin-client";
+import { updateProfile } from "@/modules/user-profiles/services/update-profile";
 
 // Mock event bus
 vi.mock("@/events/event-bus", () => ({
@@ -84,16 +78,15 @@ describe("User Profiles Module Integration", () => {
 
   const getClient = async () => mockClient as unknown as import("@supabase/supabase-js").SupabaseClient;
 
-  it("throws error when profile not found", async () => {
+  it("returns null when profile not found", async () => {
     vi.spyOn(ServerClientAuth, "getSupabaseServerClient").mockImplementation(getClient);
     const repo = createSupabaseProfileRepository();
 
     // getCurrentProfile calls findById -> returns null
     maybeSingleMock.mockResolvedValueOnce({ data: null, error: null });
 
-    await expect(
-      getCurrentProfile(repo, { userId: "user-123" })
-    ).rejects.toThrow(ProfileNotFoundError);
+    const result = await getCurrentProfile(repo, { userId: "user-123" });
+    expect(result).toBeNull();
   });
 
   it("updates a profile and validates RLS indirectly by ensuring equality check", async () => {
