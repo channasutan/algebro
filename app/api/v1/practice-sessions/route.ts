@@ -15,7 +15,6 @@ type StartSessionInput = {
 
 function validateStartSessionInput(raw: unknown): StartSessionInput | null {
   if (!isPlainObject(raw)) return null;
-  if (!("topicId" in raw)) return null;
   const { topicId } = raw as { topicId?: unknown };
   if (!isOptionalString(topicId)) return null;
   return { topicId };

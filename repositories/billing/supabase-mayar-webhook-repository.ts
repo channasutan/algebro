@@ -106,10 +106,9 @@ export async function createSupabaseMayarWebhookRepository(supabase: SupabaseCli
 
   const isDuplicateEvent = async (eventId: string): Promise<boolean> => {
     const { data, error } = await supabase
-      .from("jobs")
+      .from("mayar_webhook_events")
       .select("id")
-      .eq("type", "mayar_webhook")
-      .contains("payload", { event_id: eventId })
+      .eq("external_id", eventId)
       .maybeSingle();
 
     if (error) {
@@ -124,14 +123,10 @@ export async function createSupabaseMayarWebhookRepository(supabase: SupabaseCli
     eventType: string,
     payload: unknown
   ): Promise<boolean> => {
-    const { error } = await supabase.from("jobs").insert({
-      type: "mayar_webhook",
-      status: "processed",
-      payload: toJson({
-        event_id: eventId,
-        event_type: eventType,
-        payload: toJson(payload),
-      }),
+    const { error } = await supabase.from("mayar_webhook_events").insert({
+      external_id: eventId,
+      event_type: eventType,
+      payload: toJson(payload),
       processed_at: new Date().toISOString(),
     });
 

@@ -52,3 +52,4 @@ package-lock.json
 
 tmp.json
 test-tailwind.css
+lib/supabase/database.types.ts

@@ -9,6 +9,8 @@ components:
   - name: events
     paths:
       - events/**
+    constraint: in-process-only
+    note: "EventBus is a synchronous in-process emitter. Replace with a queue (e.g. BullMQ) for cross-process needs."
   - name: jobs
     paths:
       - jobs/**

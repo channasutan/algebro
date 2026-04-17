@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { startPracticeFlowAction, submitPracticeStepAction } from "./actions";
-import type { StartPracticeResult, SubmitStepResult } from "@/modules/practice";
+import type { StartPracticeResult, SubmitStepResult } from "@/services/practice-service";
 
 type PracticeState =
   | { status: "idle" }

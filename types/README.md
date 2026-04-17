@@ -3,7 +3,7 @@
 # types/
 
 This directory contains auto-generated TypeScript types derived from the live
-Supabase schema. **Do not edit `database.types.ts` manually** — any manual changes
+Supabase schema. **Do not edit `lib/supabase/database.types.ts` manually** — any manual changes
 will be overwritten on the next regeneration.
 
 ---
@@ -28,10 +28,10 @@ PROJECT_REF=$(grep NEXT_PUBLIC_SUPABASE_URL .env.local \
 
 npx supabase gen types typescript \
   --project-id "$PROJECT_REF" \
-  > types/database.types.ts
+  > lib/supabase/database.types.ts
 
 # Verify output is non-empty
-wc -l types/database.types.ts
+wc -l lib/supabase/database.types.ts
 ```
 
 ---
@@ -52,7 +52,7 @@ Do not hardcode either value in config.yml.
 All Supabase client factories in `lib/supabase/` are wired to this type:
 
 ```ts
-import type { Database } from '@/types/database.types'
+import type { Database } from '@/lib/supabase/database.types'
 ```
 
 - `lib/supabase/browser-client.ts` → `createBrowserClient<Database>(...)`
