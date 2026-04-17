@@ -15,6 +15,17 @@ export type SympyEvaluateResponse = {
   result: unknown;
 };
 
+function getSympyTimeoutMs(): number {
+  const rawTimeout = process.env.SYMPY_TIMEOUT_MS ?? "10000";
+  const parsedTimeout = Number.parseInt(rawTimeout, 10);
+
+  if (!Number.isFinite(parsedTimeout) || parsedTimeout <= 0) {
+    return 10_000;
+  }
+
+  return parsedTimeout;
+}
+
 async function evaluate(input: SympyEvaluateInput): Promise<SympyEvaluateResponse> {
   const response = await fetch(`${getSympyServiceUrl()}/evaluate`, {
     method: "POST",
@@ -26,7 +37,8 @@ async function evaluate(input: SympyEvaluateInput): Promise<SympyEvaluateRespons
       operation: input.operation,
       context: input.context ?? {}
     }),
-    signal: input.signal
+    // AbortSignal.timeout requires Node 18+ (CI uses Node 24)
+    signal: input.signal ?? AbortSignal.timeout(getSympyTimeoutMs())
   });
 
   if (!response.ok) {

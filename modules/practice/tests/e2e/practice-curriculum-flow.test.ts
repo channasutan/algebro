@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { eventBus } from "@/events/event-bus";
+import { eventBus } from "@/modules/practice";
 import { type CurriculumRepository } from "@/modules/curriculum/repositories/curriculum-repository";
 import { handleAttemptCompleted } from "@/modules/curriculum/events/on-attempt-completed";
 import * as masteryService from "@/modules/curriculum/services/update-mastery";
@@ -59,6 +59,7 @@ function makePracticeRepo(input: {
   };
 
   return {
+    findActiveSession: vi.fn().mockResolvedValue(null),
     createSession: vi.fn().mockResolvedValue({
       id: "session-created",
       userId: input.userId,

@@ -8,7 +8,7 @@ vi.mock("@/modules/curriculum/services/update-mastery", () => ({
 }));
 
 // Mock supabase practice repo used by handler to fetch attempt + session
-vi.mock("@/modules/practice/repositories/supabase-practice-repository", () => ({
+vi.mock("@/repositories/practice/supabase-practice-repository", () => ({
   createSupabasePracticeRepository: vi.fn(() => ({
     getAttempt: vi.fn().mockResolvedValue({
       id: "att-e2e-1",

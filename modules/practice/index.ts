@@ -1,21 +1,17 @@
-export { 
-  startSession, 
-  startSessionWithRepository, 
-  type StartSessionInput 
+export {
+  startSession,
+  type StartSessionInput
 } from "./services/start-session";
-export { 
-  createAttempt, 
-  createAttemptWithRepository, 
-  type CreateAttemptInput 
+export {
+  createAttempt,
+  type CreateAttemptInput
 } from "./services/create-attempt";
-export { 
-  submitStep, 
-  submitStepWithRepository, 
-  type SubmitStepInput 
+export {
+  submitStep,
+  type SubmitStepInput
 } from "./services/submit-step";
 export {
   completeAttempt,
-  completeAttemptWithRepository,
   type CompleteAttemptInput
 } from "./services/complete-attempt";
 export { 
@@ -31,12 +27,22 @@ export {
   PracticeError, 
   SessionNotFoundError, 
   AttemptNotFoundError, 
-  StepAdditionError 
+  StepAdditionError,
+  DuplicateActiveSessionError,
 } from "./errors";
 export { 
   getNextProblem 
 } from "./services/get-next-problem";
-export type { 
-  GetNextProblemInput, 
-  GetNextProblemResult 
+export type {
+  GetNextProblemInput,
+  GetNextProblemResult
 } from "./services/get-next-problem";
+
+// For tests
+export { eventBus } from "@/events/event-bus";
+
+// Testing helpers — repo-injected variants
+export { startSessionWithRepository } from "./services/start-session";
+export { createAttemptWithRepository, type CreateAttemptResult } from "./services/create-attempt";
+export { submitStepWithRepository } from "./services/submit-step";
+export type { PracticeRepository } from "@/repositories/practice/practice-repository";

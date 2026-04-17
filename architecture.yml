@@ -35,9 +35,15 @@ components:
   - name: lib
     paths:
       - lib/**
+  - name: repositories
+    paths:
+      - repositories/**
   - name: tests
     paths:
       - tests/**
+  - name: services
+    paths:
+      - services/**
 directives:
   - name: "Infrastructure isolation"
     constraint: "infrastructure -> modules"
@@ -104,4 +110,34 @@ directives:
     action: allow
   - name: "Tests can access events"
     constraint: "tests -> events"
+    action: allow
+  - name: "Repositories can access Supabase clients"
+    constraint: "repositories -> supabase-clients"
+    action: allow
+  - name: "App can access repositories"
+    constraint: "app -> repositories"
+    action: allow
+  - name: "Modules can access repositories"
+    constraint: "modules -> repositories"
+    action: allow
+  - name: "App cannot access modules"
+    constraint: "app -> modules"
+    action: forbid
+  - name: "App can access lib utilities"
+    constraint: "app -> lib"
+    action: allow
+  - name: "App can access services"
+    constraint: "app -> services"
+    action: allow
+  - name: "Services can access modules"
+    constraint: "services -> modules"
+    action: allow
+  - name: "Services can access lib"
+    constraint: "services -> lib"
+    action: allow
+  - name: "Services can access repositories"
+    constraint: "services -> repositories"
+    action: allow
+  - name: "Services can access Supabase clients"
+    constraint: "services -> supabase-clients"
     action: allow

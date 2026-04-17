@@ -25,7 +25,7 @@ function readRequiredPublicEnv(value: string | undefined, name: string): string 
   const normalizedValue = readOptionalPublicEnv(value);
 
   if (!normalizedValue) {
-    throw new Error(`Missing required public environment variable: ${name}`);
+    throw new Error(`Missing required env var: ${name}`);
   }
 
   return normalizedValue;

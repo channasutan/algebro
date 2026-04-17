@@ -1,0 +1,75 @@
+"use server";
+
+import {
+  startSession,
+  createAttempt,
+  submitStep,
+  getNextProblem,
+  type StartPracticeResult,
+  type SubmitStepResult,
+} from "@/modules/practice";
+import { getCurrentSession } from "@/modules/authentication";
+import { createServiceLogger, getRequestId } from "@/lib/observability";
+
+export async function startPracticeFlowAction(topicId: string | null): Promise<StartPracticeResult> {
+  const sessionResult = await getCurrentSession();
+  if (!sessionResult.session?.isAuthenticated) {
+    throw new Error("Authentication required");
+  }
+
+  const userId = sessionResult.session.userId;
+  const requestId = await getRequestId();
+  const context = { requestId };
+  const log = createServiceLogger(requestId);
+
+  log.info({ event: "practice.flow", meta: { type: "domain", phase: "start", userId, topicId } });
+
+  // Create session
+  const practiceSession = await startSession({ userId, topicId }, context);
+
+  // Resolve next problem via curriculum-first strategy
+  const nextProblem = await getNextProblem({ userId, topicId }, context);
+  const problemId = nextProblem.problemId;
+
+  // Create attempt without initial step — first step will be added via submitStep
+  const attemptResult = await createAttempt({
+    sessionId: practiceSession.id,
+    problemId,
+    userId
+    // stepIndex and stepLatex omitted — attempt-only creation
+  }, context);
+
+  log.info({ event: "practice.flow", meta: { type: "domain", phase: "complete", userId, sessionId: practiceSession.id, attemptId: attemptResult.attempt.id } });
+
+  return {
+    sessionId: practiceSession.id,
+    attemptId: attemptResult.attempt.id,
+    problemId
+  };
+}
+
+export async function submitPracticeStepAction(
+  attemptId: string,
+  stepLatex: string
+): Promise<SubmitStepResult> {
+  const sessionResult = await getCurrentSession();
+  if (!sessionResult.session?.isAuthenticated) {
+    throw new Error("Authentication required");
+  }
+
+  const userId = sessionResult.session.userId;
+  const requestId = await getRequestId();
+  const context = { requestId };
+  const log = createServiceLogger(requestId);
+
+  log.info({ event: "practice.step", meta: { type: "domain", phase: "start", userId, attemptId } });
+
+  const step = await submitStep({ attemptId, userId, stepLatex }, context);
+
+  return {
+    stepId: step.id,
+    stepIndex: step.stepIndex,
+    stepLatex: step.stepLatex,
+    isValid: step.isValid === true
+  };
+}

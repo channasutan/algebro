@@ -5,7 +5,7 @@ import type { EventHandler } from "@/events/event-types";
 import type { CurriculumRepository } from "../repositories/curriculum-repository";
 import { updateMastery } from "../services/update-mastery";
 import { createServiceLogger } from "@/lib/observability";
-import type { PracticeRepository } from "@/modules/practice/repositories/practice-repository";
+import type { PracticeRepository } from "@/repositories/practice/practice-repository";
 
 async function processMasteryUpdate(
   event: AttemptCompletedEvent,

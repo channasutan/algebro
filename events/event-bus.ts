@@ -10,6 +10,10 @@ export type EventBus = {
   subscribe(eventType: DomainEventType, handler: EventHandler): EventUnsubscribe;
 };
 
+// NOTE: We intentionally use an in-process event bus for MVP speed and simplicity.
+// This keeps module wiring lightweight, but events are not durable across process
+// restarts and are not fan-out safe across multiple instances. If reliability,
+// replay, or cross-instance delivery becomes required, migrate to a durable queue.
 export function createEventBus(): EventBus {
   const handlers = new Map<DomainEventType, Set<EventHandler>>();
 

@@ -6,8 +6,7 @@ import {
   getPublicEnv,
   getSupabaseServiceRoleKey,
 } from "@/config/env.server-entry";
-
-type Database = Record<string, never>;
+import type { Database } from "@/lib/supabase/database.types";
 
 let adminClient: SupabaseClient<Database> | undefined;
 

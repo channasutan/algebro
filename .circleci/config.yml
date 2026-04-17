@@ -6,7 +6,7 @@ orbs:
 jobs:
   validate:
     docker:
-      - image: cimg/node:22.11
+      - image: cimg/node:24.0.0
 
     steps:
       - checkout
@@ -22,19 +22,34 @@ jobs:
 
       - run:
           name: Install dependencies
-          command: npx pnpm@8 install
+          command: npx pnpm@9 install --frozen-lockfile
+
+      - run:
+          name: Generate Supabase types
+          command: |
+            : "${SUPABASE_PROJECT_REF:?Set SUPABASE_PROJECT_REF in CircleCI project environment variables}"
+            : "${SUPABASE_ACCESS_TOKEN:?Set SUPABASE_ACCESS_TOKEN in CircleCI project environment variables}"
+            npx supabase gen types \
+              --lang typescript \
+              --project-id "$SUPABASE_PROJECT_REF" \
+              > types/database.types.ts
+            test -s types/database.types.ts
+
+      - run:
+          name: Run type-check
+          command: npx pnpm@9 run type-check
 
       - run:
           name: Run tests
-          command: npx pnpm@8 test
+          command: npx pnpm@9 test
 
       - run:
           name: Run lint
-          command: npx pnpm@8 run lint
+          command: npx pnpm@9 run lint
 
       - run:
           name: Build project
-          command: npx pnpm@8 run build
+          command: npx pnpm@9 run build
 
       - sonarcloud/scan
 
