@@ -1,14 +1,17 @@
 "use server";
 
-import { ensureModulesBootstrapped } from "@/modules/bootstrap";
-import { startSession, createAttempt, submitStep, getNextProblem } from "@/modules/practice";
+import {
+  startSession,
+  createAttempt,
+  submitStep,
+  getNextProblem,
+  type StartPracticeResult,
+  type SubmitStepResult,
+} from "@/modules/practice";
 import { getCurrentSession } from "@/modules/authentication";
 import { createServiceLogger, getRequestId } from "@/lib/observability";
-import type { StartPracticeResult, SubmitStepResult } from "@/modules/practice/contracts/practice";
 
 export async function startPracticeFlowAction(topicId: string | null): Promise<StartPracticeResult> {
-  await ensureModulesBootstrapped();
-
   const sessionResult = await getCurrentSession();
   if (!sessionResult.session?.isAuthenticated) {
     throw new Error("Authentication required");
@@ -28,18 +31,19 @@ export async function startPracticeFlowAction(topicId: string | null): Promise<S
   const nextProblem = await getNextProblem({ userId, topicId }, context);
   const problemId = nextProblem.problemId;
 
-  // Create attempt internally (not exposed to UI)
-  const attempt = await createAttempt({
+  // Create attempt without initial step — first step will be added via submitStep
+  const attemptResult = await createAttempt({
     sessionId: practiceSession.id,
     problemId,
     userId
+    // stepIndex and stepLatex omitted — attempt-only creation
   }, context);
 
-  log.info({ event: "practice.flow", meta: { type: "domain", phase: "complete", userId, sessionId: practiceSession.id, attemptId: attempt.id } });
+  log.info({ event: "practice.flow", meta: { type: "domain", phase: "complete", userId, sessionId: practiceSession.id, attemptId: attemptResult.attempt.id } });
 
   return {
     sessionId: practiceSession.id,
-    attemptId: attempt.id,
+    attemptId: attemptResult.attempt.id,
     problemId
   };
 }
@@ -48,8 +52,6 @@ export async function submitPracticeStepAction(
   attemptId: string,
   stepLatex: string
 ): Promise<SubmitStepResult> {
-  await ensureModulesBootstrapped();
-
   const sessionResult = await getCurrentSession();
   if (!sessionResult.session?.isAuthenticated) {
     throw new Error("Authentication required");
