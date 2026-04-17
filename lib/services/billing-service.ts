@@ -6,13 +6,13 @@ export async function handleMayarWebhook(
   eventId: string,
   event: string,
   payload: { event: string; data: MayarWebhookData }
-): Promise<{ ok: boolean } | { duplicate: boolean }> {
+): Promise<{ ok: boolean; duplicate?: boolean }> {
   const supabase = await getSupabaseServerClient();
   const repo = await createSupabaseMayarWebhookRepository(supabase);
 
   const stored = await repo.storeWebhookEvent(eventId, event, payload);
   if (!stored) {
-    return { duplicate: true };
+    return { ok: true, duplicate: true };
   }
 
   const data = payload.data;
