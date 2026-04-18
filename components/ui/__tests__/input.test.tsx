@@ -5,7 +5,8 @@ import * as React from "react"
 
 describe("Input", () => {
   it("renders correctly with default props", () => {
-    const { asFragment } = render(<Input placeholder="Enter text" />)
+    // Static id prevents snapshot flakiness from auto-generated IDs (useId)
+    const { asFragment } = render(<Input placeholder="Enter text" id="default-input" />)
     expect(asFragment()).toMatchSnapshot()
     expect(screen.getByPlaceholderText("Enter text")).toBeDefined()
   })

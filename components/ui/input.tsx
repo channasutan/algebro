@@ -22,14 +22,17 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         {label && (
           <label
             htmlFor={id}
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-[--color-text]"
-          >
-            {label}
-          </label>
+            className={cn(
+                  "text-sm font-medium leading-none text-[--color-text]",
+                  disabled && "cursor-not-allowed opacity-70"
+                )}
+            >
+              {label}
+            </label>
         )}
         <div
           className={cn(
-            "flex h-10 w-full rounded-[--radius-md] border border-[--color-border] bg-[--color-surface] px-3 py-2 text-sm ring-offset-white transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-[--color-text-muted] focus-within:ring-2 focus-within:ring-[--color-primary] focus-within:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+            "flex h-10 w-full rounded-[--radius-md] border border-[--color-border] bg-[--color-surface] px-3 py-2 text-sm ring-offset-white transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-[--color-text-muted] focus-within:ring-2 focus-within:ring-[--color-primary] focus-within:ring-offset-2 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50",
             hasError && "border-[--color-error] focus-within:ring-[--color-error]",
             className
           )}
@@ -47,7 +50,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             disabled={disabled}
             aria-invalid={hasError ? "true" : "false"}
             aria-describedby={cn(
-              helperText && helperId,
+              !hasError && helperText && helperId,
               hasError && errorId
             )}
             {...props}
