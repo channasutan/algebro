@@ -143,11 +143,11 @@ testing-strategy.md
 
 Install dependencies:
 
-npm install
+pnpm install
 
 Start development server:
 
-npm run dev
+pnpm run dev
 
 The application will start on:
 
@@ -211,7 +211,7 @@ Tools used:
 
 Run tests:
 
-npm run test
+pnpm run test
 
 ---
 

@@ -430,6 +430,19 @@ General guidelines:
 
 ---
 
+Dependency Management Rules
+
+The project uses `pnpm` for dependency management.
+
+Rules:
+
+1. **Lockfile Integrity**: Any time `package.json` is edited or a package is added (e.g., via `shadcn add`), `pnpm install` MUST be run locally to update `pnpm-lock.yaml`.
+2. **Atomic Commits**: The updated `pnpm-lock.yaml` must be committed in the same PR as the `package.json` changes.
+3. **CI Validation**: CI is configured to use `--frozen-lockfile`. If the lockfile is out of sync, CI will fail. Do not bypass this check by using `--no-frozen-lockfile` in CI.
+4. **Environment Consistency**: Developers should ensure they are using the Node.js version specified in `package.json` engines (currently >=24.0.0).
+
+---
+
 AI Coding Rules
 
 When generating code with AI tools:
