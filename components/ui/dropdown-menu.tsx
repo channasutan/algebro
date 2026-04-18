@@ -6,14 +6,30 @@ import { Menu as MenuPrimitive } from "@base-ui/react/menu"
 import { cn } from "@/lib/utils"
 import { ChevronRightIcon, Check, Circle } from "lucide-react"
 
-interface DropdownMenuSelectableItemProps {
+// Base UI passes a state object to className render prop
+interface BaseUIMenuItemState {
+  disabled: boolean
+  highlighted: boolean
+  open?: boolean
+  checked?: boolean
+  selected?: boolean
+  [key: string]: boolean | undefined
+}
+
+type ClassNameProp =
+  | string
+  | ((state: BaseUIMenuItemState) => string)
+  | undefined
+
+interface DropdownMenuSelectableItemProps
+  extends Omit<React.HTMLAttributes<HTMLElement>, "className"> {
   primitive: React.ElementType
   indicator: React.ElementType
   icon: React.ReactNode
   indicatorSlot?: string
-  className?: any
+  className?: ClassNameProp
   children?: React.ReactNode
-  [key: string]: any
+  [key: string]: unknown
 }
 
 
@@ -23,8 +39,8 @@ const DropdownMenuSelectableItem = React.forwardRef<
 >(
   (
     {
-      primitive: Primitive,
-      indicator: Indicator,
+      primitive,
+      indicator,
       icon,
       indicatorSlot,
       className,
@@ -32,26 +48,31 @@ const DropdownMenuSelectableItem = React.forwardRef<
       ...props
     },
     ref
-  ) => (
-    <Primitive
-      ref={ref}
-      className={(state: any) =>
-        cn(
-          "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-          typeof className === "function" ? className(state) : className
-        )
-      }
-      {...props}
-    >
-      <span
-        className="pointer-events-none absolute right-2 flex items-center justify-center"
-        data-slot={indicatorSlot}
+  ) => {
+    const Primitive = primitive as React.ElementType
+    const Indicator = indicator as React.ElementType
+
+    return (
+      <Primitive
+        ref={ref}
+        className={(state: BaseUIMenuItemState) =>
+          cn(
+            "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+            typeof className === "function" ? className(state) : className
+          )
+        }
+        {...props}
       >
-        <Indicator>{icon}</Indicator>
-      </span>
-      {children}
-    </Primitive>
-  )
+        <span
+          className="pointer-events-none absolute right-2 flex items-center justify-center"
+          data-slot={indicatorSlot}
+        >
+          <Indicator>{icon}</Indicator>
+        </span>
+        {children}
+      </Primitive>
+    )
+  }
 )
 DropdownMenuSelectableItem.displayName = "DropdownMenuSelectableItem"
 
