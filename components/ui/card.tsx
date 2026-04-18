@@ -75,7 +75,7 @@ const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
       <div
         ref={ref}
         className={cn(
-          "font-semibold text-[--text-lg]",
+          "font-semibold text-[var(--text-lg)]",
           pxClasses[padding],
           ptClasses[padding],
           "pb-0",
@@ -95,7 +95,7 @@ const CardBody = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEl
       <div
         ref={ref}
         className={cn(
-          "text-[--text-base] text-[--color-text]",
+          "text-[var(--text-base)] text-[--color-text]",
           pClasses[padding],
           className
         )}

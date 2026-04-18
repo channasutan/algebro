@@ -56,17 +56,28 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const Comp = asChild ? Slot : "button"
 
+    const handleClick = React.useCallback(
+      (e: React.MouseEvent<HTMLButtonElement>) => {
+        if (isLoading || disabled) {
+          e.preventDefault()
+          return
+        }
+        props.onClick?.(e)
+      },
+      [isLoading, disabled, props.onClick]
+    )
+
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
-        disabled={!asChild ? (isLoading || disabled) : undefined}
-        aria-disabled={asChild && (isLoading || disabled) ? true : undefined}
-        onClick={
-          asChild && (isLoading || disabled)
-            ? (e) => e.preventDefault()
-            : props.onClick
-        }
+        {...(asChild
+          ? {
+              "aria-disabled": isLoading || disabled,
+              tabIndex: isLoading || disabled ? -1 : undefined,
+            }
+          : { disabled: isLoading || disabled })}
+        onClick={handleClick}
         {...props}
       >
         {asChild ? (

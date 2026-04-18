@@ -14,7 +14,7 @@ process.env.MAYAR_WEBHOOK_SECRET = process.env.MAYAR_WEBHOOK_SECRET || "test-web
 import { afterEach } from "vitest";
 
 afterEach(async () => {
-  if (typeof globalThis.document !== "undefined") {
+  if (typeof document !== "undefined") {
     const { cleanup } = await import("@testing-library/react");
     cleanup();
   }

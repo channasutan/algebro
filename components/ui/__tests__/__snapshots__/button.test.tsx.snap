@@ -4,6 +4,7 @@ exports[`Button > renders all sizes correctly 1`] = `
 <DocumentFragment>
   <button
     class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[--radius-md] font-medium transition-colors focus-visible:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--color-primary] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-[--color-primary] text-white hover:bg-[--color-primary-hover] h-9 px-3 text-xs"
+    id="button-sm"
   >
     sm
   </button>
@@ -14,6 +15,7 @@ exports[`Button > renders all sizes correctly 2`] = `
 <DocumentFragment>
   <button
     class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[--radius-md] text-sm font-medium transition-colors focus-visible:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--color-primary] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-[--color-primary] text-white hover:bg-[--color-primary-hover] h-10 px-4 py-2"
+    id="button-md"
   >
     md
   </button>
@@ -24,6 +26,7 @@ exports[`Button > renders all sizes correctly 3`] = `
 <DocumentFragment>
   <button
     class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[--radius-md] text-sm font-medium transition-colors focus-visible:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--color-primary] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-[--color-primary] text-white hover:bg-[--color-primary-hover] h-11 px-8"
+    id="button-lg"
   >
     lg
   </button>
@@ -34,6 +37,7 @@ exports[`Button > renders all variants correctly 1`] = `
 <DocumentFragment>
   <button
     class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[--radius-md] text-sm font-medium transition-colors focus-visible:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--color-primary] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-[--color-primary] text-white hover:bg-[--color-primary-hover] h-10 px-4 py-2"
+    id="button-primary"
   >
     primary
   </button>
@@ -44,6 +48,7 @@ exports[`Button > renders all variants correctly 2`] = `
 <DocumentFragment>
   <button
     class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[--radius-md] text-sm font-medium transition-colors focus-visible:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--color-primary] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-[--color-border] bg-[--color-surface] hover:bg-[--color-surface-offset] h-10 px-4 py-2"
+    id="button-secondary"
   >
     secondary
   </button>
@@ -54,6 +59,7 @@ exports[`Button > renders all variants correctly 3`] = `
 <DocumentFragment>
   <button
     class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[--radius-md] text-sm font-medium transition-colors focus-visible:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--color-primary] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 hover:bg-[--color-surface-offset] h-10 px-4 py-2"
+    id="button-ghost"
   >
     ghost
   </button>
@@ -64,6 +70,7 @@ exports[`Button > renders all variants correctly 4`] = `
 <DocumentFragment>
   <button
     class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[--radius-md] text-sm font-medium transition-colors focus-visible:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--color-primary] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-[--color-error] text-white hover:bg-[--color-error-hover] h-10 px-4 py-2"
+    id="button-destructive"
   >
     destructive
   </button>
@@ -74,6 +81,7 @@ exports[`Button > renders correctly with default props 1`] = `
 <DocumentFragment>
   <button
     class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[--radius-md] text-sm font-medium transition-colors focus-visible:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[--color-primary] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-[--color-primary] text-white hover:bg-[--color-primary-hover] h-10 px-4 py-2"
+    id="default-button"
   >
     Click me
   </button>
