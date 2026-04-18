@@ -1,3 +1,5 @@
+// AUTO-GENERATED — do not edit manually. Run `pnpm db:types` to regenerate.
+// NOTE: mayar_webhook_events manually patched — pending migration 20260419000000_create_mayar_webhook_events.sql
 export type Json =
   | string
   | number
@@ -398,6 +400,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      mayar_webhook_events: {
+        Row: {
+          id: string
+          external_id: string
+          event_type: string
+          payload: Json
+          processed_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          external_id: string
+          event_type: string
+          payload?: Json
+          processed_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          external_id?: string
+          event_type?: string
+          payload?: Json
+          processed_at?: string
+          created_at?: string
+        }
+        Relationships: []
       }
       payments: {
         Row: {
