@@ -16,7 +16,9 @@
     "test:coverage": "vitest run --coverage",
     "test:integration": "vitest run --config vitest.config.integration.ts",
     "test:watch": "vitest",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "update-types": "supabase gen types typescript --project-id kewytmniflheszifgpdc --schema public > lib/supabase/database.types.ts",
+    "db-push": "supabase db push"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.0",
