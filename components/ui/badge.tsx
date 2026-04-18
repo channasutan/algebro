@@ -1,32 +1,38 @@
 import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
-export type BadgeProps = Readonly<
-  React.HTMLAttributes<HTMLSpanElement> & {
-    variant?: "default" | "secondary" | "success" | "warning" | "error"
+const badgeVariants = cva(
+  "inline-flex items-center rounded-full font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[--color-primary] focus:ring-offset-2",
+  {
+    variants: {
+      variant: {
+        default: "bg-[--color-surface-offset] text-[--color-text-muted]",
+        success: "bg-[--color-success-highlight] text-[--color-success]",
+        warning: "bg-[--color-warning-highlight] text-[--color-warning]",
+        error: "bg-[--color-error-highlight] text-[--color-error]",
+        info: "bg-[--color-blue-highlight] text-[--color-blue]",
+      },
+      size: {
+        sm: "px-2 py-0.5 text-xs",
+        md: "px-3 py-1 text-sm",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "md",
+    },
   }
->
+)
 
-function Badge({ className, variant = "default", ...props }: BadgeProps) {
+export interface BadgeProps
+  extends React.HTMLAttributes<HTMLSpanElement>,
+    VariantProps<typeof badgeVariants> {}
+
+function Badge({ className, variant, size, ...props }: BadgeProps) {
   return (
-    <span
-      className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2",
-        variant === "default" &&
-          "bg-[var(--color-primary-highlight)] text-[var(--color-primary)]",
-        variant === "secondary" &&
-          "bg-[var(--color-surface-offset)] text-[var(--color-text-muted)] border border-[var(--color-border)]",
-        variant === "success" &&
-          "bg-[var(--color-success-highlight)] text-[var(--color-success)]",
-        variant === "warning" &&
-          "bg-[var(--color-warning-highlight)] text-[var(--color-warning)]",
-        variant === "error" &&
-          "bg-[var(--color-error-highlight)] text-[var(--color-error)]",
-        className
-      )}
-      {...props}
-    />
+    <span className={cn(badgeVariants({ variant, size }), className)} {...props} />
   )
 }
 
-export { Badge }
+export { Badge, badgeVariants }

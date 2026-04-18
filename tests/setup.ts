@@ -11,3 +11,9 @@ process.env.SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ||
 process.env.AI_PROVIDER_API_KEY = process.env.AI_PROVIDER_API_KEY || "test-ai-key";
 process.env.MAYAR_API_KEY = process.env.MAYAR_API_KEY || "test-mayar-key";
 process.env.MAYAR_WEBHOOK_SECRET = process.env.MAYAR_WEBHOOK_SECRET || "test-webhook-secret";
+import { afterEach } from "vitest";
+import { cleanup } from "@testing-library/react";
+
+afterEach(() => {
+  cleanup();
+});

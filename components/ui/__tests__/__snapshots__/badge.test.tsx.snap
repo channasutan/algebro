@@ -1,0 +1,81 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Badge > renders all variants correctly 1`] = `
+<DocumentFragment>
+  <span
+    class="inline-flex items-center rounded-full font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[--color-primary] focus:ring-offset-2 bg-[--color-surface-offset] text-[--color-text-muted] px-3 py-1 text-sm"
+  >
+    default
+  </span>
+</DocumentFragment>
+`;
+
+exports[`Badge > renders all variants correctly 2`] = `
+<DocumentFragment>
+  <span
+    class="inline-flex items-center rounded-full font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[--color-primary] focus:ring-offset-2 bg-[--color-success-highlight] text-[--color-success] px-3 py-1 text-sm"
+  >
+    success
+  </span>
+</DocumentFragment>
+`;
+
+exports[`Badge > renders all variants correctly 3`] = `
+<DocumentFragment>
+  <span
+    class="inline-flex items-center rounded-full font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[--color-primary] focus:ring-offset-2 bg-[--color-warning-highlight] text-[--color-warning] px-3 py-1 text-sm"
+  >
+    warning
+  </span>
+</DocumentFragment>
+`;
+
+exports[`Badge > renders all variants correctly 4`] = `
+<DocumentFragment>
+  <span
+    class="inline-flex items-center rounded-full font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[--color-primary] focus:ring-offset-2 bg-[--color-error-highlight] text-[--color-error] px-3 py-1 text-sm"
+  >
+    error
+  </span>
+</DocumentFragment>
+`;
+
+exports[`Badge > renders all variants correctly 5`] = `
+<DocumentFragment>
+  <span
+    class="inline-flex items-center rounded-full font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[--color-primary] focus:ring-offset-2 bg-[--color-blue-highlight] text-[--color-blue] px-3 py-1 text-sm"
+  >
+    info
+  </span>
+</DocumentFragment>
+`;
+
+exports[`Badge > renders both sizes correctly 1`] = `
+<DocumentFragment>
+  <span
+    class="inline-flex items-center rounded-full font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[--color-primary] focus:ring-offset-2 bg-[--color-surface-offset] text-[--color-text-muted] px-2 py-0.5 text-xs"
+  >
+    sm
+  </span>
+</DocumentFragment>
+`;
+
+exports[`Badge > renders both sizes correctly 2`] = `
+<DocumentFragment>
+  <span
+    class="inline-flex items-center rounded-full font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[--color-primary] focus:ring-offset-2 bg-[--color-surface-offset] text-[--color-text-muted] px-3 py-1 text-sm"
+  >
+    md
+  </span>
+</DocumentFragment>
+`;
+
+exports[`Badge > renders correctly with default props 1`] = `
+<DocumentFragment>
+  <span
+    class="inline-flex items-center rounded-full font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[--color-primary] focus:ring-offset-2 bg-[--color-surface-offset] text-[--color-text-muted] px-3 py-1 text-sm"
+  >
+    Default
+  </span>
+</DocumentFragment>
+`;

@@ -7,14 +7,15 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   test: {
-    environment: "node",
+    environment: "happy-dom",
     include: [
       "tests/**/*.test.ts",
       "modules/**/*.test.ts",
       "jobs/**/*.test.ts",
       "app/**/*.test.ts",
       "app/**/*.test.tsx",
-      "app/**/*.spec.ts"
+      "app/**/*.spec.ts",
+      "components/**/*.test.tsx"
     ],
     setupFiles: ["./tests/setup.ts"],
     coverage: {
