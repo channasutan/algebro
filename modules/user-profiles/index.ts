@@ -11,9 +11,7 @@ export { getOrCreateUserProfile, type GetOrCreateUserProfileInput } from "./serv
 export { updateUserProfile } from "./services/update-profile";
 export { ensureProfileExists, type EnsureProfileExistsInput } from "./services/ensure-profile-exists";
 
-// For tests
-export { eventBus } from "@/events/event-bus";
-export { USER_PROFILE_UPDATED } from "./events/profile-updated";
+
 
 export const userProfilesModule = {
   name: "user-profiles",
