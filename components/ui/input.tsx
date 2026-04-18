@@ -18,6 +18,13 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const errorId = `${id}-error`
     const hasError = !!error
 
+    let ariaDescribedBy: string | undefined
+    if (hasError) {
+      ariaDescribedBy = errorId
+    } else if (helperText) {
+      ariaDescribedBy = helperId
+    }
+
     return (
       <div className="flex flex-col gap-1.5 w-full">
         <div className="flex flex-col-reverse gap-1.5">
@@ -40,7 +47,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
               ref={ref}
               disabled={disabled}
               aria-invalid={hasError ? "true" : "false"}
-              aria-describedby={hasError ? errorId : (helperText ? helperId : undefined)}
+              aria-describedby={ariaDescribedBy}
               {...props}
             />
             {rightElement && (

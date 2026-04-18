@@ -22,8 +22,13 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
       lg: "8",
     }[padding] as PaddingValue
 
+    const contextValue = React.useMemo(
+      () => ({ padding: paddingValue }),
+      [paddingValue]
+    )
+
     return (
-      <CardContext.Provider value={{ padding: paddingValue }}>
+      <CardContext.Provider value={contextValue}>
         <Comp
           ref={ref}
           className={cn(
