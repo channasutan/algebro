@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/observability";
+import { getRequestId } from "@/lib/api/request-id";
 import { submitStepToAttempt } from "@/services/practice-service";
 import { parseBody, type ParseResult } from "@/services/api-helpers-service";
 import { requireAuth } from "@/services/auth-service";
@@ -20,7 +21,7 @@ function validateSubmitStepInput(raw: unknown): SubmitStepInput | null {
   return { stepLatex };
 }
 
-async function handleSubmitStep(userId: string, attemptId: string, input: SubmitStepInput): Promise<Response> {
+async function handleSubmitStep(req: NextRequest, userId: string, attemptId: string, input: SubmitStepInput): Promise<Response> {
   try {
     const result = await submitStepToAttempt({ attemptId, userId, ...input });
     return NextResponse.json(result, { status: 201 });
@@ -32,7 +33,7 @@ async function handleSubmitStep(userId: string, attemptId: string, input: Submit
         phase: "infra",
         error: err instanceof Error ? err.message : String(err),
       },
-      requestId: crypto.randomUUID(),
+      requestId: getRequestId(req),
     });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -50,5 +51,5 @@ export async function POST(
   }
   const parseResult: ParseResult<SubmitStepInput> = await parseBody(req, validateSubmitStepInput);
   if (!parseResult.ok) return parseResult.response;
-  return await handleSubmitStep(auth.userId, attempt_id, parseResult.data);
+  return await handleSubmitStep(req, auth.userId, attempt_id, parseResult.data);
 }

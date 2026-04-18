@@ -49,3 +49,7 @@ cookies.txt
 
 # lock files (using pnpm only)
 package-lock.json
+
+tmp.json
+test-tailwind.css
+lib/supabase/database.types.ts

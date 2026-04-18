@@ -27,24 +27,26 @@ async function recoverFromDuplicateSession(
   topicId: string | null,
   log: ReturnType<typeof createServiceLogger>
 ): Promise<PracticeSession> {
-  // Retry finding the existing session (the winning request created it)
-  const existingAfterRace = await repo.findActiveSession(userId, topicId);
-
-  if (existingAfterRace) {
-    log.info({
-      event: "practice.session",
-      meta: {
-        type: "domain",
-        userId,
-        phase: "complete",
-        sessionId: existingAfterRace.id,
-        outcome: "success",
-      },
-    });
-    return existingAfterRace;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const existing = await repo.findActiveSession(userId, topicId);
+    if (existing) {
+      log.info({
+        event: "practice.session",
+        meta: {
+          type: "domain",
+          userId,
+          phase: "complete",
+          sessionId: existing.id,
+          outcome: "success",
+        },
+      });
+      return existing;
+    }
+    if (attempt < 2) {
+      await new Promise(r => setTimeout(r, 50));
+    }
   }
 
-  // Extremely unlikely: constraint violated but session not found
   throw new DuplicateActiveSessionError(userId, topicId);
 }
 

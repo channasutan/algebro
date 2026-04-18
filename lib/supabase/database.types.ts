@@ -1,3 +1,4 @@
+// AUTO-GENERATED — do not edit manually. Run `pnpm db:types` to regenerate.
 export type Json =
   | string
   | number

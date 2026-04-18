@@ -3,7 +3,7 @@
 # types/
 
 This directory contains auto-generated TypeScript types derived from the live
-Supabase schema. **Do not edit `database.types.ts` manually** — any manual changes
+Supabase schema. **Do not edit `lib/supabase/database.types.ts` manually** — any manual changes
 will be overwritten on the next regeneration.
 
 ---
@@ -13,6 +13,14 @@ will be overwritten on the next regeneration.
 Ensure your Supabase Cloud project is **active** (free tier auto-pauses after ~7 days
 of inactivity — resume at supabase.com/dashboard before running this).
 
+Authenticate the Supabase CLI first (choose one):
+
+```bash
+supabase login
+# or
+export SUPABASE_ACCESS_TOKEN="your_personal_access_token"
+```
+
 ```bash
 # Extract project ref from .env.local and regenerate
 PROJECT_REF=$(grep NEXT_PUBLIC_SUPABASE_URL .env.local \
@@ -20,10 +28,10 @@ PROJECT_REF=$(grep NEXT_PUBLIC_SUPABASE_URL .env.local \
 
 npx supabase gen types typescript \
   --project-id "$PROJECT_REF" \
-  > types/database.types.ts
+  > lib/supabase/database.types.ts
 
 # Verify output is non-empty
-wc -l types/database.types.ts
+wc -l lib/supabase/database.types.ts
 ```
 
 ---
@@ -32,7 +40,10 @@ wc -l types/database.types.ts
 
 Types are regenerated automatically in CI before the type-check step.
 `SUPABASE_PROJECT_REF` must be set as a CircleCI environment variable
-(Project Settings → Environment Variables). Do not hardcode it in config.yml.
+(Project Settings → Environment Variables).
+`SUPABASE_ACCESS_TOKEN` must also be set so the Supabase CLI can authenticate
+(non-interactive CI cannot run `supabase login`).
+Do not hardcode either value in config.yml.
 
 ---
 
@@ -41,7 +52,7 @@ Types are regenerated automatically in CI before the type-check step.
 All Supabase client factories in `lib/supabase/` are wired to this type:
 
 ```ts
-import type { Database } from '@/types/database.types'
+import type { Database } from '@/lib/supabase/database.types'
 ```
 
 - `lib/supabase/browser-client.ts` → `createBrowserClient<Database>(...)`

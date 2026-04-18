@@ -143,11 +143,11 @@ testing-strategy.md
 
 Install dependencies:
 
-npm install
+pnpm install
 
 Start development server:
 
-npm run dev
+pnpm run dev
 
 The application will start on:
 
@@ -161,6 +161,8 @@ Required environment variables include:
 
 NEXT_PUBLIC_SUPABASE_URL  
 NEXT_PUBLIC_SUPABASE_ANON_KEY  
+SUPABASE_PROJECT_REF  
+SUPABASE_ACCESS_TOKEN  
 
 SUPABASE_SERVICE_ROLE_KEY  
 AI_PROVIDER_API_KEY  
@@ -209,7 +211,7 @@ Tools used:
 
 Run tests:
 
-npm run test
+pnpm run test
 
 ---
 

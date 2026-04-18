@@ -1,3 +1,9 @@
+/**
+ * @architecture in-process-only
+ * This event bus is NOT a distributed message broker. It runs in a single 
+ * Node.js process. Do not use it across service boundaries or expect delivery 
+ * guarantees across restarts.
+ */
 import type {
   DomainEvent,
   DomainEventType,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger } from "@/lib/observability";
+import { getRequestId } from "@/lib/api/request-id";
 import { completePracticeAttempt } from "@/services/practice-service";
 import { parseBody, type ParseResult } from "@/services/api-helpers-service";
 import { requireAuth } from "@/services/auth-service";
@@ -25,7 +26,7 @@ function validateCompleteAttemptInput(raw: unknown): CompleteAttemptInput | null
   return { isCorrect, topicId };
 }
 
-async function handleCompleteAttempt(userId: string, attemptId: string, input: CompleteAttemptInput): Promise<Response> {
+async function handleCompleteAttempt(req: NextRequest, userId: string, attemptId: string, input: CompleteAttemptInput): Promise<Response> {
   try {
     const result = await completePracticeAttempt({ attemptId, userId, ...input });
     return NextResponse.json(result, { status: 200 });
@@ -37,7 +38,7 @@ async function handleCompleteAttempt(userId: string, attemptId: string, input: C
         phase: "infra",
         error: err instanceof Error ? err.message : String(err),
       },
-      requestId: crypto.randomUUID(),
+      requestId: getRequestId(req),
     });
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
@@ -52,5 +53,5 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ att
   }
   const parseResult: ParseResult<CompleteAttemptInput> = await parseBody(req, validateCompleteAttemptInput);
   if (!parseResult.ok) return parseResult.response;
-  return await handleCompleteAttempt(auth.userId, attempt_id, parseResult.data);
+  return await handleCompleteAttempt(req, auth.userId, attempt_id, parseResult.data);
 }

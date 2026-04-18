@@ -1,11 +1,11 @@
 'use server';
 import 'server-only';
 
-import { ensureModulesBootstrapped } from "@/modules/bootstrap";
-import { getCurrentSession } from "@/modules/authentication";
+import { ensureModulesBootstrapped } from "@/services/practice/bootstrap";
+import { getCurrentSession } from "@/services/auth-service";
 import { getRequestId } from "@/lib/observability";
-import { generateHint } from "@/modules/ai-tutor";
-import type { HintActionResult } from "@/modules/ai-tutor/contracts";
+import { generateHint } from "@/services/practice/ai-tutor";
+import type { HintActionResult } from "@/services/practice/ai-tutor";
 import { getInfrastructureServerEnv } from "@/config/env.server";
 
 export async function generateHintAction(

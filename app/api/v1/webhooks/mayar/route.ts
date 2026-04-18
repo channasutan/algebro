@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { handleMayarWebhook, type MayarWebhookData } from "@/services/billing-service";
+import { handleMayarWebhook, type MayarWebhookData } from "@/lib/services/billing-service";
 import { getMayarWebhookSecret } from "@/config/env.server-entry";
 
 /**

@@ -28,11 +28,12 @@ jobs:
           name: Generate Supabase types
           command: |
             : "${SUPABASE_PROJECT_REF:?Set SUPABASE_PROJECT_REF in CircleCI project environment variables}"
+            : "${SUPABASE_ACCESS_TOKEN:?Set SUPABASE_ACCESS_TOKEN in CircleCI project environment variables}"
             npx supabase gen types \
               --lang typescript \
               --project-id "$SUPABASE_PROJECT_REF" \
-              > types/database.types.ts
-            test -s types/database.types.ts
+              > lib/supabase/database.types.ts
+            test -s lib/supabase/database.types.ts
 
       - run:
           name: Run type-check
