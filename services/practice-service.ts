@@ -1,16 +1,13 @@
+import * as Practice from "@/modules/practice"
 import {
   startSession,
   createAttempt,
   submitStep,
   completeAttempt,
   getNextProblem,
-  DuplicateActiveSessionError,
-  type StartPracticeResult,
-  type SubmitStepResult,
 } from "@/modules/practice"
 
-export { DuplicateActiveSessionError }
-export type { StartPracticeResult, SubmitStepResult }
+export { DuplicateActiveSessionError, type StartPracticeResult, type SubmitStepResult } from "@/modules/practice"
 
 // --- New Practice Flow Methods (for app/(app)/practice/actions.ts) ---
 
@@ -18,7 +15,7 @@ export async function startPracticeFlow(
   userId: string,
   topicId: string | null,
   context: { requestId: string }
-): Promise<StartPracticeResult & { attemptId: string; problemId: string }> {
+): Promise<Practice.StartPracticeResult & { attemptId: string; problemId: string }> {
   const practiceSession = await startSession({ userId, topicId }, context)
   const nextProblem = await getNextProblem({ userId, topicId }, context)
   const problemId = nextProblem.problemId
@@ -38,7 +35,7 @@ export async function submitPracticeStep(
   userId: string,
   stepLatex: string,
   context: { requestId: string }
-): Promise<SubmitStepResult> {
+): Promise<Practice.SubmitStepResult> {
   const step = await submitStep({ attemptId, userId, stepLatex }, context)
   return {
     stepId: step.id,

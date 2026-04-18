@@ -1,8 +1,6 @@
-import { getCurrentSession } from "@/modules/authentication"
+export { getCurrentSession } from "@/modules/authentication"
 import { getSupabaseServerClient } from "@/lib/supabase/server-client"
 import { requireAuth as _requireAuth } from "@/lib/auth/server-auth-facade"
-
-export { getCurrentSession }
 
 /**
  * Combines Supabase client creation + auth check so app/** routes

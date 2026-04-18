@@ -143,11 +143,11 @@
   --font-body: 'Satoshi', 'Inter', system-ui, sans-serif;
 
   /* Typography Scale (fluid clamp) */
-  --text-xs:   clamp(0.75rem,  0.7rem  + 0.25vw, 0.875rem); /* 12px → 14px */
-  --text-sm:   clamp(0.875rem, 0.8rem  + 0.35vw, 1rem);     /* 14px → 16px */
+  --text-xs:   clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem); /* 12px → 14px */
+  --text-sm:   clamp(0.875rem, 0.8rem + 0.35vw, 1rem);     /* 14px → 16px */
   --text-base: clamp(1rem,     0.95rem + 0.25vw, 1.125rem);  /* 16px → 18px */
-  --text-lg:   clamp(1.125rem, 1rem    + 0.75vw, 1.5rem);    /* 18px → 24px */
-  --text-xl:   clamp(1.5rem,   1.2rem  + 1.25vw, 2.25rem);   /* 24px → 36px */
+  --text-lg:   clamp(1.125rem, 1rem + 0.75vw, 1.5rem);    /* 18px → 24px */
+  --text-xl:   clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);   /* 24px → 36px */
 
   /* Spacing Tokens */
   --space-1: 0.25rem;

@@ -1,9 +1,9 @@
 import { AppSidebar } from './AppSidebar';
 import { AppHeader } from './AppHeader';
 
-type AppShellProps = {
+type AppShellProps = Readonly<{
   children: React.ReactNode;
-};
+}>;
 
 export function AppShell({ children }: AppShellProps) {
   return (

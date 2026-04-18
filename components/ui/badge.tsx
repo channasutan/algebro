@@ -1,9 +1,11 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
 
-export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: "default" | "secondary" | "success" | "warning" | "error"
-}
+export type BadgeProps = Readonly<
+  React.HTMLAttributes<HTMLSpanElement> & {
+    variant?: "default" | "secondary" | "success" | "warning" | "error"
+  }
+>
 
 function Badge({ className, variant = "default", ...props }: BadgeProps) {
   return (
