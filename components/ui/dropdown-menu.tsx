@@ -4,7 +4,58 @@ import * as React from "react"
 import { Menu as MenuPrimitive } from "@base-ui/react/menu"
 
 import { cn } from "@/lib/utils"
-import { ChevronRightIcon, CheckIcon } from "lucide-react"
+import { ChevronRightIcon, Check, Circle } from "lucide-react"
+
+interface DropdownMenuSelectableItemProps {
+  primitive: React.ElementType
+  indicator: React.ElementType
+  icon: React.ReactNode
+  indicatorSlot?: string
+  className?: any
+  children?: React.ReactNode
+  [key: string]: any
+}
+
+
+const DropdownMenuSelectableItem = React.forwardRef<
+  HTMLElement,
+  DropdownMenuSelectableItemProps
+>(
+  (
+    {
+      primitive: Primitive,
+      indicator: Indicator,
+      icon,
+      indicatorSlot,
+      className,
+      children,
+      ...props
+    },
+    ref
+  ) => (
+    <Primitive
+      ref={ref}
+      className={(state: any) =>
+        cn(
+          "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+          typeof className === "function" ? className(state) : className
+        )
+      }
+      {...props}
+    >
+      <span
+        className="pointer-events-none absolute right-2 flex items-center justify-center"
+        data-slot={indicatorSlot}
+      >
+        <Indicator>{icon}</Indicator>
+      </span>
+      {children}
+    </Primitive>
+  )
+)
+DropdownMenuSelectableItem.displayName = "DropdownMenuSelectableItem"
+
+
 
 function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
   return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />
@@ -145,39 +196,29 @@ function DropdownMenuSubContent({
   )
 }
 
-function DropdownMenuCheckboxItem({
-  className,
-  children,
-  checked,
-  inset,
-  ...props
-}: MenuPrimitive.CheckboxItem.Props & {
-  inset?: boolean
-}) {
-  return (
-    <MenuPrimitive.CheckboxItem
-      data-slot="dropdown-menu-checkbox-item"
-      data-inset={inset}
-      className={cn(
-        "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        className
-      )}
-      checked={checked}
-      {...props}
-    >
-      <span
-        className="pointer-events-none absolute right-2 flex items-center justify-center"
-        data-slot="dropdown-menu-checkbox-item-indicator"
-      >
-        <MenuPrimitive.CheckboxItemIndicator>
-          <CheckIcon
-          />
-        </MenuPrimitive.CheckboxItemIndicator>
-      </span>
-      {children}
-    </MenuPrimitive.CheckboxItem>
-  )
-}
+const DropdownMenuCheckboxItem = React.forwardRef<
+  React.ElementRef<typeof MenuPrimitive.CheckboxItem>,
+  React.ComponentPropsWithoutRef<typeof MenuPrimitive.CheckboxItem> & {
+    inset?: boolean
+  }
+>(({ className, children, checked, inset, ...props }, ref) => (
+  <DropdownMenuSelectableItem
+    ref={ref}
+    primitive={MenuPrimitive.CheckboxItem}
+    indicator={MenuPrimitive.CheckboxItemIndicator}
+    icon={<Check className="size-4" />}
+    indicatorSlot="dropdown-menu-checkbox-item-indicator"
+    data-slot="dropdown-menu-checkbox-item"
+    data-inset={inset}
+    className={className}
+    checked={checked}
+    {...props}
+  >
+    {children}
+  </DropdownMenuSelectableItem>
+))
+DropdownMenuCheckboxItem.displayName = "DropdownMenuCheckboxItem"
+
 
 function DropdownMenuRadioGroup({ ...props }: MenuPrimitive.RadioGroup.Props) {
   return (
@@ -188,37 +229,28 @@ function DropdownMenuRadioGroup({ ...props }: MenuPrimitive.RadioGroup.Props) {
   )
 }
 
-function DropdownMenuRadioItem({
-  className,
-  children,
-  inset,
-  ...props
-}: MenuPrimitive.RadioItem.Props & {
-  inset?: boolean
-}) {
-  return (
-    <MenuPrimitive.RadioItem
-      data-slot="dropdown-menu-radio-item"
-      data-inset={inset}
-      className={cn(
-        "relative flex cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground data-inset:pl-7 data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        className
-      )}
-      {...props}
-    >
-      <span
-        className="pointer-events-none absolute right-2 flex items-center justify-center"
-        data-slot="dropdown-menu-radio-item-indicator"
-      >
-        <MenuPrimitive.RadioItemIndicator>
-          <CheckIcon
-          />
-        </MenuPrimitive.RadioItemIndicator>
-      </span>
-      {children}
-    </MenuPrimitive.RadioItem>
-  )
-}
+const DropdownMenuRadioItem = React.forwardRef<
+  React.ElementRef<typeof MenuPrimitive.RadioItem>,
+  React.ComponentPropsWithoutRef<typeof MenuPrimitive.RadioItem> & {
+    inset?: boolean
+  }
+>(({ className, children, inset, ...props }, ref) => (
+  <DropdownMenuSelectableItem
+    ref={ref}
+    primitive={MenuPrimitive.RadioItem}
+    indicator={MenuPrimitive.RadioItemIndicator}
+    icon={<Circle className="size-2 fill-current" />}
+    indicatorSlot="dropdown-menu-radio-item-indicator"
+    data-slot="dropdown-menu-radio-item"
+    data-inset={inset}
+    className={className}
+    {...props}
+  >
+    {children}
+  </DropdownMenuSelectableItem>
+))
+DropdownMenuRadioItem.displayName = "DropdownMenuRadioItem"
+
 
 function DropdownMenuSeparator({
   className,
