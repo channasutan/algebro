@@ -9,6 +9,23 @@ import {
   PageContainerContent,
 } from '../page-container'
 
+// Helper to reduce asChild test duplication
+function renderAsChild(
+  Component: React.ComponentType<{ asChild?: boolean; className?: string; children?: React.ReactNode }>,
+  testId: string,
+  childTag: Extract<keyof React.JSX.IntrinsicElements, string>,
+  expectedClass: string
+) {
+  render(
+    <Component asChild>
+      {React.createElement(childTag, { 'data-testid': testId }, 'Content')}
+    </Component>
+  )
+  const element = screen.getByTestId(testId)
+  expect(element.tagName).toBe(childTag.toUpperCase())
+  expect(element.className).toContain(expectedClass)
+}
+
 describe('PageContainer', () => {
   it('renders correctly (snapshot)', () => {
     const { asFragment } = render(<PageContainer>Content</PageContainer>)
@@ -36,14 +53,7 @@ describe('PageContainer', () => {
   })
 
   it('renders as child element when asChild is true', () => {
-    render(
-      <PageContainer asChild>
-        <section data-testid="as-child-section">Content</section>
-      </PageContainer>
-    )
-    const element = screen.getByTestId('as-child-section')
-    expect(element.tagName).toBe('SECTION')
-    expect(element.className).toContain('mx-auto')
+    renderAsChild(PageContainer, 'as-child-section', 'section', 'mx-auto')
   })
 
   it('forwards custom className', () => {
@@ -73,14 +83,7 @@ describe('PageContainerHeading', () => {
   })
 
   it('renders as child element when asChild is true', () => {
-    render(
-      <PageContainerHeading asChild>
-        <h2 data-testid="heading-h2">Title</h2>
-      </PageContainerHeading>
-    )
-    const element = screen.getByTestId('heading-h2')
-    expect(element.tagName).toBe('H2')
-    expect(element.className).toContain('text-2xl')
+    renderAsChild(PageContainerHeading, 'heading-h2', 'h2', 'text-2xl')
   })
 })
 
