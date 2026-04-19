@@ -1,14 +1,13 @@
 export type { MayarWebhookData } from "@/repositories/billing/supabase-mayar-webhook-repository";
 import { type MayarWebhookData, createSupabaseMayarWebhookRepository } from "@/repositories/billing/supabase-mayar-webhook-repository";
-import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 
 export async function handleMayarWebhook(
   eventId: string,
   event: string,
   payload: { event: string; data: MayarWebhookData }
 ): Promise<{ ok: boolean; duplicate?: boolean }> {
-  const supabase = await getSupabaseServerClient();
-  const repo = await createSupabaseMayarWebhookRepository(supabase);
+  const repo = await createSupabaseMayarWebhookRepository();
+
 
   const stored = await repo.storeWebhookEvent(eventId, event, payload);
   if (!stored) {

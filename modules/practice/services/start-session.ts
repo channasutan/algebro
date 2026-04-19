@@ -27,24 +27,19 @@ async function recoverFromDuplicateSession(
   topicId: string | null,
   log: ReturnType<typeof createServiceLogger>
 ): Promise<PracticeSession> {
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const existing = await repo.findActiveSession(userId, topicId);
-    if (existing) {
-      log.info({
-        event: "practice.session",
-        meta: {
-          type: "domain",
-          userId,
-          phase: "complete",
-          sessionId: existing.id,
-          outcome: "success",
-        },
-      });
-      return existing;
-    }
-    if (attempt < 2) {
-      await new Promise(r => setTimeout(r, 50));
-    }
+  const existing = await repo.findActiveSession(userId, topicId);
+  if (existing) {
+    log.info({
+      event: "practice.session",
+      meta: {
+        type: "domain",
+        userId,
+        phase: "complete",
+        sessionId: existing.id,
+        outcome: "success",
+      },
+    });
+    return existing;
   }
 
   throw new DuplicateActiveSessionError(userId, topicId);

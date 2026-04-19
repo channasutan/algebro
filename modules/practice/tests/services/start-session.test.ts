@@ -30,7 +30,7 @@ vi.mock("@/lib/observability", () => ({
   createServiceLogger: vi.fn(() => logger)
 }));
 
-vi.mock("../../repositories/supabase-practice-repository", () => ({
+vi.mock("@/repositories/practice/supabase-practice-repository", () => ({
   createSupabasePracticeRepository: createSupabasePracticeRepositoryMock
 }));
 

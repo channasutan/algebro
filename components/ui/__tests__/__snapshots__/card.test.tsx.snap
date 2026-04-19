@@ -1,0 +1,29 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Card > renders correctly with subcomponents 1`] = `
+<DocumentFragment>
+  <div
+    class="rounded-[--radius-lg] bg-[--color-surface] border border-[oklch(from_var(--color-text)_l_c_h_/_0.08)] transition-shadow shadow-[--shadow-sm]"
+    id="default-card"
+  >
+    <div
+      class="font-semibold text-[var(--text-lg)] px-6 pt-6 pb-0"
+      id="card-header"
+    >
+      Header
+    </div>
+    <div
+      class="text-[--color-text] p-6"
+      id="card-body"
+    >
+      Body Content
+    </div>
+    <div
+      class="flex items-center gap-2 px-6 pb-6 pt-0"
+      id="card-footer"
+    >
+      Footer
+    </div>
+  </div>
+</DocumentFragment>
+`;
