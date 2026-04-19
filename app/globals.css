@@ -52,6 +52,9 @@
   --spacing-24: var(--space-24);
   --spacing-32: var(--space-32);
 
+  /* Page Content Width */
+  --max-width-default: var(--content-default);
+
   /* Border Radius */
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
@@ -178,6 +181,9 @@
 
   /* Transition Token */
   --transition-interactive: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Page Content Width */
+  --content-default: 960px;
 }
 
 /* 
