@@ -9,7 +9,7 @@ import {
 } from '@/components/ui'
 
 export default function DashboardPage() {
-  const { data, isLoading } = usePing()
+  const { data, isLoading, isError } = usePing()
 
   return (
     <PageContainer>
@@ -19,6 +19,8 @@ export default function DashboardPage() {
       <PageContainerContent>
         {isLoading ? (
           <p>Loading...</p>
+        ) : isError ? (
+          <p className="text-[--color-error]">Failed to load data.</p>
         ) : (
           <pre className="p-4 bg-[--color-surface-2] rounded-[--radius-md] overflow-auto">
             {JSON.stringify(data, null, 2)}
