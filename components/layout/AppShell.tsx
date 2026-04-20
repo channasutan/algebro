@@ -45,7 +45,7 @@ export function AppShell({ children }: AppShellProps) {
           <div className="w-[var(--sidebar-width)] hidden md:block bg-[var(--color-surface)] border-r border-[var(--color-border)]" />
         )}
         <div className="flex min-w-0 flex-1 flex-col">
-          <AppHeader />
+          <AppHeader onMenuToggle={toggleSidebar} isSidebarOpen={isSidebarOpen} />
           <main className="flex-1 min-w-0">
             {children}
           </main>
