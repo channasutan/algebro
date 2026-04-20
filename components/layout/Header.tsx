@@ -3,28 +3,25 @@
 import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
+import { navItems } from '@/lib/navigation'
 
 interface HeaderProps {
   onMenuToggle: () => void
   isSidebarOpen: boolean
 }
 
-const ROUTE_TITLES: Record<string, string> = {
-  '/dashboard': 'Dashboard',
-  '/practice':  'Practice',
-  '/topics':    'Topics',
-  '/progress':  'Progress',
-}
-
 export function Header({ onMenuToggle, isSidebarOpen }: HeaderProps) {
   const pathname = usePathname()
-  const matchedRoute = Object.keys(ROUTE_TITLES).find(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  )
-  const pageTitle = matchedRoute ? ROUTE_TITLES[matchedRoute] : 'Algebro'
+  
+  // Support prefix-match (longest match wins) for dynamic routes
+  const matchedItem = [...navItems]
+    .filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))
+    .sort((a, b) => b.href.length - a.href.length)[0]
+
+  const pageTitle = matchedItem?.label ?? 'Algebro'
 
   return (
-    <header className="sticky top-0 z-10 bg-[var(--color-surface)] border-b border-[var(--color-border)] h-16 flex items-center px-[var(--space-6)] gap-[var(--space-4)]">
+    <header className="sticky top-0 z-30 bg-[var(--color-surface)] border-b border-[var(--color-border)] h-16 flex items-center px-[var(--space-6)] gap-[var(--space-4)]">
       {/* Hamburger — mobile only */}
       <button
         onClick={onMenuToggle}
@@ -46,3 +43,4 @@ export function Header({ onMenuToggle, isSidebarOpen }: HeaderProps) {
     </header>
   )
 }
+
