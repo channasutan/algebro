@@ -18,7 +18,10 @@ const ROUTE_TITLES: Record<string, string> = {
 
 export function Header({ onMenuToggle, isSidebarOpen }: HeaderProps) {
   const pathname = usePathname()
-  const pageTitle = ROUTE_TITLES[pathname] ?? 'Algebro'
+  const matchedRoute = Object.keys(ROUTE_TITLES).find(
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
+  )
+  const pageTitle = matchedRoute ? ROUTE_TITLES[matchedRoute] : 'Algebro'
 
   return (
     <header className="sticky top-0 z-10 bg-[var(--color-surface)] border-b border-[var(--color-border)] h-16 flex items-center px-[var(--space-6)] gap-[var(--space-4)]">

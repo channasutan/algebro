@@ -1,5 +1,9 @@
+'use client'
+
+import { useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { NavLinks } from './NavLinks';
+import { X } from 'lucide-react';
 
 interface AppSidebarProps {
   isOpen?: boolean;
@@ -7,6 +11,15 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
+  useEffect(() => {
+    if (!isOpen || !onClose) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   return (
     <>
       {/* Mobile Overlay */}
@@ -25,10 +38,20 @@ export function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex h-16 items-center px-6">
+        <div className="flex h-16 items-center justify-between px-6">
           <span className="font-display text-xl font-bold tracking-tight text-[var(--color-text)]">
             Algebro
           </span>
+
+          {/* Close button — mobile only */}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close sidebar"
+            className="md:hidden flex items-center justify-center min-w-[44px] min-h-[44px] rounded-[var(--radius-md)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-offset)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]"
+          >
+            <X size={20} aria-hidden="true" />
+          </button>
         </div>
         
         <div className="flex-1 py-4">
