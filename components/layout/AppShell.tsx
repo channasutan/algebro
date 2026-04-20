@@ -11,8 +11,8 @@ type AppShellProps = Readonly<{
 }>;
 
 interface UserState {
-  displayName: string | null;
-  email: string;
+  readonly displayName: string | null;
+  readonly email: string;
 }
 
 export function AppShell({ children }: AppShellProps) {

@@ -23,14 +23,14 @@ const NAV_ITEMS = [
   { href: '/progress',  label: 'Progress',  icon: TrendingUp },
 ] as const
 
-interface SidebarProps {
-  isOpen: boolean
-  onClose?: () => void
-  user: {
-    displayName: string | null
-    email: string
-  }
-}
+type SidebarProps = Readonly<{
+  isOpen: boolean;
+  onClose?: () => void;
+  user: Readonly<{
+    displayName: string | null;
+    email: string;
+  }>;
+}>;
 
 export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
   const pathname = usePathname()
