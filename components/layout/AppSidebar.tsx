@@ -42,8 +42,8 @@ export function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
     // On desktop: sidebar is static (md:static), so no modal needed
     if (isOpen) {
       if (!dialog.open) dialog.showModal()
-    } else {
-      if (dialog.open) dialog.close()
+    } else if (dialog.open) {
+      dialog.close()
     }
   }, [isOpen])
 
