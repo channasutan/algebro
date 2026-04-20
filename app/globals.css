@@ -354,3 +354,16 @@ p, li {
   background-color: oklch(from var(--color-primary) l c h / 0.2);
   color: var(--color-text);
 }
+
+/* Native dialog reset for sidebar functionality */
+dialog {
+  padding: 0;
+  border: none;
+  background: transparent;
+  max-width: none;
+  max-height: none;
+  overflow: visible;
+}
+dialog::backdrop {
+  display: none; /* we use our own overlay */
+}

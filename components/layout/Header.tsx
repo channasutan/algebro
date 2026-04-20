@@ -6,8 +6,8 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { navItems } from '@/lib/navigation'
 
 interface HeaderProps {
-  onMenuToggle: () => void
-  isSidebarOpen: boolean
+  readonly onMenuToggle: () => void
+  readonly isSidebarOpen: boolean
 }
 
 export function Header({ onMenuToggle, isSidebarOpen }: HeaderProps) {
