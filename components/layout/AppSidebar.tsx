@@ -1,57 +1,52 @@
 'use client'
 
-import { useEffect } from 'react'
-import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { NavLinks } from './NavLinks'
 import { X } from 'lucide-react'
+import { useCloseSidebarOnNavigation } from '@/hooks/useCloseSidebarOnNavigation'
+import { useSidebarEscapeKey } from '@/hooks/useSidebarEscapeKey'
 
 interface AppSidebarProps {
   isOpen?: boolean
   onClose?: () => void
 }
 
+interface SidebarOverlayProps {
+  isOpen: boolean | undefined
+  onClose: (() => void) | undefined
+}
+
+function SidebarOverlay({ isOpen, onClose }: SidebarOverlayProps) {
+  if (!isOpen) return null
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label="Close navigation menu"
+      onClick={onClose}
+      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onClose?.()}
+      className="fixed inset-0 z-20 bg-black/50 md:hidden"
+    />
+  )
+}
+
 export function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
-  const pathname = usePathname()
-
-  // Close sidebar on route change (mobile)
-  useEffect(() => {
-    if (isOpen) onClose?.()
-  }, [pathname])
-
-
-  // Handle Escape key to close
-  useEffect(() => {
-    if (!isOpen || !onClose) return
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [isOpen, onClose])
+  useCloseSidebarOnNavigation(isOpen, onClose)
+  useSidebarEscapeKey(isOpen, onClose)
 
   return (
     <>
-      {/* Mobile Overlay */}
-      {isOpen && (
-        <div 
-          role="button"
-          tabIndex={0}
-          aria-label="Close navigation menu"
-          onClick={onClose}
-          onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onClose?.()}
-          className="fixed inset-0 z-20 bg-black/50 md:hidden" 
-        />
-      )}
+      <SidebarOverlay isOpen={isOpen} onClose={onClose} />
 
-      <aside 
-        id="app-sidebar" 
+      <aside
+        id="app-sidebar"
         role="dialog"
         aria-modal="true"
         aria-label="Navigation menu"
         className={cn(
-          "fixed inset-y-0 left-0 z-30 flex w-[260px] flex-col border-r border-[var(--color-border)] bg-[var(--color-surface)] transition-transform duration-300 ease-in-out md:static md:translate-x-0",
-          isOpen ? "translate-x-0" : "-translate-x-full"
+          'fixed inset-y-0 left-0 z-30 flex w-[260px] flex-col border-r border-[var(--color-border)] bg-[var(--color-surface)] transition-transform duration-300 ease-in-out md:static md:translate-x-0',
+          isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
         <div className="flex h-16 items-center justify-between px-6">
@@ -59,7 +54,6 @@ export function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
             Algebro
           </span>
 
-          {/* Close button — mobile only */}
           <button
             type="button"
             onClick={onClose}
@@ -69,7 +63,7 @@ export function AppSidebar({ isOpen, onClose }: AppSidebarProps) {
             <X size={20} aria-hidden="true" />
           </button>
         </div>
-        
+
         <div className="flex-1 py-4">
           <NavLinks />
         </div>
