@@ -1,0 +1,148 @@
+'use client'
+
+import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
+import { LayoutDashboard, BookOpen, Library, TrendingUp, LogOut } from 'lucide-react'
+import { getSupabaseBrowserClient } from '@/lib/supabase/browser-client'
+import { cn } from '@/lib/utils'
+
+// AlgebroLogo component - Using text as SVG was not found in the repo
+function AlgebroLogo({ className }: { className?: string }) {
+  return (
+    <span className={cn('font-display text-xl font-bold tracking-tight text-[var(--color-text)]', className)}>
+      Algebro
+    </span>
+  )
+}
+
+// Nav items definition
+const NAV_ITEMS = [
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/practice',  label: 'Practice',  icon: BookOpen },
+  { href: '/topics',    label: 'Topics',    icon: Library },
+  { href: '/progress',  label: 'Progress',  icon: TrendingUp },
+] as const
+
+interface SidebarProps {
+  isOpen: boolean
+  onClose?: () => void
+  user: {
+    displayName: string | null
+    email: string
+  }
+}
+
+export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
+  const pathname = usePathname()
+  const router = useRouter()
+  const supabase = getSupabaseBrowserClient()
+
+  // Derive initials for avatar fallback
+  const initials = (user.displayName ?? user.email)
+    .split(' ')
+    .map((n) => n[0])
+    .filter(Boolean)
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+
+  // Sign out handler
+  async function handleSignOut() {
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      console.error('Sign out error:', error.message)
+      return
+    }
+    router.push('/login')
+  }
+
+  return (
+    <>
+      {/* Backdrop - Mobile only, closes when clicking outside */}
+      {isOpen && (
+        <button
+          type="button"
+          onClick={onClose}
+          className="fixed inset-0 z-30 bg-black/50 transition-opacity duration-200 md:hidden animate-in fade-in"
+          aria-label="Close navigation menu"
+        />
+      )}
+
+      <aside
+        aria-label="Main navigation"
+        className={cn(
+          // Layout
+          'fixed inset-y-0 left-0 z-40 flex flex-col',
+          'w-[var(--sidebar-width)]',
+          'bg-[var(--color-surface)] border-r border-[var(--color-border)]',
+          // Mobile: slide in/out
+          'transition-transform duration-200 ease-in-out',
+          isOpen ? 'translate-x-0' : '-translate-x-full',
+          'md:translate-x-0'
+        )}
+      >
+        {/* Logo */}
+        <div className="flex h-16 items-center px-4 border-b border-[var(--color-border)]">
+          <AlgebroLogo className="h-8 flex items-center" />
+        </div>
+
+        {/* Nav links */}
+        <nav className="flex-1 overflow-y-auto py-4 px-2" aria-label="Sidebar">
+          <ul role="list" className="flex flex-col gap-1">
+            {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+              const isActive = pathname.startsWith(href)
+              return (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    onClick={() => onClose?.()} // Close on navigation (mobile)
+                    className={cn(
+                      'flex items-center gap-3 rounded-md px-3 py-2',
+                      'text-sm font-medium transition-colors',
+                      isActive
+                        ? 'bg-[var(--color-primary-highlight)] text-[var(--color-primary)]'
+                        : 'text-[var(--color-text-muted)] hover:bg-[var(--color-surface-offset)] hover:text-[var(--color-text)]'
+                    )}
+                    aria-current={isActive ? 'page' : undefined}
+                  >
+                    <Icon
+                      size={18}
+                      aria-hidden="true"
+                      className="shrink-0"
+                    />
+                    {label}
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </nav>
+
+        {/* User section */}
+        <div className="border-t border-[var(--color-border)] p-4 flex items-center gap-3">
+          <div
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary-highlight)] text-[var(--color-primary)] text-xs font-semibold"
+            aria-hidden="true"
+          >
+            {initials}
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-[var(--color-text)] truncate">
+              {user.displayName ?? user.email}
+            </p>
+          </div>
+
+          <button
+            onClick={handleSignOut}
+            type="button"
+            aria-label="Sign out"
+            className="rounded-md p-1.5 text-[var(--color-text-muted)] hover:bg-[var(--color-surface-offset)] hover:text-[var(--color-text)] transition-colors"
+          >
+            <LogOut size={16} aria-hidden="true" />
+          </button>
+        </div>
+      </aside>
+    </>
+  )
+}
