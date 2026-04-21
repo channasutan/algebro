@@ -34,6 +34,47 @@ type SidebarProps = Readonly<{
   }>;
 }>;
 
+function getInitials(displayName: string | null, email: string | null): string {
+  const source = displayName ?? email ?? '?'
+  const words = source.split(' ').filter(Boolean)
+  if (words.length === 0) return '?'
+  return words
+    .map((w) => w)
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+}
+
+type NavItemProps = Readonly<{
+  href: string
+  label: string
+  icon: React.ElementType
+  isActive: boolean
+  onClose?: () => void
+}>
+
+function NavItem({ href, label, icon: Icon, isActive, onClose }: NavItemProps) {
+  return (
+    <li>
+      <Link
+        href={href}
+        onClick={() => onClose?.()}
+        className={cn(
+          'flex items-center gap-3 rounded-md px-3 py-2',
+          'text-sm font-medium transition-colors',
+          isActive
+            ? 'bg-[var(--color-primary-highlight)] text-[var(--color-primary)]'
+            : 'text-[var(--color-text-muted)] hover:bg-[var(--color-surface-offset)] hover:text-[var(--color-text)]'
+        )}
+        aria-current={isActive ? 'page' : undefined}
+      >
+        <Icon size={18} aria-hidden="true" className="shrink-0" />
+        {label}
+      </Link>
+    </li>
+  )
+}
+
 export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
@@ -50,13 +91,7 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
   }, [])
 
   // Derive initials for avatar fallback
-  const initials = (user.displayName ?? user.email ?? '?')
-    .split(' ')
-    .map((n) => n)
-    .filter(Boolean)
-    .join('')
-    .slice(0, 2)
-    .toUpperCase() || '?'
+  const initials = getInitials(user.displayName, user.email)
 
   // Sign out handler
   async function handleSignOut() {
@@ -105,32 +140,16 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
         {/* Nav links */}
         <nav className="flex-1 overflow-y-auto py-4 px-2" aria-label="Sidebar">
           <ul className="flex flex-col gap-1">
-            {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-              const isActive = pathname === href || pathname.startsWith(href + '/')
-              return (
-                <li key={href}>
-                  <Link
-                    href={href}
-                    onClick={() => onClose?.()} // Close on navigation (mobile)
-                    className={cn(
-                      'flex items-center gap-3 rounded-md px-3 py-2',
-                      'text-sm font-medium transition-colors',
-                      isActive
-                        ? 'bg-[var(--color-primary-highlight)] text-[var(--color-primary)]'
-                        : 'text-[var(--color-text-muted)] hover:bg-[var(--color-surface-offset)] hover:text-[var(--color-text)]'
-                    )}
-                    aria-current={isActive ? 'page' : undefined}
-                  >
-                    <Icon
-                      size={18}
-                      aria-hidden="true"
-                      className="shrink-0"
-                    />
-                    {label}
-                  </Link>
-                </li>
-              )
-            })}
+            {NAV_ITEMS.map(({ href, label, icon }) => (
+              <NavItem
+                key={href}
+                href={href}
+                label={label}
+                icon={icon}
+                isActive={pathname === href || pathname.startsWith(href + '/')}
+                onClose={onClose}
+              />
+            ))}
           </ul>
         </nav>
 
