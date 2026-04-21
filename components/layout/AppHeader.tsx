@@ -10,19 +10,22 @@ interface AppHeaderProps {
 export function AppHeader({ onMenuToggle, isSidebarOpen, isMenuEnabled = true }: AppHeaderProps) {
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-bg)]/95 px-4 backdrop-blur">
+      {/* z-20: sits below sidebar (z-40) and backdrop (z-30) on mobile intentionally. */}
       <div className="flex items-center gap-4">
-        {/* Hamburger - mobile only */}
-        <button
-          type="button"
-          onClick={onMenuToggle}
-          disabled={!isMenuEnabled}
-          aria-label={isSidebarOpen ? 'Close navigation' : 'Open navigation'}
-          aria-expanded={isSidebarOpen}
-          aria-disabled={!isMenuEnabled}
-          className="md:hidden disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[44px] min-h-[44px] rounded-[var(--radius-md)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-offset)] transition-colors"
-        >
-          {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
-        </button>
+        {isMenuEnabled ? (
+          <button
+            type="button"
+            onClick={onMenuToggle}
+            aria-label={isSidebarOpen ? 'Close navigation' : 'Open navigation'}
+            aria-expanded={isSidebarOpen}
+            className="md:hidden flex items-center justify-center min-w-[44px] min-h-[44px] rounded-[var(--radius-md)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-offset)] transition-colors"
+          >
+            {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        ) : (
+          // Invisible placeholder maintains header layout during auth hydration
+          <div className="md:hidden min-w-[44px] min-h-[44px]" aria-hidden="true" />
+        )}
 
         {/* Placeholder for page title or breadcrumbs */}
         <span className="text-[var(--text-lg)] font-semibold text-[var(--color-text)]">

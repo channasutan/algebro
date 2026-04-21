@@ -1,5 +1,8 @@
 'use client'
 
+import * as React from 'react'
+import { useState, useEffect } from 'react'
+
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { LayoutDashboard, BookOpen, Library, LogOut } from 'lucide-react'
@@ -27,7 +30,7 @@ type SidebarProps = Readonly<{
   onClose?: () => void;
   user: Readonly<{
     displayName: string | null;
-    email: string;
+    email: string | null;
   }>;
 }>;
 
@@ -35,15 +38,25 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = getSupabaseBrowserClient()
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Track viewport size for conditional inert attribute
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)')
+    setIsMobile(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
 
   // Derive initials for avatar fallback
-  const initials = (user.displayName ?? user.email)
+  const initials = (user.displayName ?? user.email ?? '?')
     .split(' ')
-    .map((n) => n[0])
+    .map((n) => n)
     .filter(Boolean)
     .join('')
     .slice(0, 2)
-    .toUpperCase()
+    .toUpperCase() || '?'
 
   // Sign out handler
   async function handleSignOut() {
@@ -58,6 +71,7 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
   return (
     <>
       {/* Backdrop - Mobile only, closes when clicking outside */}
+      {/* z-30: above header (z-20) so tapping backdrop on mobile works, below sidebar panel (z-40) */}
       {isOpen && (
         <button
           type="button"
@@ -69,7 +83,8 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
 
       <aside
         aria-label="Main navigation"
-        inert={!isOpen}
+        // On mobile: inert when closed. On desktop: never inert (always visible).
+        inert={isMobile && !isOpen ? true : undefined}
         className={cn(
           // Mobile: fixed overlay that slides in/out
           'fixed inset-y-0 left-0 z-40 flex flex-col',

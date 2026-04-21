@@ -12,7 +12,7 @@ type AppShellProps = Readonly<{
 
 interface UserState {
   readonly displayName: string | null;
-  readonly email: string;
+  readonly email: string | null;
 }
 
 export function AppShell({ children }: AppShellProps) {
@@ -35,7 +35,7 @@ export function AppShell({ children }: AppShellProps) {
         if (user) {
           setUser({
             displayName: user.user_metadata?.display_name || user.user_metadata?.full_name || null,
-            email: user.email ?? '',
+            email: user.email ?? null,
           });
         }
       } catch (err) {
@@ -51,7 +51,7 @@ export function AppShell({ children }: AppShellProps) {
   const closeSidebar = () => setIsSidebarOpen(false);
 
   return (
-    <div className={cn("min-h-dvh bg-[var(--color-bg)] text-[var(--color-text)]")}>
+    <div className="min-h-dvh bg-[var(--color-bg)] text-[var(--color-text)]">
       <div className="mx-auto flex min-h-dvh flex-row">
         {user ? (
           <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} user={user} />
