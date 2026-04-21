@@ -4,9 +4,10 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 interface AppHeaderProps {
   readonly onMenuToggle?: () => void;
   readonly isSidebarOpen?: boolean;
+  readonly isMenuEnabled?: boolean;
 }
 
-export function AppHeader({ onMenuToggle, isSidebarOpen }: AppHeaderProps) {
+export function AppHeader({ onMenuToggle, isSidebarOpen, isMenuEnabled = true }: AppHeaderProps) {
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-bg)]/95 px-4 backdrop-blur">
       <div className="flex items-center gap-4">
@@ -14,9 +15,11 @@ export function AppHeader({ onMenuToggle, isSidebarOpen }: AppHeaderProps) {
         <button
           type="button"
           onClick={onMenuToggle}
+          disabled={!isMenuEnabled}
           aria-label={isSidebarOpen ? 'Close navigation' : 'Open navigation'}
           aria-expanded={isSidebarOpen}
-          className="md:hidden flex items-center justify-center min-w-[44px] min-h-[44px] rounded-[var(--radius-md)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-offset)] transition-colors"
+          aria-disabled={!isMenuEnabled}
+          className="md:hidden disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[44px] min-h-[44px] rounded-[var(--radius-md)] text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-surface-offset)] transition-colors"
         >
           {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
         </button>

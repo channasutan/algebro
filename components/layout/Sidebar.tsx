@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { LayoutDashboard, BookOpen, Library, TrendingUp, LogOut } from 'lucide-react'
+import { LayoutDashboard, BookOpen, Library, LogOut } from 'lucide-react'
 import { getSupabaseBrowserClient } from '@/lib/supabase/browser-client'
 import { cn } from '@/lib/utils'
 
@@ -20,7 +20,6 @@ const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/practice',  label: 'Practice',  icon: BookOpen },
   { href: '/topics',    label: 'Topics',    icon: Library },
-  { href: '/progress',  label: 'Progress',  icon: TrendingUp },
 ] as const
 
 type SidebarProps = Readonly<{
@@ -70,13 +69,13 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
 
       <aside
         aria-label="Main navigation"
+        inert={!isOpen}
         className={cn(
-          // Layout
           // Mobile: fixed overlay that slides in/out
           'fixed inset-y-0 left-0 z-40 flex flex-col',
           // Desktop: in-flow, always visible, no overlay
-          'md:relative md:inset-auto md:z-auto md:translate-x-0',
-          'w-[var(--sidebar-width)]',
+          'md:static md:inset-auto md:z-auto md:translate-x-0',
+          'w-[var(--sidebar-width)] shrink-0',
           'bg-[var(--color-surface)] border-r border-[var(--color-border)]',
           'transition-transform duration-200 ease-in-out',
           isOpen ? 'translate-x-0' : '-translate-x-full',
@@ -91,7 +90,7 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
         <nav className="flex-1 overflow-y-auto py-4 px-2" aria-label="Sidebar">
           <ul role="list" className="flex flex-col gap-1">
             {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-              const isActive = pathname.startsWith(href)
+              const isActive = pathname === href || pathname.startsWith(href + '/')
               return (
                 <li key={href}>
                   <Link
