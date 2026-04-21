@@ -35,33 +35,24 @@ export function AppShell({ children }: AppShellProps) {
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
-    const fetchUser = async () => {
-      try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        
-        if (error) {
-          console.error('Session resolution error:', error.message);
-          setAuthState({ status: 'error' });
-          return;
-        }
 
-        if (user) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (session?.user) {
           setAuthState({
             status: 'authenticated',
             user: {
-              displayName: user.user_metadata?.display_name || user.user_metadata?.full_name || null,
-              email: user.email ?? null,
+              displayName: session.user.user_metadata?.display_name ?? session.user.user_metadata?.full_name ?? null,
+              email: session.user.email ?? null,
             },
           });
         } else {
           setAuthState({ status: 'unauthenticated' });
         }
-      } catch (err) {
-        console.error('Unexpected auth error:', err);
-        setAuthState({ status: 'error' });
       }
-    };
-    fetchUser();
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
