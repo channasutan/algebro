@@ -17,8 +17,12 @@ interface UserState {
 
 export function AppShell({ children }: AppShellProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [user, setUser] = useState<UserState | null>(null);
-  const [isUserLoaded, setIsUserLoaded] = useState(false);
+  const [authState, setAuthState] = useState<
+    | { status: 'loading' }
+    | { status: 'authenticated'; user: UserState }
+    | { status: 'unauthenticated' }
+    | { status: 'error' }
+  >({ status: 'loading' });
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -28,20 +32,24 @@ export function AppShell({ children }: AppShellProps) {
         
         if (error) {
           console.error('Session resolution error:', error.message);
-          setIsUserLoaded(true);
+          setAuthState({ status: 'error' });
           return;
         }
 
         if (user) {
-          setUser({
-            displayName: user.user_metadata?.display_name || user.user_metadata?.full_name || null,
-            email: user.email ?? null,
+          setAuthState({
+            status: 'authenticated',
+            user: {
+              displayName: user.user_metadata?.display_name || user.user_metadata?.full_name || null,
+              email: user.email ?? null,
+            },
           });
+        } else {
+          setAuthState({ status: 'unauthenticated' });
         }
       } catch (err) {
         console.error('Unexpected auth error:', err);
-      } finally {
-        setIsUserLoaded(true);
+        setAuthState({ status: 'error' });
       }
     };
     fetchUser();
@@ -53,14 +61,14 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <div className="min-h-dvh bg-[var(--color-bg)] text-[var(--color-text)]">
       <div className="mx-auto flex min-h-dvh flex-row">
-        {user ? (
-          <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} user={user} />
+        {authState.status === 'authenticated' ? (
+          <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} user={authState.user} />
         ) : (
           <div
             aria-hidden="true"
             className={cn(
               "w-[var(--sidebar-width)] shrink-0 hidden md:block bg-[var(--color-surface)] border-r border-[var(--color-border)]",
-              !isUserLoaded && "animate-pulse"
+              authState.status === 'loading' && "animate-pulse"
             )}
           />
         )}
@@ -68,7 +76,7 @@ export function AppShell({ children }: AppShellProps) {
           <AppHeader 
             onMenuToggle={toggleSidebar} 
             isSidebarOpen={isSidebarOpen} 
-            isMenuEnabled={isUserLoaded && user !== null}
+            isMenuEnabled={authState.status === 'authenticated'}
           />
           <main className="flex-1 min-w-0">
             {children}
