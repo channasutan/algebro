@@ -23,6 +23,15 @@ export function AppShell({ children }: AppShellProps) {
     | { status: 'unauthenticated' }
     | { status: 'error' }
   >({ status: 'loading' });
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -72,7 +81,10 @@ export function AppShell({ children }: AppShellProps) {
             )}
           />
         )}
-        <div className="flex min-w-0 flex-1 flex-col">
+        <div 
+          className="flex min-w-0 flex-1 flex-col"
+          inert={isMobile && isSidebarOpen ? true : undefined}
+        >
           <AppHeader 
             onMenuToggle={toggleSidebar} 
             isSidebarOpen={isSidebarOpen} 
