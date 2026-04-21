@@ -53,7 +53,7 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
       console.error('Sign out error:', error.message)
       return
     }
-    router.push('/login')
+    router.push('/sign-in')
   }
 
   return (
@@ -72,13 +72,14 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
         aria-label="Main navigation"
         className={cn(
           // Layout
+          // Mobile: fixed overlay that slides in/out
           'fixed inset-y-0 left-0 z-40 flex flex-col',
+          // Desktop: in-flow, always visible, no overlay
+          'md:relative md:inset-auto md:z-auto md:translate-x-0',
           'w-[var(--sidebar-width)]',
           'bg-[var(--color-surface)] border-r border-[var(--color-border)]',
-          // Mobile: slide in/out
           'transition-transform duration-200 ease-in-out',
           isOpen ? 'translate-x-0' : '-translate-x-full',
-          'md:translate-x-0'
         )}
       >
         {/* Logo */}
