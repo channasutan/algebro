@@ -183,6 +183,7 @@
   --transition-interactive: 180ms cubic-bezier(0.16, 1, 0.3, 1);
   --content-default: 960px;
   --sidebar-width: 240px;
+  --sidebar-collapsed-width: 0px;
 }
 
 /* 
