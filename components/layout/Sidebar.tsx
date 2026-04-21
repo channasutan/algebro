@@ -10,7 +10,7 @@ import { getSupabaseBrowserClient } from '@/lib/supabase/browser-client'
 import { cn } from '@/lib/utils'
 
 // AlgebroLogo component - Using text as SVG was not found in the repo
-function AlgebroLogo({ className }: { className?: string }) {
+function AlgebroLogo({ className }: Readonly<{ className?: string }>) {
   return (
     <span className={cn('font-display text-xl font-bold tracking-tight text-[var(--color-text)]', className)}>
       Algebro
@@ -42,7 +42,7 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
 
   // Track viewport size for conditional inert attribute
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 767px)')
+    const mq = globalThis.matchMedia('(max-width: 767px)')
     setIsMobile(mq.matches)
     const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
     mq.addEventListener('change', handler)
@@ -104,7 +104,7 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
 
         {/* Nav links */}
         <nav className="flex-1 overflow-y-auto py-4 px-2" aria-label="Sidebar">
-          <ul role="list" className="flex flex-col gap-1">
+          <ul className="flex flex-col gap-1">
             {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
               const isActive = pathname === href || pathname.startsWith(href + '/')
               return (
