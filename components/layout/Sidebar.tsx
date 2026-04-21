@@ -71,11 +71,12 @@ export function Sidebar({ isOpen, onClose, user }: SidebarProps) {
   return (
     <>
       {/* Backdrop - Mobile only, closes when clicking outside */}
-      {/* z-30: above header (z-20) so tapping backdrop on mobile works, below sidebar panel (z-40) */}
       {isOpen && (
         <button
           type="button"
           onClick={onClose}
+          // z-30: above header (z-20) so tapping backdrop on mobile works,
+          // below sidebar panel (z-40) so sidebar is always on top.
           className="fixed inset-0 z-30 bg-black/50 transition-opacity duration-200 md:hidden animate-in fade-in"
           aria-label="Close navigation menu"
         />

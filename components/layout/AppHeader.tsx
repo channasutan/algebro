@@ -10,7 +10,8 @@ interface AppHeaderProps {
 export function AppHeader({ onMenuToggle, isSidebarOpen, isMenuEnabled = true }: AppHeaderProps) {
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-[var(--color-border)] bg-[var(--color-bg)]/95 px-4 backdrop-blur">
-      {/* z-20: sits below sidebar (z-40) and backdrop (z-30) on mobile intentionally. */}
+      {/* z-20: sits below sidebar (z-40) and backdrop (z-30) on mobile intentionally.
+          On desktop sidebar is md:static, so z-index has no effect. */}
       <div className="flex items-center gap-4">
         {isMenuEnabled ? (
           <button
