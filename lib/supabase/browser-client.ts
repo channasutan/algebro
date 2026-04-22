@@ -22,6 +22,13 @@ export function getSupabaseBrowserClient(): SupabaseClient<Database> {
     return browserClient;
   }
 
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    throw new Error(
+      'Missing Supabase environment variables. ' +
+      'Ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set.'
+    );
+  }
+
   browserClient = createBrowserClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   return browserClient;
