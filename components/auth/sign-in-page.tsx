@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useActionState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useActionState } from 'react';
 import { SignInForm } from './sign-in-form';
 import Link from 'next/link';
 import type { AuthActionResult } from '@/modules/authentication/contracts';
@@ -19,7 +18,7 @@ export function SignInPage({ action, initialState }: Readonly<SignInPageProps>) 
   const router = useRouter();
 
   useEffect(() => {
-    if (state && state.success) {
+    if (state?.success) {
       router.push('/dashboard');
     }
   }, [state, router]);
@@ -34,7 +33,7 @@ export function SignInPage({ action, initialState }: Readonly<SignInPageProps>) 
 
         <SignInForm
           action={dispatch}
-          serverError={state && !state.success ? state.error : null}
+          serverError={state?.success === false ? state.error : null}
           isPending={isPending}
         />
 
