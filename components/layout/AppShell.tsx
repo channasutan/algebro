@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { AppHeader } from './AppHeader';
 import { getSupabaseBrowserClient } from '@/lib/supabase/browser-client';
+import { AuthSessionMissingError } from '@supabase/supabase-js';
 import { cn } from '@/lib/utils';
 
 type AppShellProps = Readonly<{
@@ -35,56 +36,111 @@ export function AppShell({ children }: AppShellProps) {
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
+    let isMounted = true;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session?.user) {
+    const fetchUser = async () => {
+      try {
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.getUser();
+
+        if (!isMounted) return;
+
+        if (error) {
+          if (error instanceof AuthSessionMissingError) {
+            setAuthState({ status: 'unauthenticated' });
+          } else {
+            setAuthState({ status: 'error' });
+          }
+          return;
+        }
+
+        if (user) {
           setAuthState({
             status: 'authenticated',
             user: {
-              displayName: session.user.user_metadata?.display_name ?? session.user.user_metadata?.full_name ?? null,
-              email: session.user.email ?? null,
+              displayName:
+                user.user_metadata?.display_name ??
+                user.user_metadata?.full_name ??
+                null,
+              email: user.email ?? null,
             },
           });
         } else {
           setAuthState({ status: 'unauthenticated' });
         }
+      } catch {
+        if (isMounted) setAuthState({ status: 'error' });
       }
-    );
+    };
 
-    return () => subscription.unsubscribe();
+    fetchUser();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      isMounted = false; // listener won — discard any in-flight fetchUser result
+      if (session?.user) {
+        setAuthState({
+          status: 'authenticated',
+          user: {
+            displayName:
+              session.user.user_metadata?.display_name ??
+              session.user.user_metadata?.full_name ??
+              null,
+            email: session.user.email ?? null,
+          },
+        });
+      } else {
+        setAuthState({ status: 'unauthenticated' });
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const closeSidebar = () => setIsSidebarOpen(false);
 
   return (
-    <div className="min-h-dvh bg-[var(--color-bg)] text-[var(--color-text)]">
-      <div className="mx-auto flex min-h-dvh flex-row">
-        {authState.status === 'authenticated' ? (
-          <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} user={authState.user} />
-        ) : (
-          <div
-            aria-hidden="true"
-            className={cn(
-              "w-[var(--sidebar-width)] shrink-0 hidden md:block bg-[var(--color-surface)] border-r border-[var(--color-border)]",
-              authState.status === 'loading' && "animate-pulse"
-            )}
-          />
-        )}
-        <div 
-          className="flex min-w-0 flex-1 flex-col"
-          inert={isMobile && isSidebarOpen ? true : undefined}
-        >
-          <AppHeader 
-            onMenuToggle={toggleSidebar} 
-            isSidebarOpen={isSidebarOpen} 
-            isMenuEnabled={authState.status === 'authenticated'}
-          />
-          <main className="flex-1 min-w-0">
-            {children}
-          </main>
-        </div>
+    /* Outer shell — viewport height, overflow hidden, NO scroll */
+    <div className="flex h-dvh overflow-hidden bg-[var(--color-bg)] text-[var(--color-text)]">
+      {authState.status === 'authenticated' ? (
+        <Sidebar
+          isOpen={isSidebarOpen}
+          onClose={closeSidebar}
+          user={authState.user}
+        />
+      ) : (
+        <div
+          aria-hidden="true"
+          className={cn(
+            'w-[var(--sidebar-width)] shrink-0 hidden md:block',
+            'bg-[var(--color-surface)] border-r border-[var(--color-border)]',
+            authState.status === 'loading' && 'animate-pulse'
+          )}
+        />
+      )}
+
+      {/* Right column — flex-col, min-w-0 prevents flex overflow blowout */}
+      <div
+        className="flex flex-1 flex-col min-w-0 overflow-hidden"
+        inert={isMobile && isSidebarOpen ? true : undefined}
+      >
+        <AppHeader
+          onMenuToggle={toggleSidebar}
+          isSidebarOpen={isSidebarOpen}
+          isMenuEnabled={authState.status === 'authenticated'}
+        />
+
+        {/* THE SINGLE SCROLL REGION */}
+        <main className="flex-1 min-h-0 overflow-y-auto">
+          {children}
+        </main>
       </div>
     </div>
   );
