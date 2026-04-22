@@ -1,6 +1,8 @@
-// app/sign-in/page.tsx
-import { SignInForm } from "./_components/sign-in-form";
+import { SignInPage } from "@/components/auth/sign-in-page";
+import { signInAction } from "./actions";
 
-export default function SignInPage() {
-  return <SignInForm />;
+const initialState = { success: false, error: "" } as const;
+
+export default function Page() {
+  return <SignInPage action={signInAction} initialState={initialState} />;
 }

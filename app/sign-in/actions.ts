@@ -4,12 +4,9 @@ import { ensureModulesBootstrapped } from "@/modules/bootstrap";
 import { signInUser } from "@/modules/authentication";
 import { getPublicEnv } from "@/config/env.server-entry";
 import { getRequestId, createServiceLogger } from "@/lib/observability";
+import type { AuthActionResult } from "@/modules/authentication/contracts";
 
-type ActionResult =
-  | { success: true }
-  | { success: false; error: string };
-
-export async function signInAction(_prevState: ActionResult, formData: FormData): Promise<ActionResult> {
+export async function signInAction(_prevState: AuthActionResult, formData: FormData): Promise<AuthActionResult> {
   await ensureModulesBootstrapped();
 
   const emailRaw = formData.get("email");
@@ -20,7 +17,7 @@ export async function signInAction(_prevState: ActionResult, formData: FormData)
   }
 
   const email = emailRaw.trim().toLowerCase();
-  const password = passwordRaw.trim();
+  const password = passwordRaw; // Never trim passwords
 
   if (!email || !password) {
     return { success: false, error: "Email and password are required" };
@@ -30,7 +27,6 @@ export async function signInAction(_prevState: ActionResult, formData: FormData)
   const log = createServiceLogger(requestId);
   try {
     await signInUser({ email, password }, { requestId });
-
     return { success: true };
   } catch (err) {
     // Return deterministic error for all authentication failures to prevent leaking info
@@ -43,4 +39,6 @@ export async function signInAction(_prevState: ActionResult, formData: FormData)
     }
     return { success: false, error: "Invalid email or password" };
   }
+
 }
+

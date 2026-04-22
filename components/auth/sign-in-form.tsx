@@ -1,0 +1,138 @@
+'use client';
+
+import { useRef, useTransition } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+
+// ─── Schema ────────────────────────────────────────────────────────────────────
+const signInSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z
+    .string()
+    .min(1, 'Password is required')
+    .refine((val) => val.trim().length > 0, {
+      message: 'Password cannot be blank',
+    }),
+});
+
+type SignInFormValues = z.infer<typeof signInSchema>;
+
+// ─── Props ─────────────────────────────────────────────────────────────────────
+interface SignInFormProps {
+  /**
+   * Dispatcher returned by useActionState — do NOT pass the raw server action.
+   * The raw action has signature (prevState, formData) => Promise<ActionResult>
+   * and is incompatible with this slot.
+   */
+  action: (formData: FormData) => void;
+  /** Transport-safe error message returned by the server action */
+  serverError?: string | null;
+  /** Pending state from useFormStatus or useActionState */
+  isPending?: boolean;
+}
+
+// ─── Component ─────────────────────────────────────────────────────────────────
+export function SignInForm({ action, serverError, isPending: isActionPending }: Readonly<SignInFormProps>) {
+  const formRef = useRef<HTMLFormElement>(null);
+  const [isTransitionPending, startTransition] = useTransition();
+  const isPending = isActionPending || isTransitionPending;
+
+  const form = useForm<SignInFormValues>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+    mode: 'onTouched',
+  });
+
+  const handleSubmit = form.handleSubmit(() => {
+    startTransition(() => {
+      // RHF has validated — submit the real native form so the Server Action
+      // dispatcher receives the browser-constructed FormData. This keeps
+      // the progressive-enhancement path (form action=) as the source of
+      // truth for data serialisation.
+      action(new FormData(formRef.current ?? undefined));
+    });
+  });
+
+  return (
+    <Form {...form}>
+      <form
+        ref={formRef}
+        action={action}
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit(e);
+        }}
+        noValidate
+        className="space-y-4"
+      >
+        {serverError && (
+          <p
+            role="alert"
+            aria-live="polite"
+            className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          >
+            {serverError}
+          </p>
+        )}
+
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  type="email"
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  disabled={isPending}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="password"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Password</FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  type="password"
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  disabled={isPending}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <Button type="submit" className="w-full" disabled={isPending}>
+          {isPending ? 'Signing in…' : 'Sign in'}
+        </Button>
+      </form>
+    </Form>
+  );
+}
