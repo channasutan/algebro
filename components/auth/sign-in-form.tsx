@@ -63,7 +63,7 @@ export function SignInForm({ action, serverError, isPending: isActionPending }: 
       // dispatcher receives the browser-constructed FormData. This keeps
       // the progressive-enhancement path (form action=) as the source of
       // truth for data serialisation.
-      action(new FormData(formRef.current!));
+      action(new FormData(formRef.current ?? undefined));
     });
   });
 
