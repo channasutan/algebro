@@ -1,4 +1,5 @@
-import { SignInForm } from "@/components/auth/sign-in-form";
+// app/sign-in/page.tsx
+import { SignInForm } from "./_components/sign-in-form";
 
 export default function SignInPage() {
   return <SignInForm />;
