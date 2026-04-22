@@ -1,14 +1,5 @@
-import { AuthForm } from "../(auth)/components/AuthForm";
-import { signInAction } from "./actions";
+import { SignInForm } from "@/components/auth/sign-in-form";
 
 export default function SignInPage() {
-  return (
-    <AuthForm
-      title="Sign In"
-      submitLabel="Sign In"
-      pendingLabel="Signing in..."
-      action={signInAction}
-      successMessage="Sign in successful!"
-    />
-  );
+  return <SignInForm />;
 }
