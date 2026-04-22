@@ -1,14 +1,9 @@
-import { AuthForm } from "../(auth)/components/AuthForm";
+import { SignInPage } from "@/components/auth/sign-in-page";
 import { signInAction } from "./actions";
+import type { AuthActionResult } from "@/modules/authentication/contracts";
 
-export default function SignInPage() {
-  return (
-    <AuthForm
-      title="Sign In"
-      submitLabel="Sign In"
-      pendingLabel="Signing in..."
-      action={signInAction}
-      successMessage="Sign in successful!"
-    />
-  );
+const initialState: AuthActionResult = { success: false, error: "" };
+
+export default function Page() {
+  return <SignInPage action={signInAction} initialState={initialState} />;
 }

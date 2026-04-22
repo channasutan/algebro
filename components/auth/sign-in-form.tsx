@@ -1,5 +1,6 @@
 'use client';
 
+import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -15,18 +16,26 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
 // ─── Schema ────────────────────────────────────────────────────────────────────
-// Keep co-located unless shared — move to schema.ts if reused elsewhere.
 const signInSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
+  password: z
+    .string()
+    .min(1, 'Password is required')
+    .refine((val) => val.trim().length > 0, {
+      message: 'Password cannot be blank',
+    }),
 });
 
 type SignInFormValues = z.infer<typeof signInSchema>;
 
 // ─── Props ─────────────────────────────────────────────────────────────────────
 interface SignInFormProps {
-  /** Server action bound via useActionState in the parent or passed directly */
-  action: (formData: FormData) => void | Promise<void>;
+  /**
+   * Dispatcher returned by useActionState — do NOT pass the raw server action.
+   * The raw action has signature (prevState, formData) => Promise<ActionResult>
+   * and is incompatible with this slot.
+   */
+  action: (formData: FormData) => void;
   /** Transport-safe error message returned by the server action */
   serverError?: string | null;
   /** Pending state from useFormStatus or useActionState */
@@ -34,33 +43,31 @@ interface SignInFormProps {
 }
 
 // ─── Component ─────────────────────────────────────────────────────────────────
-export function SignInForm({ action, serverError, isPending }: SignInFormProps) {
+export function SignInForm({ action, serverError, isPending: isActionPending }: SignInFormProps) {
+  const [isTransitionPending, startTransition] = useTransition();
+  const isPending = isActionPending || isTransitionPending;
+
   const form = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
       email: '',
       password: '',
     },
-    mode: 'onTouched', // Validate on blur; re-validate on change after first touch
+    mode: 'onTouched',
   });
 
-  /**
-   * RHF's handleSubmit runs zod validation first.
-   * On success, build a FormData and call the server action.
-   * react-hook-form never calls onSubmit with invalid data.
-   */
-  const onSubmit = form.handleSubmit(async (values: SignInFormValues) => {
-    const formData = new FormData();
-    formData.set('email', values.email);
-    formData.set('password', values.password);
-    await action(formData);
+  const onSubmit = form.handleSubmit((values: SignInFormValues) => {
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.set('email', values.email);
+      formData.set('password', values.password);
+      await action(formData);
+    });
   });
 
   return (
     <Form {...form}>
       <form onSubmit={onSubmit} noValidate className="space-y-4">
-
-        {/* ── Server-level error (wrong credentials, rate limit, etc.) ── */}
         {serverError && (
           <p
             role="alert"
@@ -71,7 +78,6 @@ export function SignInForm({ action, serverError, isPending }: SignInFormProps) 
           </p>
         )}
 
-        {/* ── Email ──────────────────────────────────────────────────────── */}
         <FormField
           control={form.control}
           name="email"
@@ -87,13 +93,11 @@ export function SignInForm({ action, serverError, isPending }: SignInFormProps) 
                   disabled={isPending}
                 />
               </FormControl>
-              {/* FormMessage renders the zod error string automatically */}
               <FormMessage />
             </FormItem>
           )}
         />
 
-        {/* ── Password ───────────────────────────────────────────────────── */}
         <FormField
           control={form.control}
           name="password"
@@ -101,7 +105,6 @@ export function SignInForm({ action, serverError, isPending }: SignInFormProps) 
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                {/* type="password" is the sole AC requirement for obscuring input */}
                 <Input
                   {...field}
                   type="password"
@@ -115,7 +118,6 @@ export function SignInForm({ action, serverError, isPending }: SignInFormProps) 
           )}
         />
 
-        {/* ── Submit ─────────────────────────────────────────────────────── */}
         <Button type="submit" className="w-full" disabled={isPending}>
           {isPending ? 'Signing in…' : 'Sign in'}
         </Button>

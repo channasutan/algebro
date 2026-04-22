@@ -1,14 +1,19 @@
 'use client';
 
 import { useActionState } from 'react';
-import { signInAction } from '@/app/sign-in/actions';
 import { SignInForm } from './sign-in-form';
 import Link from 'next/link';
+import type { AuthActionResult } from '@/modules/authentication/contracts';
 
-const initialState = { success: false, error: "" } as const;
+interface SignInPageProps {
+  /** The server action to perform sign-in */
+  action: (prevState: AuthActionResult, formData: FormData) => Promise<AuthActionResult>;
+  /** Initial state for useActionState */
+  initialState: AuthActionResult;
+}
 
-export function SignInPage() {
-  const [state, action, isPending] = useActionState(signInAction, initialState);
+export function SignInPage({ action, initialState }: SignInPageProps) {
+  const [state, dispatch, isPending] = useActionState(action, initialState);
 
   return (
     <main className="flex min-h-svh items-center justify-center p-4">
@@ -19,8 +24,8 @@ export function SignInPage() {
         </div>
 
         <SignInForm
-          action={action}
-          serverError={!state.success ? state.error : null}
+          action={dispatch}
+          serverError={state && !state.success ? state.error : null}
           isPending={isPending}
         />
 
