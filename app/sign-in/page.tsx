@@ -1,14 +1,6 @@
-import { AuthForm } from "../(auth)/components/AuthForm";
-import { signInAction } from "./actions";
+// app/sign-in/page.tsx
+import { SignInForm } from "./_components/sign-in-form";
 
 export default function SignInPage() {
-  return (
-    <AuthForm
-      title="Sign In"
-      submitLabel="Sign In"
-      pendingLabel="Signing in..."
-      action={signInAction}
-      successMessage="Sign in successful!"
-    />
-  );
+  return <SignInForm />;
 }
