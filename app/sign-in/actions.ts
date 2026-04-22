@@ -4,7 +4,6 @@ import { ensureModulesBootstrapped } from "@/modules/bootstrap";
 import { signInUser } from "@/modules/authentication";
 import { getPublicEnv } from "@/config/env.server-entry";
 import { getRequestId, createServiceLogger } from "@/lib/observability";
-import { redirect } from "next/navigation";
 import type { AuthActionResult } from "@/modules/authentication/contracts";
 
 export async function signInAction(_prevState: AuthActionResult, formData: FormData): Promise<AuthActionResult> {
@@ -28,6 +27,7 @@ export async function signInAction(_prevState: AuthActionResult, formData: FormD
   const log = createServiceLogger(requestId);
   try {
     await signInUser({ email, password }, { requestId });
+    return { success: true };
   } catch (err) {
     // Return deterministic error for all authentication failures to prevent leaking info
     const env = getPublicEnv();
@@ -40,6 +40,5 @@ export async function signInAction(_prevState: AuthActionResult, formData: FormD
     return { success: false, error: "Invalid email or password" };
   }
 
-  // Redirect after mutation per Next.js best practices
-  redirect("/dashboard");
 }
+

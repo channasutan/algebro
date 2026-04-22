@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useActionState } from 'react';
 import { SignInForm } from './sign-in-form';
 import Link from 'next/link';
@@ -14,6 +16,13 @@ interface SignInPageProps {
 
 export function SignInPage({ action, initialState }: Readonly<SignInPageProps>) {
   const [state, dispatch, isPending] = useActionState(action, initialState);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (state && state.success) {
+      router.push('/dashboard');
+    }
+  }, [state, router]);
 
   return (
     <main className="flex min-h-svh items-center justify-center p-4">
