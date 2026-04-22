@@ -1,6 +1,6 @@
 'use client';
 
-import { useTransition } from 'react';
+import { useRef, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -44,6 +44,7 @@ interface SignInFormProps {
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 export function SignInForm({ action, serverError, isPending: isActionPending }: Readonly<SignInFormProps>) {
+  const formRef = useRef<HTMLFormElement>(null);
   const [isTransitionPending, startTransition] = useTransition();
   const isPending = isActionPending || isTransitionPending;
 
@@ -56,18 +57,28 @@ export function SignInForm({ action, serverError, isPending: isActionPending }: 
     mode: 'onTouched',
   });
 
-  const onSubmit = form.handleSubmit((values: SignInFormValues) => {
+  const handleSubmit = form.handleSubmit(() => {
     startTransition(() => {
-      const formData = new FormData();
-      formData.set('email', values.email);
-      formData.set('password', values.password);
-      action(formData);
+      // RHF has validated — submit the real native form so the Server Action
+      // dispatcher receives the browser-constructed FormData. This keeps
+      // the progressive-enhancement path (form action=) as the source of
+      // truth for data serialisation.
+      action(new FormData(formRef.current!));
     });
   });
 
   return (
     <Form {...form}>
-      <form onSubmit={onSubmit} noValidate className="space-y-4">
+      <form
+        ref={formRef}
+        action={action}
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit(e);
+        }}
+        noValidate
+        className="space-y-4"
+      >
         {serverError && (
           <p
             role="alert"
