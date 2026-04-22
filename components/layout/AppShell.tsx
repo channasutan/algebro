@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { AppHeader } from './AppHeader';
 import { getSupabaseBrowserClient } from '@/lib/supabase/browser-client';
+import { AuthSessionMissingError } from '@supabase/supabase-js';
 import { cn } from '@/lib/utils';
 
 type AppShellProps = Readonly<{
@@ -35,6 +36,7 @@ export function AppShell({ children }: AppShellProps) {
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
+    let isMounted = true;
 
     const fetchUser = async () => {
       try {
@@ -43,8 +45,14 @@ export function AppShell({ children }: AppShellProps) {
           error,
         } = await supabase.auth.getUser();
 
+        if (!isMounted) return;
+
         if (error) {
-          setAuthState({ status: 'error' });
+          if (error instanceof AuthSessionMissingError) {
+            setAuthState({ status: 'unauthenticated' });
+          } else {
+            setAuthState({ status: 'error' });
+          }
           return;
         }
 
@@ -63,7 +71,7 @@ export function AppShell({ children }: AppShellProps) {
           setAuthState({ status: 'unauthenticated' });
         }
       } catch {
-        setAuthState({ status: 'error' });
+        if (isMounted) setAuthState({ status: 'error' });
       }
     };
 
@@ -72,6 +80,7 @@ export function AppShell({ children }: AppShellProps) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      isMounted = false; // listener won — discard any in-flight fetchUser result
       if (session?.user) {
         setAuthState({
           status: 'authenticated',
@@ -88,7 +97,10 @@ export function AppShell({ children }: AppShellProps) {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
@@ -96,7 +108,7 @@ export function AppShell({ children }: AppShellProps) {
 
   return (
     /* Outer shell — viewport height, overflow hidden, NO scroll */
-    <div className="flex h-screen overflow-hidden bg-[var(--color-bg)] text-[var(--color-text)]">
+    <div className="flex h-dvh overflow-hidden bg-[var(--color-bg)] text-[var(--color-text)]">
       {authState.status === 'authenticated' ? (
         <Sidebar
           isOpen={isSidebarOpen}
@@ -126,7 +138,7 @@ export function AppShell({ children }: AppShellProps) {
         />
 
         {/* THE SINGLE SCROLL REGION */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 min-h-0 overflow-y-auto">
           {children}
         </main>
       </div>
