@@ -1,6 +1,6 @@
 import { SignInPage } from "@/components/auth/sign-in-page";
 import { signInAction } from "./actions";
-import type { AuthActionResult } from "@/modules/authentication/contracts";
+import type { AuthActionResult } from "@/modules/authentication/contracts/auth-action-result";
 
 const initialState: AuthActionResult = { success: false, error: "" };
 

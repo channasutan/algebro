@@ -43,7 +43,7 @@ interface SignInFormProps {
 }
 
 // ─── Component ─────────────────────────────────────────────────────────────────
-export function SignInForm({ action, serverError, isPending: isActionPending }: SignInFormProps) {
+export function SignInForm({ action, serverError, isPending: isActionPending }: Readonly<SignInFormProps>) {
   const [isTransitionPending, startTransition] = useTransition();
   const isPending = isActionPending || isTransitionPending;
 
@@ -57,11 +57,11 @@ export function SignInForm({ action, serverError, isPending: isActionPending }: 
   });
 
   const onSubmit = form.handleSubmit((values: SignInFormValues) => {
-    startTransition(async () => {
+    startTransition(() => {
       const formData = new FormData();
       formData.set('email', values.email);
       formData.set('password', values.password);
-      await action(formData);
+      action(formData);
     });
   });
 

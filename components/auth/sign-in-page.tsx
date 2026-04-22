@@ -12,7 +12,7 @@ interface SignInPageProps {
   initialState: AuthActionResult;
 }
 
-export function SignInPage({ action, initialState }: SignInPageProps) {
+export function SignInPage({ action, initialState }: Readonly<SignInPageProps>) {
   const [state, dispatch, isPending] = useActionState(action, initialState);
 
   return (
