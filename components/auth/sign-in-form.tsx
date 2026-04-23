@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
+import Link from 'next/link';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -65,6 +66,13 @@ export function SignInForm({ action }: Readonly<SignInFormProps>) {
       </div>
 
       <SubmitButton />
+
+      <p className="text-sm text-center text-muted-foreground">
+        Don&apos;t have an account?{' '}
+        <Link href="/sign-up" className="underline underline-offset-4 hover:text-primary">
+          Sign up
+        </Link>
+      </p>
     </form>
   );
 }
