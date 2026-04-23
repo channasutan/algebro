@@ -90,9 +90,9 @@ describe("Auth UI Actions Transport Layer", () => {
       success: true,
     });
 
-    const result = await signInAction({ success: false, error: "" }, formData);
-
-    expect(result).toEqual({ success: true });
+    // Success path throws redirect
+    await expect(signInAction(undefined, formData)).rejects.toThrow(/NEXT_REDIRECT: \/practice/);
+    
     expect(ensureModulesBootstrapped).toHaveBeenCalledTimes(1);
     
      // Verify email was trimmed and lowercase mapped
@@ -109,13 +109,13 @@ describe("Auth UI Actions Transport Layer", () => {
 
     // Mock a verbose unsafe database error 
     vi.mocked(signInUser).mockRejectedValue(
-      new Error("RAW_SUPABASE_ERROR: INVALID_CREDENTIALS [10x5R]")
+      new Error("Invalid login credentials")
     );
 
-    const result = await signInAction({ success: false, error: "" }, formData);
+    const result = await signInAction(undefined, formData);
 
     // It should strip the trace and safely output a deterministic message
-    expect(result).toEqual({ success: false, error: "Invalid email or password" });
+    expect(result).toEqual({ error: "Incorrect email or password. Please try again." });
     expect(signInUser).toHaveBeenCalledTimes(1);
   });
 
