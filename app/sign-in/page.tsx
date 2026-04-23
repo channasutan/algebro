@@ -1,8 +1,14 @@
+import { redirect } from "next/navigation";
+import { getCurrentSession } from "@/modules/authentication";
 import { SignInPage } from "@/components/auth/sign-in-page";
 import { signInAction } from "./actions";
 
-const initialState = { success: false, error: "" } as const;
+export default async function Page() {
+  const { session } = await getCurrentSession();
+  
+  if (session) {
+    redirect("/practice");
+  }
 
-export default function Page() {
-  return <SignInPage action={signInAction} initialState={initialState} />;
+  return <SignInPage action={signInAction} />;
 }

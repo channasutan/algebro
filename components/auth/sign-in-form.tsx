@@ -1,138 +1,78 @@
 'use client';
 
-import { useRef, useTransition } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
+import Link from 'next/link';
+import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import type { SignInActionState } from '@/app/sign-in/actions';
 
-// ─── Schema ────────────────────────────────────────────────────────────────────
-const signInSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z
-    .string()
-    .min(1, 'Password is required')
-    .refine((val) => val.trim().length > 0, {
-      message: 'Password cannot be blank',
-    }),
-});
-
-type SignInFormValues = z.infer<typeof signInSchema>;
-
-// ─── Props ─────────────────────────────────────────────────────────────────────
-interface SignInFormProps {
-  /**
-   * Dispatcher returned by useActionState — do NOT pass the raw server action.
-   * The raw action has signature (prevState, formData) => Promise<ActionResult>
-   * and is incompatible with this slot.
-   */
-  action: (formData: FormData) => void;
-  /** Transport-safe error message returned by the server action */
-  serverError?: string | null;
-  /** Pending state from useFormStatus or useActionState */
-  isPending?: boolean;
-}
-
-// ─── Component ─────────────────────────────────────────────────────────────────
-export function SignInForm({ action, serverError, isPending: isActionPending }: Readonly<SignInFormProps>) {
-  const formRef = useRef<HTMLFormElement>(null);
-  const [isTransitionPending, startTransition] = useTransition();
-  const isPending = isActionPending || isTransitionPending;
-
-  const form = useForm<SignInFormValues>({
-    resolver: zodResolver(signInSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
-    mode: 'onTouched',
-  });
-
-  const handleSubmit = form.handleSubmit(() => {
-    startTransition(() => {
-      // RHF has validated — submit the real native form so the Server Action
-      // dispatcher receives the browser-constructed FormData. This keeps
-      // the progressive-enhancement path (form action=) as the source of
-      // truth for data serialisation.
-      action(new FormData(formRef.current ?? undefined));
-    });
-  });
+function SubmitButton() {
+  const { pending } = useFormStatus();
 
   return (
-    <Form {...form}>
-      <form
-        ref={formRef}
-        action={action}
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSubmit(e);
-        }}
-        noValidate
-        className="space-y-4"
-      >
-        {serverError && (
-          <p
-            role="alert"
-            aria-live="polite"
-            className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
-          >
-            {serverError}
-          </p>
-        )}
+    <Button type="submit" className="w-full" disabled={pending} aria-disabled={pending}>
+      {pending ? 'Signing in...' : 'Sign in'}
+    </Button>
+  );
+}
 
-        <FormField
-          control={form.control}
+interface SignInFormProps {
+  /**
+   * The raw server action.
+   * SignInForm will wrap this in useActionState.
+   */
+  action: (prevState: SignInActionState, formData: FormData) => Promise<SignInActionState>;
+}
+
+export function SignInForm({ action }: Readonly<SignInFormProps>) {
+  const [state, formAction] = useActionState(action, undefined);
+
+  return (
+    <form action={formAction} noValidate className="space-y-4">
+      {state?.error && (
+        <p
+          role="alert"
+          aria-live="polite"
+          className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
+        >
+          {state.error}
+        </p>
+      )}
+
+      <div className="space-y-2">
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
           name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  type="email"
-                  placeholder="you@example.com"
-                  autoComplete="email"
-                  disabled={isPending}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          type="email"
+          placeholder="you@example.com"
+          autoComplete="email"
+          required
         />
+      </div>
 
-        <FormField
-          control={form.control}
+      <div className="space-y-2">
+        <Label htmlFor="password">Password</Label>
+        <Input
+          id="password"
           name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  type="password"
-                  placeholder="••••••••"
-                  autoComplete="current-password"
-                  disabled={isPending}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          type="password"
+          placeholder="••••••••"
+          autoComplete="current-password"
+          required
         />
+      </div>
 
-        <Button type="submit" className="w-full" disabled={isPending}>
-          {isPending ? 'Signing in…' : 'Sign in'}
-        </Button>
-      </form>
-    </Form>
+      <SubmitButton />
+
+      <p className="text-sm text-center text-muted-foreground">
+        Don&apos;t have an account?{' '}
+        <Link href="/sign-up" className="underline underline-offset-4 hover:text-primary">
+          Sign up
+        </Link>
+      </p>
+    </form>
   );
 }

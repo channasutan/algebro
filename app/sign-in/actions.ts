@@ -1,44 +1,66 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { ensureModulesBootstrapped } from "@/modules/bootstrap";
 import { signInUser } from "@/modules/authentication";
 import { getPublicEnv } from "@/config/env.server-entry";
 import { getRequestId, createServiceLogger } from "@/lib/observability";
-import type { AuthActionResult } from "@/modules/authentication/contracts";
+import { signInSchema } from "@/lib/validations/sign-in";
 
-export async function signInAction(_prevState: AuthActionResult, formData: FormData): Promise<AuthActionResult> {
+export type SignInActionState = { error: string } | undefined;
+
+export async function signInAction(
+  _prevState: SignInActionState,
+  formData: FormData
+): Promise<SignInActionState> {
   await ensureModulesBootstrapped();
 
-  const emailRaw = formData.get("email");
-  const passwordRaw = formData.get("password");
+  const rawEmail = formData.get("email");
+  const rawPassword = formData.get("password");
 
-  if (typeof emailRaw !== "string" || typeof passwordRaw !== "string") {
-    return { success: false, error: "Invalid input" };
+  // Validate with Zod
+  const validation = signInSchema.safeParse({
+    email: rawEmail,
+    password: rawPassword,
+  });
+
+  if (!validation.success) {
+    const firstIssue = validation.error.issues[0];
+    return { error: firstIssue?.message ?? "Invalid input" };
   }
 
-  const email = emailRaw.trim().toLowerCase();
-  const password = passwordRaw; // Never trim passwords
-
-  if (!email || !password) {
-    return { success: false, error: "Email and password are required" };
-  }
-
+  const { email, password } = validation.data;
   const requestId = await getRequestId();
   const log = createServiceLogger(requestId);
+
   try {
     await signInUser({ email, password }, { requestId });
-    return { success: true };
   } catch (err) {
-    // Return deterministic error for all authentication failures to prevent leaking info
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    
+    // Map Supabase specific errors to user-friendly messages
+    // "Invalid login credentials" is the common Supabase error for wrong email/password
+    if (errorMessage.includes("Invalid login credentials")) {
+      return { error: "Incorrect email or password. Please try again." };
+    }
+
     const env = getPublicEnv();
     if (env.nodeEnv !== "production") {
       log.warn({
         event: "user-profiles.auth",
-        meta: { type: "system", phase: "infra", outcome: "failure", error: err instanceof Error ? err.message : String(err) }
+        meta: { 
+          type: "system", 
+          phase: "infra", 
+          outcome: "failure", 
+          error: errorMessage 
+        }
       });
     }
-    return { success: false, error: "Invalid email or password" };
+
+    // Default user-safe error
+    return { error: "An unexpected error occurred. Please try again later." };
   }
 
+  // On success: redirect to /practice server-side
+  redirect("/practice");
 }
-

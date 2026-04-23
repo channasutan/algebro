@@ -1,28 +1,15 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { SignInForm } from './sign-in-form';
 import Link from 'next/link';
-import type { AuthActionResult } from '@/modules/authentication/contracts';
+import type { SignInActionState } from '@/app/sign-in/actions';
 
 interface SignInPageProps {
   /** The server action to perform sign-in */
-  action: (prevState: AuthActionResult, formData: FormData) => Promise<AuthActionResult>;
-  /** Initial state for useActionState */
-  initialState: AuthActionResult;
+  action: (prevState: SignInActionState, formData: FormData) => Promise<SignInActionState>;
 }
 
-export function SignInPage({ action, initialState }: Readonly<SignInPageProps>) {
-  const [state, dispatch, isPending] = useActionState(action, initialState);
-  const router = useRouter();
-
-  useEffect(() => {
-    if (state?.success) {
-      router.push('/dashboard');
-    }
-  }, [state, router]);
-
+export function SignInPage({ action }: Readonly<SignInPageProps>) {
   return (
     <main className="flex min-h-svh items-center justify-center p-4">
       <div className="w-full max-w-sm space-y-6">
@@ -31,11 +18,7 @@ export function SignInPage({ action, initialState }: Readonly<SignInPageProps>) 
           <p className="text-sm text-muted-foreground">Sign in to your account</p>
         </div>
 
-        <SignInForm
-          action={dispatch}
-          serverError={state?.success === false ? state.error : null}
-          isPending={isPending}
-        />
+        <SignInForm action={action} />
 
         <p className="text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{' '}
