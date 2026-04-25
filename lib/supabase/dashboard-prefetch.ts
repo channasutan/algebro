@@ -8,94 +8,60 @@ import {
   type ActivityItem,
   type ProgressDataPoint,
 } from "@/lib/validations/dashboard";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/lib/supabase/database.types";
-
-interface MathSession {
-  id: string;
-  status: string;
-  duration: number | null;
-  created_at: string;
-  user_id: string;
-}
-
-interface SessionAnswer {
-  is_correct: boolean;
-  user_id: string;
-}
-
-interface UserProgress {
-  current_streak: number;
-  user_id: string;
-}
-
-type SupabaseWithDashboard = SupabaseClient<
-  Database & {
-    public: {
-      Tables: Database["public"]["Tables"] & {
-        math_sessions: { Row: MathSession; Insert: unknown; Update: unknown; Relationships: [] };
-        session_answers: { Row: SessionAnswer; Insert: unknown; Update: unknown; Relationships: [] };
-        user_progress: { Row: UserProgress; Insert: unknown; Update: unknown; Relationships: [] };
-      };
-    };
-  }
->;
 
 export async function prefetchDashboardData(userId: string): Promise<{
   stats: DashboardStats;
   activity: ActivityItem[];
   progressChart: ProgressDataPoint[];
 }> {
-  const supabase = (await getSupabaseServerClient()) as unknown as SupabaseWithDashboard;
+  const supabase = await getSupabaseServerClient();
 
   // 1. Stats Data
-  // TODO: Table 'math_sessions' not found in schema — verify with backend
   const { data: sessionsData, error: sessionsError } = await supabase
-    .from("math_sessions")
-    .select("id, status, duration, created_at")
+    .from("practice_sessions")
+    .select("id, completed_at, started_at, created_at, topic_id")
     .eq("user_id", userId);
 
   if (sessionsError) throw new Error(sessionsError.message);
 
-  // TODO: Table 'session_answers' not found in schema — verify with backend
-  const { data: answersData, error: answersError } = await supabase
-    .from("session_answers")
+  const { data: attemptsData, error: attemptsError } = await supabase
+    .from("attempts")
     .select("is_correct")
     .eq("user_id", userId);
 
-  if (answersError) throw new Error(answersError.message);
+  if (attemptsError) throw new Error(attemptsError.message);
 
-  const sessions = (sessionsData as unknown as MathSession[]) || [];
-  const answers = (answersData as unknown as SessionAnswer[]) || [];
+  const sessions = sessionsData || [];
+  const attempts = attemptsData || [];
 
   const totalSessions = sessions.length;
-  const completedSessions = sessions.filter((s) => s.status === "completed").length;
+  const completedSessions = sessions.filter((s) => s.completed_at).length;
 
-  const totalAnswers = answers.length;
-  const correctAnswers = answers.filter((a) => a.is_correct).length;
+  const totalAnswers = attempts.length;
+  const correctAnswers = attempts.filter((a) => a.is_correct).length;
   const accuracy = totalAnswers > 0 ? (correctAnswers / totalAnswers) * 100 : null;
 
-  // TODO: Table 'user_progress' not found in schema — verify with backend
-  const { data: progressData } = await supabase
-    .from("user_progress")
-    .select("current_streak")
-    .eq("user_id", userId)
-    .single();
+  // Streak logic (placeholder)
+  const currentStreak = 0;
 
-  const currentStreak = progressData
-    ? Number((progressData as unknown as UserProgress).current_streak)
-    : 0;
-  const totalTimeMinutes = sessions.reduce((acc, s) => acc + (s.duration || 0), 0) || null;
+  const totalTimeMinutes = sessions.reduce((acc, s) => {
+    if (s.started_at && s.completed_at) {
+      const duration =
+        (new Date(s.completed_at).getTime() -
+          new Date(s.started_at).getTime()) /
+        (1000 * 60);
+      return acc + duration;
+    }
+    return acc;
+  }, 0);
 
-  const rawStats = {
+  const stats = dashboardStatsSchema.parse({
     totalSessions,
     completedSessions,
     accuracy,
     currentStreak,
-    totalTimeMinutes,
-  };
-
-  const stats = dashboardStatsSchema.parse(rawStats);
+    totalTimeMinutes: totalTimeMinutes > 0 ? totalTimeMinutes : null,
+  });
 
   // 2. Activity Data
   const rawActivity = [...sessions]
@@ -105,16 +71,16 @@ export async function prefetchDashboardData(userId: string): Promise<{
       id: item.id,
       sessionId: item.id,
       type: "session_completed",
-      description: `Session ${item.status}`,
+      description: item.completed_at ? "Completed practice session" : "Started practice session",
       createdAt: item.created_at,
-      metadata: null,
+      metadata: { topicId: item.topic_id },
     }));
 
   const activity = z.array(activityItemSchema).parse(rawActivity);
 
   // 3. Progress Chart Data
   const dateLimit = new Date();
-  dateLimit.setDate(dateLimit.getDate() - 30); // Defaulting to 30d for prefetch
+  dateLimit.setDate(dateLimit.getDate() - 30); // Default to 30d for prefetch
 
   const grouped = sessions
     .filter((s) => new Date(s.created_at) >= dateLimit)
@@ -128,14 +94,24 @@ export async function prefetchDashboardData(userId: string): Promise<{
           minutesPracticed: 0,
         };
       }
-      if (item.status === "completed") {
+      if (item.completed_at) {
         acc[date].sessionsCompleted += 1;
       }
-      acc[date].minutesPracticed = (acc[date].minutesPracticed || 0) + (item.duration || 0);
+      if (item.started_at && item.completed_at) {
+        const duration =
+          (new Date(item.completed_at).getTime() -
+            new Date(item.started_at).getTime()) /
+          (1000 * 60);
+        acc[date].minutesPracticed = (acc[date].minutesPracticed ?? 0) + duration;
+      }
       return acc;
     }, {});
 
-  const progressChart = z.array(progressDataPointSchema).parse(Object.values(grouped));
+  const sortedProgressData = Object.values(grouped).sort((a, b) =>
+    a.date.localeCompare(b.date)
+  );
+
+  const progressChart = z.array(progressDataPointSchema).parse(sortedProgressData);
 
   return { stats, activity, progressChart };
 }
