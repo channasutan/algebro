@@ -48,17 +48,33 @@ export function computeDashboardStats(
 
 /**
  * Maps raw practice sessions into formatted activity items.
+ *
+ * createdAt reflects when the relevant event occurred:
+ * - Completed session: uses completed_at (when the work finished)
+ * - In-progress session: falls back to created_at (when it started)
+ *
+ * This ensures the activity feed sorts and displays by the correct
+ * event time rather than always anchoring to session start.
  */
 export function mapActivityItems(
-  sessions: { id: string; completed_at: string | null; created_at: string; topic_id: string | null }[],
+  sessions: {
+    id: string;
+    completed_at: string | null;
+    created_at: string;
+    topic_id: string | null;
+  }[],
   limit: number
 ): ActivityItem[] {
   return sessions.slice(0, limit).map((item) => ({
     id: item.id,
     sessionId: item.id,
     type: "session_completed",
-    description: item.completed_at ? "Completed practice session" : "Started practice session",
-    createdAt: item.created_at,
+    description: item.completed_at
+      ? "Completed practice session"
+      : "Started practice session",
+    // Use completion time for completed sessions so the feed reflects
+    // when work finished, not when it started.
+    createdAt: item.completed_at ?? item.created_at,
     metadata: { topicId: item.topic_id },
   }));
 }

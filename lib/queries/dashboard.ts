@@ -31,15 +31,15 @@ export function useDashboardStats(userId: string) {
         supabase
           .from("topic_progress")
           .select("mastery_score")
-          .eq("user_id", userId), // Fix: no maybeSingle() — returns array for multi-topic users
+          .eq("user_id", userId), // returns array, not maybeSingle
       ]);
 
       if (sessionsRes.error) throw new Error(sessionsRes.error.message);
       if (attemptsRes.error) throw new Error(attemptsRes.error.message);
-      if (progressRes.error) throw new Error(progressRes.error.message);
-
-      // Average mastery across all topics instead of reading a single row
-      const progressRows = progressRes.data ?? [];
+      // topic_progress failure is non-fatal: computeDashboardStats does not
+      // currently emit masteryScore in DashboardStats, so degrade gracefully
+      // rather than taking down the whole stats query.
+      const progressRows = progressRes.error ? [] : (progressRes.data ?? []);
       const masteryScore =
         progressRows.length > 0
           ? progressRows.reduce(
