@@ -23,19 +23,35 @@ export function useDashboardStats(userId: string) {
       const supabase = getSupabaseBrowserClient();
 
       const [sessionsRes, attemptsRes, progressRes] = await Promise.all([
-        supabase.from("practice_sessions").select("id, started_at, completed_at").eq("user_id", userId),
+        supabase
+          .from("practice_sessions")
+          .select("id, started_at, completed_at")
+          .eq("user_id", userId),
         supabase.from("attempts").select("is_correct").eq("user_id", userId),
-        supabase.from("topic_progress").select("mastery_score").eq("user_id", userId).maybeSingle(),
+        supabase
+          .from("topic_progress")
+          .select("mastery_score")
+          .eq("user_id", userId), // Fix: no maybeSingle() — returns array for multi-topic users
       ]);
 
       if (sessionsRes.error) throw new Error(sessionsRes.error.message);
       if (attemptsRes.error) throw new Error(attemptsRes.error.message);
       if (progressRes.error) throw new Error(progressRes.error.message);
 
+      // Average mastery across all topics instead of reading a single row
+      const progressRows = progressRes.data ?? [];
+      const masteryScore =
+        progressRows.length > 0
+          ? progressRows.reduce(
+              (sum, r) => sum + (r.mastery_score ?? 0),
+              0
+            ) / progressRows.length
+          : 0;
+
       const rawStats = computeDashboardStats(
-        sessionsRes.data || [],
-        attemptsRes.data || [],
-        progressRes.data?.mastery_score
+        sessionsRes.data ?? [],
+        attemptsRes.data ?? [],
+        masteryScore
       );
 
       return dashboardStatsSchema.parse(rawStats);
@@ -59,7 +75,7 @@ export function useRecentActivity(userId: string, limit: number = 10) {
 
       if (error) throw new Error(error.message);
 
-      const rawItems = mapActivityItems(data || [], limit);
+      const rawItems = mapActivityItems(data ?? [], limit);
       return z.array(activityItemSchema).parse(rawItems);
     },
     enabled: !!userId,
@@ -86,7 +102,7 @@ export function useProgressChart(
 
       if (error) throw new Error(error.message);
 
-      const rawPoints = aggregateProgressChart(data || [], days);
+      const rawPoints = aggregateProgressChart(data ?? [], days);
       return z.array(progressDataPointSchema).parse(rawPoints);
     },
     enabled: !!userId,
