@@ -11,7 +11,7 @@ export const dashboardStatsSchema = z.object({
 export const activityItemSchema = z.object({
   id: z.string(),
   sessionId: z.string(),
-  type: z.enum(["session_completed", "answer_submitted", "streak_achieved"]),
+  type: z.enum(["session_completed", "session_started", "answer_submitted", "streak_achieved"]),
   description: z.string(),
   createdAt: z.string(),
   metadata: z.record(z.string(), z.unknown()).nullable(),

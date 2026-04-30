@@ -18,81 +18,71 @@ import {
   useProgressChart,
 } from '@/hooks/use-dashboard'
 
+// ─── SectionError (shared inline fallback) ───────────────────────────────
+function SectionError({ message }: { message: string }) {
+  return (
+    <div
+      role="alert"
+      className="flex items-center justify-center h-32 rounded-lg
+                 border border-[--color-error]/20 bg-[--color-error-highlight]
+                 text-[--color-error] text-sm"
+    >
+      <p>{message}</p>
+    </div>
+  )
+}
+
+// ─── StatsSection ────────────────────────────────────────────────────────
+function StatsSection({ userId }: { userId: string }) {
+  const { data, isLoading, isError } = useDashboardStats(userId)
+
+  if (isError) return <SectionError message="Could not load stats." />
+  return <KPICards stats={data} isLoading={isLoading} />
+}
+
+// ─── ProgressSection ─────────────────────────────────────────────────────
+function ProgressSection({ userId }: { userId: string }) {
+  const { data, isLoading, isError } = useProgressChart(userId, '30d')
+
+  if (isError) return <SectionError message="Could not load progress chart." />
+  return <ProgressChart data={data} isLoading={isLoading} />
+}
+
+// ─── ActivitySection ─────────────────────────────────────────────────────
+function ActivitySection({ userId }: { userId: string }) {
+  const { data, isLoading, isError } = useRecentActivity(userId, 10)
+
+  if (isError) return <SectionError message="Could not load recent activity." />
+
+  const lastTopicId =
+    data && data.length > 0
+      ? (data[0].metadata?.topicId as string | undefined)
+      : null
+
+  return (
+    <div className="flex flex-col gap-6">
+      <QuickActions lastTopicId={lastTopicId} isLoading={isLoading} />
+      <RecentActivity activity={data} isLoading={isLoading} />
+    </div>
+  )
+}
+
+// ─── Root client component ────────────────────────────────────────────────
 export function DashboardClient({ userId }: Readonly<{ userId: string }>) {
-  const {
-    data: stats,
-    isLoading: isStatsLoading,
-    isError: isStatsError,
-    refetch: refetchStats,
-  } = useDashboardStats(userId)
-
-  const {
-    data: activity,
-    isLoading: isActivityLoading,
-    isError: isActivityError,
-    refetch: refetchActivity,
-  } = useRecentActivity(userId, 10)
-
-  const {
-    data: progressChart,
-    isLoading: isChartLoading,
-    isError: isChartError,
-    refetch: refetchChart,
-  } = useProgressChart(userId, '30d')
-
-  // Find the most recently active topic that has an ID.
-  // The first item in activity is the most recent.
-  const lastTopicId = activity && activity.length > 0 ? (activity[0].metadata?.topicId as string | undefined) : null
-
-  const hasError = isStatsError || isActivityError || isChartError
-
-  // ✅ No void — handle promises explicitly
-  function handleRetry() {
-    if (isStatsError) refetchStats().catch(console.error)
-    if (isActivityError) refetchActivity().catch(console.error)
-    if (isChartError) refetchChart().catch(console.error)
-  }
-
-  const isAnyLoading = isStatsLoading || isActivityLoading || isChartLoading
-
-  if (hasError && !isAnyLoading) {
-    return (
-      <PageContainer>
-        <PageContainerHeader>
-          <PageContainerHeading>Dashboard</PageContainerHeading>
-        </PageContainerHeader>
-        <PageContainerContent>
-          <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
-            <p className="text-sm text-[--color-text-muted]">
-              Something went wrong loading your dashboard.
-            </p>
-            <button
-              onClick={handleRetry}
-              className="rounded-md bg-[--color-primary] px-4 py-2 text-sm font-medium text-[--color-text-inverse] transition hover:bg-[--color-primary-hover]"
-            >
-              Try again
-            </button>
-          </div>
-        </PageContainerContent>
-      </PageContainer>
-    )
-  }
-
   return (
     <PageContainer>
       <PageContainerHeader>
         <PageContainerHeading>Dashboard</PageContainerHeading>
       </PageContainerHeader>
       <PageContainerContent className="space-y-6">
-        <KPICards stats={stats} isLoading={isStatsLoading} />
+        <StatsSection userId={userId} />
 
         <div className="grid gap-6 lg:grid-cols-7">
           <div className="lg:col-span-4 xl:col-span-5">
-            <ProgressChart data={progressChart} isLoading={isChartLoading} />
+            <ProgressSection userId={userId} />
           </div>
           <div className="flex flex-col gap-6 lg:col-span-3 xl:col-span-2">
-            <QuickActions lastTopicId={lastTopicId} isLoading={isActivityLoading} />
-            <RecentActivity activity={activity} isLoading={isActivityLoading} />
+            <ActivitySection userId={userId} />
           </div>
         </div>
       </PageContainerContent>

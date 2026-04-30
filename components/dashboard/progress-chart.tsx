@@ -35,10 +35,14 @@ export function ProgressChart({ data, isLoading }: Readonly<ProgressChartProps>)
 
   // Format the date to something friendlier like "Apr 15"
   const formattedData = data.map((point) => {
-    const d = new Date(point.date)
+    const [year, month, day] = point.date.split('-').map(Number)
+    const d = new Date(year, month - 1, day) // local midnight — no UTC shift
     return {
       ...point,
-      formattedDate: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      formattedDate: d.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      }),
     }
   })
 

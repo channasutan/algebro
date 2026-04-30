@@ -23,14 +23,14 @@ export function calculateSessionDurationMinutes(
  */
 export function computeDashboardStats(
   sessions: { started_at: string; completed_at: string | null }[],
-  attempts: { is_correct: boolean | null }[],
-  masteryScore: number = 0
+  attempts: { is_correct: boolean | null }[]
 ): DashboardStats {
   const totalSessions = sessions.length;
   const completedSessions = sessions.filter((s) => s.completed_at).length;
 
-  const totalAnswers = attempts.length;
-  const correctAnswers = attempts.filter((a) => a.is_correct).length;
+  const gradedAttempts = attempts.filter((a) => a.is_correct !== null);
+  const totalAnswers = gradedAttempts.length;
+  const correctAnswers = gradedAttempts.filter((a) => a.is_correct === true).length;
   const accuracy = totalAnswers > 0 ? (correctAnswers / totalAnswers) * 100 : null;
 
   const totalTimeMinutes = sessions.reduce((acc, s) => {
@@ -65,18 +65,26 @@ export function mapActivityItems(
   }[],
   limit: number
 ): ActivityItem[] {
-  return sessions.slice(0, limit).map((item) => ({
-    id: item.id,
-    sessionId: item.id,
-    type: "session_completed",
-    description: item.completed_at
-      ? "Completed practice session"
-      : "Started practice session",
-    // Use completion time for completed sessions so the feed reflects
-    // when work finished, not when it started.
-    createdAt: item.completed_at ?? item.created_at,
-    metadata: { topicId: item.topic_id },
-  }));
+  return sessions
+    .map(
+      (item): ActivityItem => ({
+        id: item.id,
+        sessionId: item.id,
+        type: item.completed_at
+          ? ("session_completed" as const)
+          : ("session_started" as const),
+        description: item.completed_at
+          ? "Completed practice session"
+          : "Started practice session",
+        createdAt: item.completed_at ?? item.created_at,
+        metadata: { topicId: item.topic_id },
+      })
+    )
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
+    .slice(0, limit);
 }
 
 /**
@@ -93,9 +101,13 @@ export function aggregateProgressChart(
 
   const attemptsBySession = new Map<string, { total: number; correct: number }>();
   for (const a of attempts) {
-    const entry = attemptsBySession.get(a.session_id) ?? { total: 0, correct: 0 };
+    if (a.is_correct === null) continue; // skip ungraded
+    const entry = attemptsBySession.get(a.session_id) ?? {
+      total: 0,
+      correct: 0,
+    };
     entry.total += 1;
-    if (a.is_correct) entry.correct += 1;
+    if (a.is_correct === true) entry.correct += 1;
     attemptsBySession.set(a.session_id, entry);
   }
 

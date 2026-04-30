@@ -399,6 +399,33 @@ export type Database = {
           },
         ]
       }
+      mayar_webhook_events: {
+        Row: {
+          id: string
+          external_id: string
+          event_type: string
+          payload: Json
+          processed_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          external_id: string
+          event_type: string
+          payload?: Json
+          processed_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          external_id?: string
+          event_type?: string
+          payload?: Json
+          processed_at?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number | null
