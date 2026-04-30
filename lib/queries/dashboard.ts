@@ -94,15 +94,27 @@ export function useProgressChart(
       const dateLimit = new Date();
       dateLimit.setDate(dateLimit.getDate() - days);
 
-      const { data, error } = await supabase
-        .from("practice_sessions")
-        .select("created_at, started_at, completed_at")
-        .eq("user_id", userId)
-        .gte("created_at", dateLimit.toISOString());
+      const [sessionsRes, attemptsRes] = await Promise.all([
+        supabase
+          .from("practice_sessions")
+          .select("id, created_at, started_at, completed_at")
+          .eq("user_id", userId)
+          .gte("created_at", dateLimit.toISOString()),
+        supabase
+          .from("attempts")
+          .select("session_id, is_correct")
+          .eq("user_id", userId)
+          .gte("created_at", dateLimit.toISOString()),
+      ]);
 
-      if (error) throw new Error(error.message);
+      if (sessionsRes.error) throw new Error(sessionsRes.error.message);
+      if (attemptsRes.error) throw new Error(attemptsRes.error.message);
 
-      const rawPoints = aggregateProgressChart(data ?? [], days);
+      const rawPoints = aggregateProgressChart(
+        sessionsRes.data ?? [],
+        attemptsRes.data ?? [],
+        days
+      );
       return z.array(progressDataPointSchema).parse(rawPoints);
     },
     enabled: !!userId,

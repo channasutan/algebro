@@ -28,7 +28,7 @@ export async function prefetchDashboardData(userId: string): Promise<{
       .select("id, started_at, completed_at, created_at, topic_id")
       .eq("user_id", userId)
       .order("created_at", { ascending: false }), // Fix: ordered for consistent activity feed
-    supabase.from("attempts").select("is_correct").eq("user_id", userId),
+    supabase.from("attempts").select("is_correct, session_id").eq("user_id", userId),
     supabase
       .from("topic_progress")
       .select("mastery_score")
@@ -61,7 +61,7 @@ export async function prefetchDashboardData(userId: string): Promise<{
   );
 
   const progressChart = z.array(progressDataPointSchema).parse(
-    aggregateProgressChart(sessions, 30) // Default to 30d for prefetch
+    aggregateProgressChart(sessions, attempts, 30) // Default to 30d for prefetch
   );
 
   return { stats, activity, progressChart };

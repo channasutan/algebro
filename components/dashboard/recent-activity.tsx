@@ -89,7 +89,7 @@ export function RecentActivity({ activity, isLoading }: RecentActivityProps) {
                     {formatRelativeTime(item.createdAt)}
                   </p>
                 </div>
-                {item.metadata?.topicId && (
+                {item.metadata && typeof item.metadata.topicId === 'string' && (
                   <Link
                     href={`/practice/${item.metadata.topicId}`}
                     className="text-sm font-medium text-[--color-primary] hover:underline"

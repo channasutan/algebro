@@ -81,17 +81,27 @@ export function mapActivityItems(
 
 /**
  * Groups sessions by date for progress chart visualization.
+ * Computes the accuracy percentage for each day using the provided attempts data.
  */
 export function aggregateProgressChart(
-  sessions: { created_at: string; started_at: string; completed_at: string | null }[],
+  sessions: { id: string; created_at: string; started_at: string; completed_at: string | null }[],
+  attempts: { session_id: string; is_correct: boolean | null }[],
   days: number
 ): ProgressDataPoint[] {
   const dateLimit = new Date();
   dateLimit.setDate(dateLimit.getDate() - days);
 
+  const attemptsBySession = new Map<string, { total: number; correct: number }>();
+  for (const a of attempts) {
+    const entry = attemptsBySession.get(a.session_id) ?? { total: 0, correct: 0 };
+    entry.total += 1;
+    if (a.is_correct) entry.correct += 1;
+    attemptsBySession.set(a.session_id, entry);
+  }
+
   const grouped = sessions
     .filter((s) => new Date(s.created_at) >= dateLimit)
-    .reduce((acc: Record<string, ProgressDataPoint>, item) => {
+    .reduce((acc: Record<string, ProgressDataPoint & { _totalAnswers: number; _correctAnswers: number }>, item) => {
       const date = new Date(item.created_at).toISOString().split("T")[0];
       if (!acc[date]) {
         acc[date] = {
@@ -99,6 +109,8 @@ export function aggregateProgressChart(
           sessionsCompleted: 0,
           accuracyPercent: null,
           minutesPracticed: 0,
+          _totalAnswers: 0,
+          _correctAnswers: 0,
         };
       }
       if (item.completed_at) {
@@ -107,8 +119,23 @@ export function aggregateProgressChart(
       acc[date].minutesPracticed =
         (acc[date].minutesPracticed ?? 0) +
         calculateSessionDurationMinutes(item.started_at, item.completed_at);
+        
+      const sessionAttempts = attemptsBySession.get(item.id);
+      if (sessionAttempts) {
+        acc[date]._totalAnswers += sessionAttempts.total;
+        acc[date]._correctAnswers += sessionAttempts.correct;
+      }
+      
       return acc;
     }, {});
 
-  return Object.values(grouped).sort((a, b) => a.date.localeCompare(b.date));
+  return Object.values(grouped)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map(({ _totalAnswers, _correctAnswers, ...point }) => ({
+      ...point,
+      accuracyPercent:
+        _totalAnswers > 0
+          ? Math.round((_correctAnswers / _totalAnswers) * 100)
+          : null,
+    }));
 }

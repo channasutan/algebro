@@ -39,7 +39,7 @@ export function QuickActions({ lastTopicId, isLoading }: QuickActionsProps) {
             {lastTopicId ? 'Continue Practice' : 'Start Practicing'}
           </Link>
         </Button>
-        <Button asChild variant="outline" size="lg" className="w-full justify-start gap-2">
+        <Button asChild variant="secondary" size="lg" className="w-full justify-start gap-2">
           <Link href="/topics">
             <Compass className="h-4 w-4" />
             Explore Topics
