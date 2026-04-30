@@ -11,11 +11,12 @@ import { ProgressChart } from '@/components/dashboard/progress-chart'
 import { RecentActivity } from '@/components/dashboard/recent-activity'
 import { QuickActions } from '@/components/dashboard/quick-actions'
 
+// ✅ hooks/ layer — not lib/ directly
 import {
   useDashboardStats,
   useRecentActivity,
   useProgressChart,
-} from '@/lib/queries'
+} from '@/hooks/use-dashboard'
 
 export function DashboardClient({ userId }: Readonly<{ userId: string }>) {
   const {
@@ -45,10 +46,11 @@ export function DashboardClient({ userId }: Readonly<{ userId: string }>) {
 
   const hasError = isStatsError || isActivityError || isChartError
 
+  // ✅ No void — handle promises explicitly
   function handleRetry() {
-    if (isStatsError) void refetchStats()
-    if (isActivityError) void refetchActivity()
-    if (isChartError) void refetchChart()
+    if (isStatsError) refetchStats().catch(console.error)
+    if (isActivityError) refetchActivity().catch(console.error)
+    if (isChartError) refetchChart().catch(console.error)
   }
 
   const isAnyLoading = isStatsLoading || isActivityLoading || isChartLoading
