@@ -1,6 +1,6 @@
 import { HydrationBoundary } from '@tanstack/react-query'
 import { redirect } from 'next/navigation'
-import { loadDashboardPage } from '@/lib/loaders/dashboard-loader'
+import { loadDashboardPage } from '@/loaders/dashboard-loader'
 import { DashboardClient } from './client'
 
 export const metadata = {

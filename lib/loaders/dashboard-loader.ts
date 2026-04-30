@@ -1,4 +1,4 @@
-import { HydrationBoundary, dehydrate, type DehydratedState } from '@tanstack/react-query'
+import { dehydrate, type DehydratedState } from '@tanstack/react-query'
 import { getQueryClient } from '@/lib/query-client'
 import { getSupabaseServerClient } from '@/lib/supabase/server-client'
 import { prefetchDashboardData } from '@/lib/supabase/dashboard-prefetch'
