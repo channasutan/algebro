@@ -90,7 +90,16 @@ export function useProgressChart(
     queryKey: queryKeys.dashboard.progressChart(userId, range),
     queryFn: async () => {
       const supabase = getSupabaseBrowserClient();
-      const days = range === "7d" ? 7 : range === "30d" ? 30 : 90;
+
+      let days: number;
+      if (range === "7d") {
+        days = 7;
+      } else if (range === "30d") {
+        days = 30;
+      } else {
+        days = 90;
+      }
+
       const dateLimit = new Date();
       dateLimit.setDate(dateLimit.getDate() - days);
 

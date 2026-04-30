@@ -1,8 +1,7 @@
 import { HydrationBoundary, dehydrate } from '@tanstack/react-query'
-import { getQueryClient } from '@/lib/query-client'
-import { prefetchDashboardData } from '@/lib/supabase/dashboard-prefetch'
-import { getSupabaseServerClient } from '@/lib/supabase/server-client'
-import { queryKeys } from '@/lib/queries/keys'
+import { getQueryClient } from '@/lib'
+import { prefetchDashboardData, getSupabaseServerClient } from '@/lib/supabase'
+import { queryKeys } from '@/lib/queries'
 import { DashboardClient } from './client'
 import { redirect } from 'next/navigation'
 
@@ -13,16 +12,16 @@ export const metadata = {
 export default async function DashboardPage() {
   const supabase = await getSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
-  
+
   if (!user) {
     redirect('/sign-in')
   }
 
   const queryClient = getQueryClient()
-  
+
   try {
     const data = await prefetchDashboardData(user.id)
-    
+
     // Seed the query cache with prefetched data
     queryClient.setQueryData(queryKeys.dashboard.stats(user.id), data.stats)
     queryClient.setQueryData(queryKeys.dashboard.activity(user.id, 10), data.activity)

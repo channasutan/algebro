@@ -16,7 +16,15 @@ interface KPICardsProps {
   isLoading?: boolean
 }
 
-function CountUp({ value, suffix = '', decimals = 0 }: { value: number, suffix?: string, decimals?: number }) {
+interface CountUpProps {
+  readonly value: number
+  readonly suffix?: string
+  readonly decimals?: number
+}
+
+const KPI_SKELETON_KEYS = ['kpi-sk-sessions', 'kpi-sk-accuracy', 'kpi-sk-streak', 'kpi-sk-time'] as const
+
+function CountUp({ value, suffix = '', decimals = 0 }: CountUpProps) {
   const count = useMotionValue(0)
   const rounded = useTransform(count, (latest) => {
     return latest.toFixed(decimals) + suffix
@@ -30,12 +38,12 @@ function CountUp({ value, suffix = '', decimals = 0 }: { value: number, suffix?:
   return <motion.span>{rounded}</motion.span>
 }
 
-export function KPICards({ stats, isLoading }: KPICardsProps) {
+export function KPICards({ stats, isLoading }: Readonly<KPICardsProps>) {
   if (isLoading || !stats) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Card key={i} padding="md">
+        {KPI_SKELETON_KEYS.map((key) => (
+          <Card key={key} padding="md">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <Skeleton className="h-4 w-[100px]" />
               <Skeleton className="h-4 w-4" />
@@ -70,10 +78,10 @@ export function KPICards({ stats, isLoading }: KPICardsProps) {
         </CardHeader>
         <CardBody>
           <div className="text-2xl font-bold">
-            {stats.accuracy !== null ? (
-              <CountUp value={stats.accuracy} suffix="%" decimals={1} />
-            ) : (
+            {stats.accuracy === null ? (
               '--%'
+            ) : (
+              <CountUp value={stats.accuracy} suffix="%" decimals={1} />
             )}
           </div>
         </CardBody>
@@ -98,10 +106,10 @@ export function KPICards({ stats, isLoading }: KPICardsProps) {
         </CardHeader>
         <CardBody>
           <div className="text-2xl font-bold">
-            {stats.totalTimeMinutes !== null ? (
-              <CountUp value={stats.totalTimeMinutes} decimals={1} />
-            ) : (
+            {stats.totalTimeMinutes === null ? (
               '--'
+            ) : (
+              <CountUp value={stats.totalTimeMinutes} decimals={1} />
             )} <span className="text-sm font-normal text-[--color-text-subtle]">min</span>
           </div>
         </CardBody>

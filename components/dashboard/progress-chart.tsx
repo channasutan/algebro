@@ -19,7 +19,7 @@ interface ProgressChartProps {
   isLoading?: boolean
 }
 
-export function ProgressChart({ data, isLoading }: ProgressChartProps) {
+export function ProgressChart({ data, isLoading }: Readonly<ProgressChartProps>) {
   if (isLoading || !data) {
     return (
       <Card padding="md">
@@ -42,7 +42,8 @@ export function ProgressChart({ data, isLoading }: ProgressChartProps) {
     }
   })
 
-  const hasData = data.length > 0 && data.some((d) => d.accuracyPercent !== null || d.sessionsCompleted > 0)
+  // Array.some() already returns false for empty arrays — no length guard needed
+  const hasData = data.some((d) => d.accuracyPercent !== null || d.sessionsCompleted > 0)
 
   return (
     <Card padding="md">
@@ -51,11 +52,7 @@ export function ProgressChart({ data, isLoading }: ProgressChartProps) {
       </CardHeader>
       <CardBody>
         <div className="h-[300px] w-full">
-          {!hasData ? (
-            <div className="flex h-full items-center justify-center rounded-md border border-dashed border-[oklch(from_var(--color-text)_l_c_h_/_0.15)] bg-[--color-surface-2]">
-              <p className="text-sm text-[--color-text-subtle]">No practice data available yet.</p>
-            </div>
-          ) : (
+          {hasData ? (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={formattedData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="oklch(from var(--color-text) l c h / 0.1)" />
@@ -94,6 +91,10 @@ export function ProgressChart({ data, isLoading }: ProgressChartProps) {
                 />
               </LineChart>
             </ResponsiveContainer>
+          ) : (
+            <div className="flex h-full items-center justify-center rounded-md border border-dashed border-[oklch(from_var(--color-text)_l_c_h_/_0.15)] bg-[--color-surface-2]">
+              <p className="text-sm text-[--color-text-subtle]">No practice data available yet.</p>
+            </div>
           )}
         </div>
       </CardBody>

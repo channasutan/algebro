@@ -15,9 +15,9 @@ import {
   useDashboardStats,
   useRecentActivity,
   useProgressChart,
-} from '@/lib/queries/dashboard'
+} from '@/lib/queries'
 
-export function DashboardClient({ userId }: { userId: string }) {
+export function DashboardClient({ userId }: Readonly<{ userId: string }>) {
   const {
     data: stats,
     isLoading: isStatsLoading,
@@ -83,7 +83,7 @@ export function DashboardClient({ userId }: { userId: string }) {
       </PageContainerHeader>
       <PageContainerContent className="space-y-6">
         <KPICards stats={stats} isLoading={isStatsLoading} />
-        
+
         <div className="grid gap-6 lg:grid-cols-7">
           <div className="lg:col-span-4 xl:col-span-5">
             <ProgressChart data={progressChart} isLoading={isChartLoading} />

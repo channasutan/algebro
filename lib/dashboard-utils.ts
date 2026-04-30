@@ -15,7 +15,7 @@ export function calculateSessionDurationMinutes(
   const start = new Date(startedAt).getTime();
   const end = new Date(completedAt).getTime();
   const durationMinutes = (end - start) / (1000 * 60);
-  return durationMinutes > 0 ? durationMinutes : 0;
+  return Math.max(0, durationMinutes);
 }
 
 /**
@@ -119,13 +119,13 @@ export function aggregateProgressChart(
       acc[date].minutesPracticed =
         (acc[date].minutesPracticed ?? 0) +
         calculateSessionDurationMinutes(item.started_at, item.completed_at);
-        
+
       const sessionAttempts = attemptsBySession.get(item.id);
       if (sessionAttempts) {
         acc[date]._totalAnswers += sessionAttempts.total;
         acc[date]._correctAnswers += sessionAttempts.correct;
       }
-      
+
       return acc;
     }, {});
 

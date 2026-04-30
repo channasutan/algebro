@@ -12,7 +12,15 @@ interface RecentActivityProps {
   isLoading?: boolean
 }
 
-export function RecentActivity({ activity, isLoading }: RecentActivityProps) {
+const ACTIVITY_SKELETON_KEYS = [
+  'act-sk-1',
+  'act-sk-2',
+  'act-sk-3',
+  'act-sk-4',
+  'act-sk-5',
+] as const
+
+export function RecentActivity({ activity, isLoading }: Readonly<RecentActivityProps>) {
   if (isLoading || !activity) {
     return (
       <Card padding="md">
@@ -20,8 +28,8 @@ export function RecentActivity({ activity, isLoading }: RecentActivityProps) {
           Recent Activity
         </CardHeader>
         <CardBody className="space-y-4">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4">
+          {ACTIVITY_SKELETON_KEYS.map((key) => (
+            <div key={key} className="flex items-center gap-4">
               <Skeleton className="h-10 w-10 rounded-full" />
               <div className="space-y-2">
                 <Skeleton className="h-4 w-[200px]" />
@@ -47,18 +55,19 @@ export function RecentActivity({ activity, isLoading }: RecentActivityProps) {
 
   const formatRelativeTime = (dateString: string) => {
     const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
+    const now = Date.now()
     const daysDifference = Math.round(
-      (new Date(dateString).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+      (new Date(dateString).getTime() - now) / (1000 * 60 * 60 * 24)
     )
-    
+
     if (daysDifference === 0) {
       const hoursDifference = Math.round(
-        (new Date(dateString).getTime() - new Date().getTime()) / (1000 * 60 * 60)
+        (new Date(dateString).getTime() - now) / (1000 * 60 * 60)
       )
       if (hoursDifference === 0) return 'Just now'
       return rtf.format(hoursDifference, 'hour')
     }
-    
+
     return rtf.format(daysDifference, 'day')
   }
 

@@ -1,4 +1,3 @@
-export type { Database } from "./database.types";
-export { getSupabaseServerClient } from "./server-client";
-export { getSupabaseAdminClient } from "./admin-client";
-export { getSupabaseBrowserClient } from "./browser-client";
+export { getSupabaseServerClient } from './server-client'
+export { prefetchDashboardData } from './dashboard-prefetch'
+export { getSupabaseBrowserClient } from './browser-client'

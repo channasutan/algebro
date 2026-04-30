@@ -12,7 +12,7 @@ interface QuickActionsProps {
   isLoading?: boolean
 }
 
-export function QuickActions({ lastTopicId, isLoading }: QuickActionsProps) {
+export function QuickActions({ lastTopicId, isLoading }: Readonly<QuickActionsProps>) {
   if (isLoading) {
     return (
       <Card padding="md">
