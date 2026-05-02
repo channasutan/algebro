@@ -12,7 +12,7 @@ import {
 } from 'recharts'
 import { Card, CardHeader, CardBody } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { type ProgressDataPoint } from '@/lib/validations/dashboard'
+import { type ProgressDataPoint } from '@/modules/dashboard'
 
 interface ProgressChartProps {
   data?: ProgressDataPoint[]

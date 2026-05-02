@@ -1,15 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "./keys";
 import {
-  type DashboardStats,
-  type ActivityItem,
-  type ProgressDataPoint,
-} from "@/lib/validations/dashboard";
-import {
   fetchDashboardStats,
   fetchRecentActivity,
   fetchProgressChart,
-} from "@/modules/dashboard/repositories/dashboard-repository";
+  type DashboardStats,
+  type ActivityItem,
+  type ProgressDataPoint,
+} from "@/modules/dashboard";
 
 export function useDashboardStats(userId: string) {
   return useQuery<DashboardStats>({
@@ -27,11 +25,17 @@ export function useRecentActivity(userId: string, limit: number = 10) {
   });
 }
 
+const RANGE_TO_DAYS: Record<"7d" | "30d" | "90d", number> = {
+  "7d": 7,
+  "30d": 30,
+  "90d": 90,
+};
+
 export function useProgressChart(
   userId: string,
   range: "7d" | "30d" | "90d"
 ) {
-  const days = range === "7d" ? 7 : range === "30d" ? 30 : 90;
+  const days = RANGE_TO_DAYS[range];
 
   return useQuery<ProgressDataPoint[]>({
     queryKey: queryKeys.dashboard.progressChart(userId, range),

@@ -1,5 +1,6 @@
-import { getSupabaseServerClient } from "@/lib/supabase/server-client";
 import { z } from "zod";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/database.types";
 import {
   dashboardStatsSchema,
   activityItemSchema,
@@ -7,20 +8,21 @@ import {
   type DashboardStats,
   type ActivityItem,
   type ProgressDataPoint,
-} from "@/lib/validations/dashboard";
+} from "@/modules/dashboard/validations/dashboard";
 import {
   computeDashboardStats,
   mapActivityItems,
   aggregateProgressChart,
-} from "@/lib/dashboard-utils";
+} from "@/modules/dashboard/utils/dashboard-utils";
 
-export async function prefetchDashboardData(userId: string): Promise<{
+export async function prefetchDashboardData(
+  supabase: SupabaseClient<Database>,
+  userId: string
+): Promise<{
   stats: DashboardStats;
   activity: ActivityItem[];
   progressChart: ProgressDataPoint[];
 }> {
-  const supabase = await getSupabaseServerClient();
-
   // Parallel fetch raw data
   const [sessionsRes, attemptsRes] = await Promise.all([
     supabase

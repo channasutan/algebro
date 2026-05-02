@@ -5,7 +5,7 @@ import { type User } from '@supabase/supabase-js'
 import {
   getAuthenticatedUser,
   prefetchDashboard,
-} from '@/modules/dashboard/repositories/dashboard-repository'
+} from '@/modules/dashboard'
 
 export async function loadDashboardPage(): Promise<{ user: User | null; dehydratedState: DehydratedState }> {
   const user = await getAuthenticatedUser()

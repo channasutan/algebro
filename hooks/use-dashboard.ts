@@ -12,4 +12,4 @@ export type {
   DashboardStats,
   ActivityItem,
   ProgressDataPoint,
-} from '@/lib/validations/dashboard'
+} from '@/modules/dashboard'

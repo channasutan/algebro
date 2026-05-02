@@ -4,7 +4,7 @@ import * as React from 'react'
 import Link from 'next/link'
 import { Card, CardHeader, CardBody } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { type ActivityItem } from '@/lib/validations/dashboard'
+import { type ActivityItem } from '@/modules/dashboard'
 import { CheckCircle2, Award, FileText } from 'lucide-react'
 
 interface RecentActivityProps {

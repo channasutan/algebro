@@ -2,7 +2,7 @@ import {
   type DashboardStats,
   type ActivityItem,
   type ProgressDataPoint,
-} from "@/lib/validations/dashboard";
+} from "@/modules/dashboard/validations/dashboard";
 
 /**
  * Calculates duration between two timestamps in minutes.
