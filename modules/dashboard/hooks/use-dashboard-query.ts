@@ -4,10 +4,12 @@ import {
   fetchDashboardStats,
   fetchRecentActivity,
   fetchProgressChart,
-  type DashboardStats,
-  type ActivityItem,
-  type ProgressDataPoint,
-} from "../index.client";
+} from "../services/dashboard-browser-fetch";
+import type {
+  DashboardStats,
+  ActivityItem,
+  ProgressDataPoint,
+} from "../validations/dashboard";
 
 export function useDashboardStats(userId: string) {
   return useQuery<DashboardStats>({
