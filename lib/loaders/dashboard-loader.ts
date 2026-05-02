@@ -1,21 +1,20 @@
 import { dehydrate, type DehydratedState } from '@tanstack/react-query'
 import { getQueryClient } from '@/lib/query-client'
-import { getSupabaseServerClient } from '@/lib/supabase/server-client'
-import { prefetchDashboardData } from '@/lib/supabase/dashboard-prefetch'
 import { queryKeys } from '@/lib/queries/keys'
 import { type User } from '@supabase/supabase-js'
+import {
+  getAuthenticatedUser,
+  prefetchDashboard,
+} from '@/modules/dashboard/repositories/dashboard-repository'
 
 export async function loadDashboardPage(): Promise<{ user: User | null; dehydratedState: DehydratedState }> {
-  const supabase = await getSupabaseServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getAuthenticatedUser()
 
   const queryClient = getQueryClient()
 
   if (user) {
     try {
-      const data = await prefetchDashboardData(user.id)
+      const data = await prefetchDashboard(user.id)
       queryClient.setQueryData(queryKeys.dashboard.stats(user.id), data.stats)
       queryClient.setQueryData(queryKeys.dashboard.activity(user.id, 10), data.activity)
       queryClient.setQueryData(
