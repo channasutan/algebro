@@ -54,14 +54,17 @@ function ActivitySection({ userId }: Readonly<{ userId: string }>) {
 
   if (isError) return <SectionError message="Could not load recent activity." />
 
-  const lastTopicId =
-    data && data.length > 0
-      ? (data[0].metadata?.topicId as string | undefined)
-      : null
+  const lastActivity = data?.[0]
+  const lastSessionId = lastActivity?.metadata?.sessionId as string | undefined
+  const lastAttemptId = lastActivity?.metadata?.attemptId as string | undefined
 
   return (
     <div className="flex flex-col gap-6">
-      <QuickActions lastTopicId={lastTopicId} isLoading={isLoading} />
+      <QuickActions 
+        lastSessionId={lastSessionId} 
+        lastAttemptId={lastAttemptId} 
+        isLoading={isLoading} 
+      />
       <RecentActivity activity={data} isLoading={isLoading} />
     </div>
   )

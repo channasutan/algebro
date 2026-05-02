@@ -24,13 +24,20 @@ export async function prefetchDashboardData(
   progressChart: ProgressDataPoint[];
 }> {
   // Parallel fetch raw data
-  const [sessionsRes, attemptsRes] = await Promise.all([
+  const [sessionsRes, attemptsRes, masteryRes] = await Promise.all([
     supabase
       .from("practice_sessions")
       .select("id, started_at, completed_at, created_at, topic_id")
       .eq("user_id", userId)
+      .order("completed_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false }),
     supabase.from("attempts").select("is_correct, session_id").eq("user_id", userId),
+    supabase
+      .from("topic_progress")
+      .select("mastery_score")
+      .eq("user_id", userId)
+      .order("last_practiced_at", { ascending: false })
+      .limit(1)
   ]);
 
   if (sessionsRes.error) throw new Error(sessionsRes.error.message);
@@ -38,13 +45,14 @@ export async function prefetchDashboardData(
 
   const sessions = sessionsRes.data ?? [];
   const attempts = attemptsRes.data ?? [];
+  const currentStreak = 0;
 
   // Transform using shared pure helpers
-  const stats = dashboardStatsSchema.parse(
-    computeDashboardStats(sessions, attempts)
-  );
+  const stats = dashboardStatsSchema.parse({
+    ...computeDashboardStats(sessions, attempts),
+    currentStreak,
+  });
 
-  // sessions already ordered desc — mapActivityItems slices first 10 correctly
   const activity = z.array(activityItemSchema).parse(
     mapActivityItems(sessions, 10)
   );

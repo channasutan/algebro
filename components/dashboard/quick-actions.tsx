@@ -8,11 +8,16 @@ import { Play, Compass } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 
 interface QuickActionsProps {
-  lastTopicId?: string | null
+  lastSessionId?: string | null
+  lastAttemptId?: string | null
   isLoading?: boolean
 }
 
-export function QuickActions({ lastTopicId, isLoading }: Readonly<QuickActionsProps>) {
+export function QuickActions({ 
+  lastSessionId, 
+  lastAttemptId, 
+  isLoading 
+}: Readonly<QuickActionsProps>) {
   if (isLoading) {
     return (
       <Card padding="md">
@@ -34,9 +39,9 @@ export function QuickActions({ lastTopicId, isLoading }: Readonly<QuickActionsPr
       </CardHeader>
       <CardBody className="flex flex-col gap-3">
         <Button asChild size="lg" className="w-full justify-start gap-2">
-          <Link href={lastTopicId ? `/practice/${lastTopicId}` : '/practice'}>
+          <Link href={lastSessionId && lastAttemptId ? `/practice/${lastSessionId}?attemptId=${lastAttemptId}` : '/practice'}>
             <Play className="h-4 w-4" />
-            {lastTopicId ? 'Continue Practice' : 'Start Practicing'}
+            {lastSessionId ? 'Continue Practice' : 'Start Practicing'}
           </Link>
         </Button>
         <Button asChild variant="secondary" size="lg" className="w-full justify-start gap-2">

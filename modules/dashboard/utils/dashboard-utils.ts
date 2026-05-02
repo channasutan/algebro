@@ -33,16 +33,18 @@ export function computeDashboardStats(
   const correctAnswers = gradedAttempts.filter((a) => a.is_correct === true).length;
   const accuracy = totalAnswers > 0 ? (correctAnswers / totalAnswers) * 100 : null;
 
-  const totalTimeMinutes = sessions.reduce((acc, s) => {
-    return acc + calculateSessionDurationMinutes(s.started_at, s.completed_at);
-  }, 0);
+  const totalTimeMinutes = sessions.length > 0
+    ? sessions.reduce((acc, s) => {
+        return acc + calculateSessionDurationMinutes(s.started_at, s.completed_at);
+      }, 0)
+    : null;
 
   return {
     totalSessions,
     completedSessions,
     accuracy,
     currentStreak: 0, // Placeholder until streak engine is implemented
-    totalTimeMinutes: totalTimeMinutes > 0 ? totalTimeMinutes : null,
+    totalTimeMinutes,
   };
 }
 
@@ -62,23 +64,36 @@ export function mapActivityItems(
     completed_at: string | null;
     created_at: string;
     topic_id: string | null;
+    attempts?: { id: string; created_at: string }[];
   }[],
   limit: number
 ): ActivityItem[] {
   return sessions
     .map(
-      (item): ActivityItem => ({
-        id: item.id,
-        sessionId: item.id,
-        type: item.completed_at
-          ? ("session_completed" as const)
-          : ("session_started" as const),
-        description: item.completed_at
-          ? "Completed practice session"
-          : "Started practice session",
-        createdAt: item.completed_at ?? item.created_at,
-        metadata: { topicId: item.topic_id },
-      })
+      (item): ActivityItem => {
+        // Find the latest attempt to provide a "Continue" or "View" link
+        const sortedAttempts = [...(item.attempts || [])].sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        const lastAttemptId = sortedAttempts[0]?.id;
+
+        return {
+          id: item.id,
+          sessionId: item.id,
+          type: item.completed_at
+            ? ("session_completed" as const)
+            : ("session_started" as const),
+          description: item.completed_at
+            ? "Completed practice session"
+            : "Started practice session",
+          createdAt: item.completed_at ?? item.created_at,
+          metadata: { 
+            topicId: item.topic_id,
+            sessionId: item.id,
+            attemptId: lastAttemptId
+          },
+        };
+      }
     )
     .sort(
       (a, b) =>

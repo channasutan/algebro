@@ -4,7 +4,7 @@ import * as React from 'react'
 import Link from 'next/link'
 import { Card, CardHeader, CardBody } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { type ActivityItem } from '@/modules/dashboard'
+import { type ActivityItem } from '@/modules/dashboard/index.client'
 import { CheckCircle2, Award, FileText } from 'lucide-react'
 
 interface RecentActivityProps {
@@ -98,9 +98,9 @@ export function RecentActivity({ activity, isLoading }: Readonly<RecentActivityP
                     {formatRelativeTime(item.createdAt)}
                   </p>
                 </div>
-                {item.metadata && typeof item.metadata.topicId === 'string' && (
+                {item.metadata && typeof item.metadata.sessionId === 'string' && typeof item.metadata.attemptId === 'string' && (
                   <Link
-                    href={`/practice/${item.metadata.topicId}`}
+                    href={`/practice/${item.metadata.sessionId}?attemptId=${item.metadata.attemptId}`}
                     className="text-sm font-medium text-[--color-primary] hover:underline"
                   >
                     View
