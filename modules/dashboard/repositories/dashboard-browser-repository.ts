@@ -1,6 +1,6 @@
-import { getSupabaseServerClient } from '@/lib/supabase/server-client'
-import type { SupabaseClient } from '@supabase/supabase-js'
+import { getSupabaseBrowserClient } from '@/lib/supabase/browser-client'
 import type { Database } from '@/lib/supabase/database.types'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { computeDashboardStats, mapActivityItems, aggregateProgressChart }
   from '@/modules/dashboard/utils/dashboard-utils'
 import {
@@ -13,31 +13,20 @@ import {
 } from '@/modules/dashboard/validations/dashboard'
 import { z } from 'zod'
 
-export class DashboardRepository {
-  private readonly clientPromise: Promise<SupabaseClient<Database>>
+export class DashboardBrowserRepository {
+  private readonly client: SupabaseClient<Database>
 
   constructor() {
-    this.clientPromise = getSupabaseServerClient()
-  }
-
-  private async getClient(): Promise<SupabaseClient<Database>> {
-    return this.clientPromise
-  }
-
-  async getAuthenticatedUser() {
-    const client = await this.getClient()
-    const { data: { user } } = await client.auth.getUser()
-    return user
+    this.client = getSupabaseBrowserClient()
   }
 
   async fetchDashboardStats(userId: string): Promise<DashboardStats> {
-    const client = await this.getClient()
     const [sessionsRes, attemptsRes] = await Promise.all([
-      client
+      this.client
         .from('practice_sessions')
         .select('id, started_at, completed_at, created_at, topic_id')
         .eq('user_id', userId),
-      client.from('attempts').select('is_correct').eq('user_id', userId),
+      this.client.from('attempts').select('is_correct').eq('user_id', userId),
     ])
 
     if (sessionsRes.error) throw new Error(sessionsRes.error.message)
@@ -54,10 +43,7 @@ export class DashboardRepository {
   }
 
   async fetchRecentActivity(userId: string, limit: number): Promise<ActivityItem[]> {
-    const client = await this.getClient()
-    // Fetch sessions and their attempts in parallel or via a join
-    // For simplicity and since it's a small number, we'll fetch them separately
-    const { data: sessions, error: sessionsError } = await client
+    const { data: sessions, error: sessionsError } = await this.client
       .from('practice_sessions')
       .select(`
         id, 
@@ -80,17 +66,16 @@ export class DashboardRepository {
   }
 
   async fetchProgressChart(userId: string, days: number): Promise<ProgressDataPoint[]> {
-    const client = await this.getClient()
     const dateLimit = new Date()
     dateLimit.setDate(dateLimit.getDate() - days)
 
     const [sessionsRes, attemptsRes] = await Promise.all([
-      client
+      this.client
         .from('practice_sessions')
         .select('id, created_at, started_at, completed_at')
         .eq('user_id', userId)
         .gte('created_at', dateLimit.toISOString()),
-      client
+      this.client
         .from('attempts')
         .select('session_id, is_correct')
         .eq('user_id', userId)

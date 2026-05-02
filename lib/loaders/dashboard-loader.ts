@@ -4,8 +4,8 @@ import { queryKeys } from '@/lib/queries/keys'
 import { type User } from '@supabase/supabase-js'
 import {
   getAuthenticatedUser,
-  prefetchDashboard,
-} from '@/modules/dashboard/index.server'
+  prefetchDashboardStats,
+} from '@/modules/dashboard'
 
 export async function loadDashboardPage(): Promise<{ user: User | null; dehydratedState: DehydratedState }> {
   const user = await getAuthenticatedUser()
@@ -14,7 +14,7 @@ export async function loadDashboardPage(): Promise<{ user: User | null; dehydrat
 
   if (user) {
     try {
-      const data = await prefetchDashboard(user.id)
+      const data = await prefetchDashboardStats(user.id)
       queryClient.setQueryData(queryKeys.dashboard.stats(user.id), data.stats)
       queryClient.setQueryData(queryKeys.dashboard.activity(user.id, 10), data.activity)
       queryClient.setQueryData(

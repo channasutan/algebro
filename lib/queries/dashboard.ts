@@ -1,7 +1,5 @@
-import {
-  useDashboardStats,
-  useRecentActivity,
-  useDashboardProgressChart as useProgressChart,
-} from "@/modules/dashboard/index.client";
-
-export { useDashboardStats, useRecentActivity, useProgressChart };
+export { 
+  useDashboardStats, 
+  useRecentActivity, 
+  useProgressChart 
+} from "@/modules/dashboard";

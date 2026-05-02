@@ -12,4 +12,4 @@ export type {
   DashboardStats,
   ActivityItem,
   ProgressDataPoint,
-} from '@/modules/dashboard/index.client'
+} from '@/modules/dashboard'
