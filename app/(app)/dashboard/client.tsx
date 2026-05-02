@@ -19,7 +19,7 @@ import {
 } from '@/hooks/use-dashboard'
 
 // ─── SectionError (shared inline fallback) ───────────────────────────────
-function SectionError({ message }: { message: string }) {
+function SectionError({ message }: Readonly<{ message: string }>) {
   return (
     <div
       role="alert"
@@ -33,7 +33,7 @@ function SectionError({ message }: { message: string }) {
 }
 
 // ─── StatsSection ────────────────────────────────────────────────────────
-function StatsSection({ userId }: { userId: string }) {
+function StatsSection({ userId }: Readonly<{ userId: string }>) {
   const { data, isLoading, isError } = useDashboardStats(userId)
 
   if (isError) return <SectionError message="Could not load stats." />
@@ -41,7 +41,7 @@ function StatsSection({ userId }: { userId: string }) {
 }
 
 // ─── ProgressSection ─────────────────────────────────────────────────────
-function ProgressSection({ userId }: { userId: string }) {
+function ProgressSection({ userId }: Readonly<{ userId: string }>) {
   const { data, isLoading, isError } = useProgressChart(userId, '30d')
 
   if (isError) return <SectionError message="Could not load progress chart." />
@@ -49,7 +49,7 @@ function ProgressSection({ userId }: { userId: string }) {
 }
 
 // ─── ActivitySection ─────────────────────────────────────────────────────
-function ActivitySection({ userId }: { userId: string }) {
+function ActivitySection({ userId }: Readonly<{ userId: string }>) {
   const { data, isLoading, isError } = useRecentActivity(userId, 10)
 
   if (isError) return <SectionError message="Could not load recent activity." />

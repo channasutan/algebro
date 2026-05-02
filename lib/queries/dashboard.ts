@@ -50,8 +50,7 @@ export function useDashboardStats(userId: string) {
 
       const rawStats = computeDashboardStats(
         sessionsRes.data ?? [],
-        attemptsRes.data ?? [],
-        masteryScore
+        attemptsRes.data ?? []
       );
 
       return dashboardStatsSchema.parse(rawStats);
