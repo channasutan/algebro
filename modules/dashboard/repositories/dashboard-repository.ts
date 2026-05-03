@@ -1,6 +1,6 @@
 // dashboard-repository.ts
 import 'server-only'
-import { getSupabaseServerClient } from '@/lib/supabase/server-client'
+import { getSupabaseServerClient } from '@/lib/supabase'
 import {
   queryDashboardStats,
   queryRecentActivity,

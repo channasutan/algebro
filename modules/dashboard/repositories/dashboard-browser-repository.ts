@@ -1,6 +1,6 @@
 // dashboard-browser-repository.ts
 import 'client-only'
-import { getSupabaseBrowserClient } from '@/lib/supabase/browser-client'
+import { getSupabaseBrowserClient } from '@/lib/supabase'
 import {
   queryDashboardStats,
   queryRecentActivity,
