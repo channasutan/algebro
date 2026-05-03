@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { DashboardBrowserRepository } from '@/repositories/dashboard/dashboard-browser-repository'
-import { queryKeys } from '@/lib/queries/keys'
+import { queryKeys } from '@/config/query-keys'
 import type { DashboardStats, ActivityItem, ProgressDataPoint } from '../validations/dashboard'
 
 export function useDashboardStats(userId: string) {
