@@ -1,6 +1,6 @@
 // dashboard-repository.ts
 import 'server-only'
-import { getSupabaseServerClient } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase/server'
 import {
   queryDashboardStats,
   queryRecentActivity,
@@ -19,7 +19,7 @@ import {
 import { z } from 'zod'
 
 export class DashboardRepository {
-  private readonly clientPromise = getSupabaseServerClient()
+  private readonly clientPromise = createServerClient()
 
   private async getClient() {
     return this.clientPromise

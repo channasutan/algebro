@@ -1,10 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queries/keys";
-import {
-  fetchDashboardStats,
-  fetchRecentActivity,
-  fetchProgressChart,
-} from "../services/dashboard-browser-fetch";
 import type {
   DashboardStats,
   ActivityItem,
@@ -14,7 +9,10 @@ import type {
 export function useDashboardStats(userId: string) {
   return useQuery<DashboardStats>({
     queryKey: queryKeys.dashboard.stats(userId),
-    queryFn: () => fetchDashboardStats(userId),
+    queryFn: async () => {
+      const { fetchDashboardStats } = await import("../services/dashboard-browser-fetch");
+      return fetchDashboardStats(userId);
+    },
     enabled: !!userId,
   });
 }
@@ -22,7 +20,10 @@ export function useDashboardStats(userId: string) {
 export function useRecentActivity(userId: string, limit: number = 10) {
   return useQuery<ActivityItem[]>({
     queryKey: queryKeys.dashboard.activity(userId, limit),
-    queryFn: () => fetchRecentActivity(userId, limit),
+    queryFn: async () => {
+      const { fetchRecentActivity } = await import("../services/dashboard-browser-fetch");
+      return fetchRecentActivity(userId, limit);
+    },
     enabled: !!userId,
   });
 }
@@ -41,7 +42,10 @@ export function useProgressChart(
 
   return useQuery<ProgressDataPoint[]>({
     queryKey: queryKeys.dashboard.progressChart(userId, range),
-    queryFn: () => fetchProgressChart(userId, days),
+    queryFn: async () => {
+      const { fetchProgressChart } = await import("../services/dashboard-browser-fetch");
+      return fetchProgressChart(userId, days);
+    },
     enabled: !!userId,
   });
 }

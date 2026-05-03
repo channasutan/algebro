@@ -1,6 +1,6 @@
 // dashboard-browser-repository.ts
 import 'client-only'
-import { getSupabaseBrowserClient } from '@/lib/supabase'
+import { createBrowserClient } from '@/lib/supabase/client'
 import {
   queryDashboardStats,
   queryRecentActivity,
@@ -19,7 +19,7 @@ import {
 import { z } from 'zod'
 
 export class DashboardBrowserRepository {
-  private readonly client = getSupabaseBrowserClient()
+  private readonly client = createBrowserClient()
 
   async fetchDashboardStats(userId: string) {
     const { sessions, attempts } = await queryDashboardStats(this.client, userId)
