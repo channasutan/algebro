@@ -1,6 +1,5 @@
 import 'server-only'
-import { prefetchDashboardStats } from '@/modules/dashboard/index.server'
-import { getAuthenticatedUser } from '@/modules/dashboard/index.server'
+import { prefetchDashboardStats, getAuthenticatedUser } from '@/modules/dashboard/index.server'
 
 export async function loadDashboardData() {
   const user = await getAuthenticatedUser()

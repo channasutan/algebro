@@ -13,6 +13,8 @@ export {
   useRecentActivity,
   useProgressChart,
 } from './hooks/use-dashboard-query'
+export { queryKeys } from '@/lib/queries/keys'
+
 
 // Types carry no runtime code — always safe to export from either barrel
 export type {

@@ -1,6 +1,8 @@
+import { createBrowserClient } from '@/lib/supabase/client'
 import { DashboardBrowserRepository } from '../repositories/dashboard-browser-repository'
 
-const repo = new DashboardBrowserRepository()
+const repo = new DashboardBrowserRepository(createBrowserClient())
+
 
 export async function fetchDashboardStats(userId: string) {
   return repo.fetchDashboardStats(userId)

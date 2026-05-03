@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queries/keys";
+import { queryKeys } from "@/modules/dashboard";
 import type {
   DashboardStats,
   ActivityItem,

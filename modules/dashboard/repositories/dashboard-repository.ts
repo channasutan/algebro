@@ -1,6 +1,7 @@
 // dashboard-repository.ts
 import 'server-only'
-import { createServerClient } from '@/lib/supabase/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/lib/supabase/database.types'
 import {
   queryDashboardStats,
   queryRecentActivity,
@@ -18,24 +19,20 @@ import {
 } from '../validations/dashboard'
 import { z } from 'zod'
 
-export class DashboardRepository {
-  private readonly clientPromise = createServerClient()
+type DbClient = SupabaseClient<Database>
 
-  private async getClient() {
-    return this.clientPromise
-  }
+export class DashboardRepository {
+  constructor(private readonly client: DbClient) {}
 
   async getAuthenticatedUser() {
-    const client = await this.getClient()
     const {
       data: { user },
-    } = await client.auth.getUser()
+    } = await this.client.auth.getUser()
     return user
   }
 
   async fetchDashboardStats(userId: string) {
-    const client = await this.getClient()
-    const { sessions, attempts } = await queryDashboardStats(client, userId)
+    const { sessions, attempts } = await queryDashboardStats(this.client, userId)
     return dashboardStatsSchema.parse({
       ...computeDashboardStats(sessions, attempts),
       currentStreak: 0,
@@ -43,16 +40,15 @@ export class DashboardRepository {
   }
 
   async fetchRecentActivity(userId: string, limit: number) {
-    const client = await this.getClient()
-    const sessions = await queryRecentActivity(client, userId, limit)
+    const sessions = await queryRecentActivity(this.client, userId, limit)
     return z.array(activityItemSchema).parse(mapActivityItems(sessions, limit))
   }
 
   async fetchProgressChart(userId: string, days: number) {
-    const client = await this.getClient()
-    const { sessions, attempts } = await queryProgressChart(client, userId, days)
+    const { sessions, attempts } = await queryProgressChart(this.client, userId, days)
     return z
       .array(progressDataPointSchema)
       .parse(aggregateProgressChart(sessions, attempts, days))
   }
 }
+

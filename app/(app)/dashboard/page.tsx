@@ -1,7 +1,6 @@
 import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query'
 import { redirect } from 'next/navigation'
-import { loadDashboardData } from '@/modules/dashboard/loaders/dashboard-loader'
-import { queryKeys } from '@/lib/queries/keys'
+import { loadDashboardData, queryKeys } from '@/modules/dashboard/index.server'
 import { DashboardClient } from './client'
 
 export const metadata = {

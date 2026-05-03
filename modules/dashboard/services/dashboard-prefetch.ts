@@ -1,3 +1,4 @@
+import { createServerClient } from '@/lib/supabase/server'
 import { DashboardRepository } from "../repositories/dashboard-repository";
 import type {
   DashboardStats,
@@ -12,7 +13,9 @@ export async function prefetchDashboardStats(
   activity: ActivityItem[];
   progressChart: ProgressDataPoint[];
 }> {
-  const repository = new DashboardRepository();
+  const supabase = await createServerClient()
+  const repository = new DashboardRepository(supabase);
+
 
   const [stats, activity, progressChart] = await Promise.all([
     repository.fetchDashboardStats(userId),
