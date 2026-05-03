@@ -74,6 +74,12 @@ directives:
   - name: "Modules can read configuration"
     constraint: "modules -> config"
     action: allow
+  - name: "Module repositories can read configuration"
+    constraint: "module-repositories -> config"
+    action: allow
+  - name: "Module non-repositories can read configuration"
+    constraint: "module-non-repositories -> config"
+    action: allow
   - name: "Infrastructure can read configuration"
     constraint: "infrastructure -> config"
     action: allow
