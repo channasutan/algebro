@@ -1,5 +1,6 @@
-// dashboard-browser-repository.ts
+// repositories/dashboard/dashboard-browser-repository.ts
 import 'client-only'
+import { createBrowserClient } from '@/lib/supabase/client'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase/database.types'
 import {
@@ -11,19 +12,22 @@ import {
   computeDashboardStats,
   mapActivityItems,
   aggregateProgressChart,
-} from '../utils/dashboard-utils'
+} from '@/modules/dashboard/utils/dashboard-utils'
 import {
   dashboardStatsSchema,
   activityItemSchema,
   progressDataPointSchema,
-} from '../validations/dashboard'
+} from '@/modules/dashboard/validations/dashboard'
 import { z } from 'zod'
 
 type DbClient = SupabaseClient<Database>
 
 export class DashboardBrowserRepository {
-  constructor(private readonly client: DbClient) {}
+  private readonly client: DbClient
 
+  constructor(client?: DbClient) {
+    this.client = client ?? createBrowserClient()
+  }
 
   async fetchDashboardStats(userId: string) {
     const { sessions, attempts } = await queryDashboardStats(this.client, userId)

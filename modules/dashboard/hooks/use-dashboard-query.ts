@@ -2,33 +2,24 @@
 
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { createBrowserClient } from '@/lib/supabase/client'
+import { DashboardBrowserRepository } from '@/repositories/dashboard/dashboard-browser-repository'
 import { queryKeys } from '@/lib/queries/keys'
-import {
-  fetchDashboardStats,
-  fetchRecentActivity,
-  fetchProgressChart,
-} from '../services/dashboard-browser-fetch'
 import type { DashboardStats, ActivityItem, ProgressDataPoint } from '../validations/dashboard'
 
-function useSupabase() {
-  return useMemo(() => createBrowserClient(), [])
-}
-
 export function useDashboardStats(userId: string) {
-  const supabase = useSupabase()
+  const repo = useMemo(() => new DashboardBrowserRepository(), [])
   return useQuery<DashboardStats>({
     queryKey: queryKeys.dashboard.stats(userId),
-    queryFn: () => fetchDashboardStats(supabase, userId),
+    queryFn: () => repo.fetchDashboardStats(userId),
     enabled: !!userId,
   })
 }
 
 export function useRecentActivity(userId: string, limit = 10) {
-  const supabase = useSupabase()
+  const repo = useMemo(() => new DashboardBrowserRepository(), [])
   return useQuery<ActivityItem[]>({
     queryKey: queryKeys.dashboard.activity(userId, limit),
-    queryFn: () => fetchRecentActivity(supabase, userId, limit),
+    queryFn: () => repo.fetchRecentActivity(userId, limit),
     enabled: !!userId,
   })
 }
@@ -40,10 +31,10 @@ const RANGE_TO_DAYS: Record<'7d' | '30d' | '90d', number> = {
 }
 
 export function useProgressChart(userId: string, range: '7d' | '30d' | '90d') {
-  const supabase = useSupabase()
+  const repo = useMemo(() => new DashboardBrowserRepository(), [])
   return useQuery<ProgressDataPoint[]>({
     queryKey: queryKeys.dashboard.progressChart(userId, range),
-    queryFn: () => fetchProgressChart(supabase, userId, RANGE_TO_DAYS[range]),
+    queryFn: () => repo.fetchProgressChart(userId, RANGE_TO_DAYS[range]),
     enabled: !!userId,
   })
 }

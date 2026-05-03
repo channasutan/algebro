@@ -1,4 +1,4 @@
-// dashboard-repository.ts
+// repositories/dashboard/dashboard-repository.ts
 import 'server-only'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/lib/supabase/database.types'
@@ -11,12 +11,12 @@ import {
   computeDashboardStats,
   mapActivityItems,
   aggregateProgressChart,
-} from '../utils/dashboard-utils'
+} from '@/modules/dashboard/utils/dashboard-utils'
 import {
   dashboardStatsSchema,
   activityItemSchema,
   progressDataPointSchema,
-} from '../validations/dashboard'
+} from '@/modules/dashboard/validations/dashboard'
 import { z } from 'zod'
 
 type DbClient = SupabaseClient<Database>
@@ -51,4 +51,3 @@ export class DashboardRepository {
       .parse(aggregateProgressChart(sessions, attempts, days))
   }
 }
-
