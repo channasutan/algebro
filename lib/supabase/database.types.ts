@@ -1,5 +1,3 @@
-// AUTO-GENERATED — do not edit manually. Run `pnpm db:types` to regenerate.
-// NOTE: mayar_webhook_events manually patched — pending migration 20260419000000_create_mayar_webhook_events.sql
 export type Json =
   | string
   | number

@@ -1,39 +1,41 @@
-'use client'
+import { dehydrate, HydrationBoundary, QueryClient } from '@tanstack/react-query'
+import { redirect } from 'next/navigation'
+import { loadDashboardData } from '@/services/dashboard/dashboard.service'
+import { queryKeys } from '@/config/query-keys'
+import { DashboardClient } from './client'
 
-import { type ReactNode } from 'react'
-import { usePing } from '@/hooks/use-ping'
-import {
-  PageContainer,
-  PageContainerHeader,
-  PageContainerHeading,
-  PageContainerContent,
-} from '@/components/ui'
+export const metadata = {
+  title: 'Dashboard | Algebro',
+}
 
-export default function DashboardPage() {
-  const { data, isLoading, isError } = usePing()
+export default async function DashboardPage() {
+  const { user, stats, activity, progressChart } = await loadDashboardData()
 
-  // Extracted from nested ternary — SonarCloud S3358
-  let content: ReactNode
-  if (isLoading) {
-    content = <p>Loading...</p>
-  } else if (isError) {
-    content = <p className="text-[--color-error]">Failed to load data.</p>
-  } else {
-    content = (
-      <pre className="p-4 bg-[--color-surface-2] rounded-[--radius-md] overflow-auto">
-        {JSON.stringify(data, null, 2)}
-      </pre>
-    )
+  if (!user) {
+    redirect('/sign-in')
   }
 
+  const queryClient = new QueryClient()
+
+  // Prefetch all dashboard data
+  await Promise.all([
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.dashboard.stats(user.id),
+      queryFn: async () => stats,
+    }),
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.dashboard.activity(user.id, 10),
+      queryFn: async () => activity,
+    }),
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.dashboard.progressChart(user.id, '30d'),
+      queryFn: async () => progressChart,
+    }),
+  ])
+
   return (
-    <PageContainer>
-      <PageContainerHeader>
-        <PageContainerHeading>Dashboard</PageContainerHeading>
-      </PageContainerHeader>
-      <PageContainerContent>
-        {content}
-      </PageContainerContent>
-    </PageContainer>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <DashboardClient userId={user.id} />
+    </HydrationBoundary>
   )
 }
