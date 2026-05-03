@@ -1,9 +1,8 @@
-import { createServerClient } from '@/lib/supabase/server'
 import { DashboardRepository } from '../repositories/dashboard-repository'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/lib/supabase/database.types'
 
-export async function getAuthenticatedUser() {
-  const supabase = await createServerClient()
+export async function getAuthenticatedUser(supabase: SupabaseClient<Database>) {
   const repo = new DashboardRepository(supabase)
   return repo.getAuthenticatedUser()
 }
-
