@@ -2,10 +2,11 @@ import { dehydrate, type DehydratedState } from '@tanstack/react-query'
 import { getQueryClient } from '@/lib/query-client'
 import { queryKeys } from '@/lib/queries/keys'
 import { type User } from '@supabase/supabase-js'
+// ✅ FIXED: import from .server barrel — this file runs in a server context
 import {
   getAuthenticatedUser,
   prefetchDashboardStats,
-} from '@/modules/dashboard'
+} from '@/modules/dashboard/index.server'
 
 export async function loadDashboardPage(): Promise<{ user: User | null; dehydratedState: DehydratedState }> {
   const user = await getAuthenticatedUser()
