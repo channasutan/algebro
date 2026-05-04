@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 
 interface KPICardsProps {
-  stats?: {
+  readonly stats?: Readonly<{
     problemsSolved: number
     accuracy: number | null
     currentStreak: number
@@ -17,8 +17,8 @@ interface KPICardsProps {
     accuracyDelta: number | null
     currentStreakDelta: number | null
     topicsMasteredDelta: number | null
-  }
-  isLoading?: boolean
+  }>
+  readonly isLoading?: boolean
 }
 
 interface CountUpProps {
