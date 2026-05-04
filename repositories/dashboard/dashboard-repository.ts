@@ -35,7 +35,7 @@ export class DashboardRepository {
     const { sessions, attempts } = await queryDashboardStats(this.client, userId)
     return dashboardStatsSchema.parse({
       ...computeDashboardStats(sessions, attempts),
-      currentStreak: 0,
+      currentStreak: 0, // Intentional override — streak engine not yet implemented
     })
   }
 

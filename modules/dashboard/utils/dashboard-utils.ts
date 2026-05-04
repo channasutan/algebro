@@ -33,7 +33,7 @@ export function computeDashboardStats(
   const correctAnswers = gradedAttempts.filter((a) => a.is_correct === true).length;
   const accuracy = totalAnswers > 0 ? (correctAnswers / totalAnswers) * 100 : null;
 
-  const totalTimeMinutes = sessions.length > 0
+  const _totalTimeMinutes = sessions.length > 0
     ? sessions.reduce((acc, s) => {
         return acc + calculateSessionDurationMinutes(s.started_at, s.completed_at);
       }, 0)
@@ -41,10 +41,14 @@ export function computeDashboardStats(
 
   return {
     totalSessions,
-    completedSessions,
+    problemsSolved: completedSessions,
     accuracy,
     currentStreak: 0, // Placeholder until streak engine is implemented
-    totalTimeMinutes,
+    topicsMastered: 0, // Placeholder — requires dedicated topic completion query
+    problemsSolvedDelta: null,
+    accuracyDelta: null,
+    currentStreakDelta: null,
+    topicsMasteredDelta: null,
   };
 }
 

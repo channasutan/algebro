@@ -2,10 +2,14 @@ import { z } from "zod";
 
 export const dashboardStatsSchema = z.object({
   totalSessions: z.number(),
-  completedSessions: z.number(),
+  problemsSolved: z.number(),
   accuracy: z.number().nullable(),
   currentStreak: z.number(),
-  totalTimeMinutes: z.number().nullable(),
+  topicsMastered: z.number(),
+  problemsSolvedDelta: z.number().nullable(),
+  accuracyDelta: z.number().nullable(),
+  currentStreakDelta: z.number().nullable(),
+  topicsMasteredDelta: z.number().nullable(),
 });
 
 export const activityItemSchema = z.object({
