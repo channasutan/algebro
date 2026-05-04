@@ -18,7 +18,7 @@ export function useCountUp(end: number, duration = 1200): number {
   useEffect(() => {
     // React 19: useEffect fires after paint — correct for animation triggers
     // MDN: matchMedia is the recommended API for prefers-reduced-motion
-    const prefersReduced = window.matchMedia(
+    const prefersReduced = globalThis.matchMedia(
       '(prefers-reduced-motion: reduce)'
     ).matches
 
