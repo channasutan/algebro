@@ -41,10 +41,14 @@ export function computeDashboardStats(
 
   return {
     totalSessions,
-    completedSessions,
+    problemsSolved: completedSessions,
     accuracy,
     currentStreak: 0, // Placeholder until streak engine is implemented
-    totalTimeMinutes,
+    topicsMastered: totalTimeMinutes !== null ? Math.floor(totalTimeMinutes) : 0,
+    problemsSolvedDelta: null,
+    accuracyDelta: null,
+    currentStreakDelta: null,
+    topicsMasteredDelta: null,
   };
 }
 

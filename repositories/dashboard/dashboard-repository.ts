@@ -36,6 +36,10 @@ export class DashboardRepository {
     return dashboardStatsSchema.parse({
       ...computeDashboardStats(sessions, attempts),
       currentStreak: 0,
+      problemsSolvedDelta: null,
+      accuracyDelta: null,
+      currentStreakDelta: null,
+      topicsMasteredDelta: null,
     })
   }
 
