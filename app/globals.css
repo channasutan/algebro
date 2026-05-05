@@ -184,6 +184,13 @@
   --content-default: 960px;
   --sidebar-width: 240px;
   --sidebar-collapsed-width: 0px;
+
+  /* Charts */
+  --chart-1: 180 100% 35%; /* Primary teal equivalent in hsl */
+  --chart-2: 12 76% 61%;
+  --chart-3: 197 37% 24%;
+  --chart-4: 43 74% 66%;
+  --chart-5: 27 87% 67%;
 }
 
 /* 
@@ -235,6 +242,13 @@
   --shadow-sm: 0 1px 2px 0 oklch(0 0 0 / 0.5);
   --shadow-md: 0 4px 6px -1px oklch(0 0 0 / 0.5), 0 2px 4px -1px oklch(0 0 0 / 0.4);
   --shadow-lg: 0 10px 15px -3px oklch(0 0 0 / 0.6), 0 4px 6px -2px oklch(0 0 0 / 0.5);
+
+  /* Charts */
+  --chart-1: 180 100% 45%;
+  --chart-2: 12 76% 61%;
+  --chart-3: 197 37% 24%;
+  --chart-4: 43 74% 66%;
+  --chart-5: 27 87% 67%;
 }
 
 /* 
@@ -287,6 +301,13 @@
     --shadow-sm: 0 1px 2px 0 oklch(0 0 0 / 0.5);
     --shadow-md: 0 4px 6px -1px oklch(0 0 0 / 0.5), 0 2px 4px -1px oklch(0 0 0 / 0.4);
     --shadow-lg: 0 10px 15px -3px oklch(0 0 0 / 0.6), 0 4px 6px -2px oklch(0 0 0 / 0.5);
+
+    /* Charts */
+    --chart-1: 180 100% 45%;
+    --chart-2: 12 76% 61%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
   }
 }
 
