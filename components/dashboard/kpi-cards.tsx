@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { motion, useMotionValue, useTransform, animate } from 'framer-motion'
+import { useCountUp } from '@/hooks/use-count-up'
 import { Card, CardHeader, CardBody } from '@/components/ui/card'
 import { BookOpen, Target, Flame, Trophy } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -21,27 +21,6 @@ interface KPICardsProps {
   readonly isLoading?: boolean
 }
 
-interface CountUpProps {
-  readonly value: number
-  readonly suffix?: string
-  readonly decimals?: number
-}
-
-const KPI_SKELETON_KEYS = ['kpi-sk-problems', 'kpi-sk-accuracy', 'kpi-sk-streak', 'kpi-sk-topics'] as const
-
-function CountUp({ value, suffix = '', decimals = 0 }: CountUpProps) {
-  const count = useMotionValue(0)
-  const rounded = useTransform(count, (latest) => {
-    return latest.toFixed(decimals) + suffix
-  })
-
-  React.useEffect(() => {
-    const controls = animate(count, value, { duration: 1.5, ease: 'easeOut' })
-    return controls.stop
-  }, [count, value])
-
-  return <motion.span>{rounded}</motion.span>
-}
 
 function DeltaBadge({ value }: { value: number | null }) {
   if (value === null) {
@@ -63,7 +42,14 @@ function DeltaBadge({ value }: { value: number | null }) {
   )
 }
 
+const KPI_SKELETON_KEYS = ['kpi-sk-problems', 'kpi-sk-accuracy', 'kpi-sk-streak', 'kpi-sk-topics'] as const
+
 export function KPICards({ stats, isLoading }: Readonly<KPICardsProps>) {
+  const problemsCount = useCountUp(stats?.problemsSolved ?? 0)
+  const accuracyCount = useCountUp((stats?.accuracy ?? 0) * 10)
+  const streakCount   = useCountUp(stats?.currentStreak ?? 0)
+  const topicsCount   = useCountUp(stats?.topicsMastered ?? 0)
+
   if (isLoading || !stats) {
     return (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -92,7 +78,7 @@ export function KPICards({ stats, isLoading }: Readonly<KPICardsProps>) {
         </CardHeader>
         <CardBody>
           <div className="text-2xl font-bold">
-            <CountUp value={stats.problemsSolved} />
+            {problemsCount}
           </div>
           <DeltaBadge value={stats.problemsSolvedDelta} />
         </CardBody>
@@ -105,11 +91,9 @@ export function KPICards({ stats, isLoading }: Readonly<KPICardsProps>) {
         </CardHeader>
         <CardBody>
           <div className="text-2xl font-bold">
-            {stats.accuracy === null ? (
-              '--%'
-            ) : (
-              <CountUp value={stats.accuracy} suffix="%" decimals={1} />
-            )}
+            {stats.accuracy === null
+              ? '--%'
+              : `${(accuracyCount / 10).toFixed(1)}%`}
           </div>
           <DeltaBadge value={stats.accuracyDelta} />
         </CardBody>
@@ -122,7 +106,7 @@ export function KPICards({ stats, isLoading }: Readonly<KPICardsProps>) {
         </CardHeader>
         <CardBody>
           <div className="text-2xl font-bold">
-            <CountUp value={stats.currentStreak} /> <span className="text-sm font-normal text-[--color-text-subtle]">days</span>
+            {streakCount} <span className="text-sm font-normal text-[--color-text-subtle]">days</span>
           </div>
           <DeltaBadge value={stats.currentStreakDelta} />
         </CardBody>
@@ -135,7 +119,7 @@ export function KPICards({ stats, isLoading }: Readonly<KPICardsProps>) {
         </CardHeader>
         <CardBody>
           <div className="text-2xl font-bold">
-            <CountUp value={stats.topicsMastered} />
+            {topicsCount}
           </div>
           <DeltaBadge value={stats.topicsMasteredDelta} />
         </CardBody>
