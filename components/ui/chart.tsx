@@ -330,28 +330,26 @@ function ChartLegendContent({
 
 /**
  * Resolves the config label key by probing the payload and its nested payload
- * for a string value at the given key. Returns the resolved key or the original key.
+ * for a string value at the given key. Returns the resolved string value or
+ * falls back to the original key.
+ *
+ * @see https://www.typescriptlang.org/docs/handbook/2/narrowing.html#typeof-type-guards
  */
 function resolveConfigLabelKey(
   payload: unknown,
   payloadPayload: Record<string, unknown> | undefined,
   key: string
 ): string {
-  if (
-    typeof payload === "object" &&
-    payload !== null &&
-    key in payload &&
-    typeof (payload as Record<string, unknown>)[key] === "string"
-  ) {
-    return (payload as Record<string, unknown>)[key] as string
+  // Probe the top-level payload first
+  if (typeof payload === "object" && payload !== null && key in payload) {
+    const val = (payload as Record<string, unknown>)[key]
+    if (typeof val === "string") return val // narrowing applies to `val` ✓
   }
 
-  if (
-    payloadPayload &&
-    key in payloadPayload &&
-    typeof payloadPayload[key] === "string"
-  ) {
-    return payloadPayload[key] as string
+  // Fall back to the nested payload.payload object
+  if (payloadPayload != null && key in payloadPayload) {
+    const val = payloadPayload[key]
+    if (typeof val === "string") return val // narrowing applies to `val` ✓
   }
 
   return key
