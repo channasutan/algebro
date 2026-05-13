@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import type { AccuracyDataPoint } from '@/components/features/dashboard/accuracy-chart'
+
 
 import {
   PageContainer,
@@ -56,15 +56,7 @@ const AccuracyChart = dynamic(
   }
 )
 
-const MOCK_ACCURACY_DATA: AccuracyDataPoint[] = [
-  { day: 'Mon', accuracy: 72 },
-  { day: 'Tue', accuracy: 85 },
-  { day: 'Wed', accuracy: 68 },
-  { day: 'Thu', accuracy: 91 },
-  { day: 'Fri', accuracy: 78 },
-  { day: 'Sat', accuracy: 88 },
-  { day: 'Sun', accuracy: 94 },
-]
+
 
 // ─── ProgressSection ─────────────────────────────────────────────────────
 function ProgressSection({ userId }: Readonly<{ userId: string }>) {
@@ -75,7 +67,7 @@ function ProgressSection({ userId }: Readonly<{ userId: string }>) {
     <div className="flex flex-col gap-6">
       <ProgressChart data={data} isLoading={isLoading} />
       {/* TODO FRO-54: Replace with real data from useDashboardStats or query */} {/* NOSONAR */}
-      <AccuracyChart data={process.env.NODE_ENV === 'development' ? MOCK_ACCURACY_DATA : []} />
+      <AccuracyChart data={[]} />
     </div>
   )
 }
