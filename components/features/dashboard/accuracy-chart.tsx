@@ -18,7 +18,7 @@ const chartConfig = {
 } satisfies ChartConfig
 
 type AccuracyChartProps = {
-  data: AccuracyDataPoint[]
+  readonly data: readonly AccuracyDataPoint[]
 }
 
 export function AccuracyChart({ data }: AccuracyChartProps) {
@@ -45,7 +45,7 @@ export function AccuracyChart({ data }: AccuracyChartProps) {
           cursor={false}
           content={
             <ChartTooltipContent
-              formatter={(value) => [`${value}%`, 'Accuracy']}
+              formatter={(value) => `${value}%`}
             />
           }
         />
@@ -61,3 +61,5 @@ export function AccuracyChart({ data }: AccuracyChartProps) {
     </ChartContainer>
   )
 }
+
+export type { AccuracyDataPoint } from '@/modules/dashboard/types/accuracy-chart'
