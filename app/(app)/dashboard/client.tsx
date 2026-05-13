@@ -1,5 +1,8 @@
 'use client'
 
+import dynamic from 'next/dynamic'
+
+
 import {
   PageContainer,
   PageContainerHeader,
@@ -40,12 +43,33 @@ function StatsSection({ userId }: Readonly<{ userId: string }>) {
   return <KPICards stats={data} isLoading={isLoading} />
 }
 
+
+
+const AccuracyChart = dynamic(
+  () =>
+    import('@/components/features/dashboard/accuracy-chart').then((mod) => ({ default: mod.AccuracyChart })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="aspect-video w-full animate-pulse rounded-lg bg-muted" />
+    ),
+  }
+)
+
+
+
 // ─── ProgressSection ─────────────────────────────────────────────────────
 function ProgressSection({ userId }: Readonly<{ userId: string }>) {
   const { data, isLoading, isError } = useProgressChart(userId, '30d')
 
   if (isError) return <SectionError message="Could not load progress chart." />
-  return <ProgressChart data={data} isLoading={isLoading} />
+  return (
+    <div className="flex flex-col gap-6">
+      <ProgressChart data={data} isLoading={isLoading} />
+      {/* TODO FRO-54: Replace with real data from useDashboardStats or query */} {/* NOSONAR */}
+      <AccuracyChart data={[]} />
+    </div>
+  )
 }
 
 // ─── ActivitySection ─────────────────────────────────────────────────────
