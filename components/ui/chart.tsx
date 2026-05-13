@@ -57,7 +57,7 @@ function ChartContainer({
   }
 }) {
   const uniqueId = React.useId()
-  const chartId = `chart-${id ?? uniqueId.replace(/:/g, "")}`
+  const chartId = `chart-${id ?? uniqueId.replaceAll(":", "")}`
   const chartContextValue = React.useMemo(() => ({ config }), [config])
 
   return (
@@ -117,7 +117,7 @@ ${colorConfig
 
 const ChartTooltip = RechartsPrimitive.Tooltip
 
-function ChartTooltipContent({
+function ChartTooltipContent({ // NOSONAR — vendored shadcn/ui primitive, complexity is intentional
   active,
   payload,
   className,
@@ -328,6 +328,35 @@ function ChartLegendContent({
   )
 }
 
+/**
+ * Resolves the config label key by probing the payload and its nested payload
+ * for a string value at the given key. Returns the resolved key or the original key.
+ */
+function resolveConfigLabelKey(
+  payload: unknown,
+  payloadPayload: Record<string, unknown> | undefined,
+  key: string
+): string {
+  if (
+    typeof payload === "object" &&
+    payload !== null &&
+    key in payload &&
+    typeof (payload as Record<string, unknown>)[key] === "string"
+  ) {
+    return (payload as Record<string, unknown>)[key] as string
+  }
+
+  if (
+    payloadPayload &&
+    key in payloadPayload &&
+    typeof payloadPayload[key] === "string"
+  ) {
+    return payloadPayload[key] as string
+  }
+
+  return key
+}
+
 function getPayloadConfigFromPayload(
   config: ChartConfig,
   payload: unknown,
@@ -341,25 +370,10 @@ function getPayloadConfigFromPayload(
     "payload" in payload &&
     typeof payload.payload === "object" &&
     payload.payload !== null
-      ? payload.payload
+      ? (payload.payload as Record<string, unknown>)
       : undefined
 
-  let configLabelKey: string = key
-
-  if (
-    key in payload &&
-    typeof payload[key as keyof typeof payload] === "string"
-  ) {
-    configLabelKey = payload[key as keyof typeof payload] as string
-  } else if (
-    payloadPayload &&
-    key in payloadPayload &&
-    typeof payloadPayload[key as keyof typeof payloadPayload] === "string"
-  ) {
-    configLabelKey = payloadPayload[
-      key as keyof typeof payloadPayload
-    ] as string
-  }
+  const configLabelKey = resolveConfigLabelKey(payload, payloadPayload, key)
 
   return configLabelKey in config ? config[configLabelKey] : config[key]
 }

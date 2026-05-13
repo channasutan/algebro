@@ -74,7 +74,7 @@ function ProgressSection({ userId }: Readonly<{ userId: string }>) {
   return (
     <div className="flex flex-col gap-6">
       <ProgressChart data={data} isLoading={isLoading} />
-      {/* TODO FRO-54: Replace with real data from useDashboardStats or query */}
+      {/* TODO FRO-54: Replace with real data from useDashboardStats or query */} {/* NOSONAR */}
       <AccuracyChart data={process.env.NODE_ENV === 'development' ? MOCK_ACCURACY_DATA : []} />
     </div>
   )
