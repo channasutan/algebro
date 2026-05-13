@@ -196,7 +196,7 @@ function ChartTooltipContent({ // NOSONAR — vendored shadcn/ui primitive, comp
         className
       )}
     >
-      {!nestLabel ? tooltipLabel : null}
+      {nestLabel ? null : tooltipLabel}
       <div className="grid gap-1.5">
         {payload
           .filter((item) => item.type !== "none")
@@ -329,10 +329,21 @@ function ChartLegendContent({
 }
 
 /**
+ * Type guard: asserts payload is a non-null object with the given key.
+ * Extracting this check removes multi-branch conditionals from call sites.
+ * @see https://www.typescriptlang.org/docs/handbook/2/narrowing.html#using-type-predicates
+ */
+function hasKey(
+  value: unknown,
+  key: string
+): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && key in value
+}
+
+/**
  * Resolves the config label key by probing the payload and its nested payload
  * for a string value at the given key. Returns the resolved string value or
  * falls back to the original key.
- *
  * @see https://www.typescriptlang.org/docs/handbook/2/narrowing.html#typeof-type-guards
  */
 function resolveConfigLabelKey(
@@ -340,16 +351,14 @@ function resolveConfigLabelKey(
   payloadPayload: Record<string, unknown> | undefined,
   key: string
 ): string {
-  // Probe the top-level payload first
-  if (typeof payload === "object" && payload !== null && key in payload) {
-    const val = (payload as Record<string, unknown>)[key]
-    if (typeof val === "string") return val // narrowing applies to `val` ✓
+  if (hasKey(payload, key)) {
+    const val = payload[key]
+    if (typeof val === "string") return val
   }
 
-  // Fall back to the nested payload.payload object
   if (payloadPayload != null && key in payloadPayload) {
     const val = payloadPayload[key]
-    if (typeof val === "string") return val // narrowing applies to `val` ✓
+    if (typeof val === "string") return val
   }
 
   return key
